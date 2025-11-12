@@ -1,236 +1,435 @@
-# 🎓 EduBaza.uz Platform - AI Worksheet Generator
+# EduBaza.uz - AI-Powered Worksheet Generator
 
-O'qituvchilar uchun AI yordamida ish varaqlari yaratish platformasi.
+> Платформа для автоматической генерации учебных материалов для учителей Узбекистана
 
-## 🏗️ Arxitektura
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-red)](https://redis.io/)
 
-**Гибридный подход:** Модульный монолит с готовностью к микросервисам
+## 📋 О проекте
 
+EduBaza.uz - это платформа для учителей Узбекистана, которая помогает автоматически генерировать учебные материалы (worksheets) с использованием искусственного интеллекта. Проект упрощает создание заданий, тестов и дидактических материалов для всех предметов школьной программы.
+
+### ✨ Возможности (Sprint 1)
+
+- 🔐 **Авторизация через SMS OTP** - безопасный вход без паролей
+- 👤 **Профиль учителя** - ФИО, специальность, школа
+- 📱 **Поддержка узбекских номеров** - автоматическое форматирование +998
+- 🎨 **Современный интерфейс** - адаптивный дизайн с Tailwind CSS
+- 🔒 **JWT токены** - защищённые API endpoints
+- ⚡ **Rate Limiting** - защита от спама (3 попытки за 15 минут)
+
+## 🚀 Технологии
+
+### Frontend
+- **Next.js 14** (App Router) - React фреймворк
+- **TypeScript** - типизация
+- **Tailwind CSS** - стилизация
+
+### Backend
+- **Next.js API Routes** - серверная логика
+- **PostgreSQL 16** - основная база данных
+- **Redis 7** - кэширование и rate limiting
+- **Prisma ORM** - работа с базой данных
+
+### Внешние сервисы
+- **Eskiz.uz** - отправка SMS
+- **Google Gemini API** - генерация заданий (в разработке)
+
+## 📦 Установка и запуск
+
+### Требования
+
+- Node.js 18+
+- Docker и Docker Compose
+- Git
+
+### 1. Клонирование репозитория
+
+```bash
+git clone https://github.com/iakadirov/edubaza-platform.git
+cd edubaza-platform
 ```
-edubaza-platform/
-├── src/
-│   ├── modules/          # Бизнес-модули (готовы к выделению в микросервисы)
-│   │   ├── auth/         # Авторизация (JWT, SMS OTP)
-│   │   ├── worksheets/   # Генерация worksheet'ов (AI + PDF)
-│   │   ├── payments/     # Платежи (Click.uz, Payme.uz)
-│   │   ├── subscriptions # Управление подписками
-│   │   └── templates/    # Шаблоны PDF
-│   └── shared/           # Общая инфраструктура
-│       ├── infrastructure/ # DB, Redis, Queue, External APIs
-│       ├── middleware/     # Auth, Rate Limit, Error handling
-│       ├── utils/          # Helper functions
-│       └── config/         # Конфигурация
-├── components/           # React компоненты
-├── app/                  # Next.js App Router
-└── prisma/               # Database schema
-```
 
-## 🚀 Быстрый старт
-
-### 1. Установка зависимостей
+### 2. Установка зависимостей
 
 ```bash
 npm install
 ```
 
-### 2. Настройка окружения
+### 3. Настройка переменных окружения
+
+Создайте файл `.env.local` на основе `.env.example`:
 
 ```bash
-# Скопируйте .env.example в .env.local
 cp .env.example .env.local
-
-# Отредактируйте .env.local и заполните необходимые ключи
 ```
 
-### 3. Запуск Docker (PostgreSQL + Redis)
+Заполните необходимые переменные:
+
+```env
+# Database
+DATABASE_URL="postgresql://edubaza:your_password@localhost:5432/edubaza?schema=public"
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT
+JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+
+# Eskiz.uz SMS API
+ESKIZ_EMAIL=your_email@example.com
+ESKIZ_PASSWORD=your_password
+ESKIZ_API_URL=https://notify.eskiz.uz/api
+
+# Google Gemini API (опционально)
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+### 4. Запуск Docker контейнеров
 
 ```bash
 docker-compose up -d
 ```
 
-### 4. Миграция базы данных
+Это запустит:
+- PostgreSQL на порту 5432
+- Redis на порту 6379
+
+### 5. Инициализация базы данных
 
 ```bash
-npm run prisma:migrate
+# Создание таблиц
+docker exec -i edubaza_postgres psql -U edubaza -d edubaza < prisma/init.sql
+
+# Применение миграций профиля
+docker exec -i edubaza_postgres psql -U edubaza -d edubaza < migration_add_profile.sql
 ```
 
-### 5. Запуск dev сервера
+### 6. Запуск проекта
 
 ```bash
 npm run dev
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000)
+Откройте http://localhost:3000 в браузере.
 
-## 📦 Tech Stack
+## 📁 Структура проекта
 
-### Frontend
-- **Next.js 14** - React framework (App Router)
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling
-- **shadcn/ui** - UI components
-- **React Hook Form + Zod** - Forms & validation
+```
+edubaza-platform/
+├── app/                          # Next.js App Router
+│   ├── api/                      # API endpoints
+│   │   ├── auth/                 # Авторизация (send-otp, verify-otp)
+│   │   ├── user/                 # Профиль пользователя
+│   │   └── test/                 # Тестовые endpoints
+│   ├── login/                    # Страница логина
+│   ├── dashboard/                # Личный кабинет
+│   └── profile/                  # Редактирование профиля
+├── lib/                          # Утилиты и хелперы
+│   ├── redis.ts                  # Redis клиент
+│   ├── sms.ts                    # Eskiz.uz интеграция
+│   ├── jwt.ts                    # JWT токены
+│   ├── db-users.ts               # Работа с пользователями
+│   └── auth-middleware.ts        # Middleware для защиты роутов
+├── prisma/                       # Prisma ORM
+│   ├── schema.prisma             # Схема базы данных
+│   └── init.sql                  # Начальная инициализация
+├── docker-compose.yml            # Docker конфигурация
+└── .env.example                  # Пример переменных окружения
+```
 
-### Backend
-- **Next.js API Routes** - REST API
-- **Prisma ORM** - Database ORM
-- **PostgreSQL 15** - Database
-- **Redis 7** - Cache & Queue
-- **BullMQ** - Background jobs
+## 🔐 Аутентификация
 
-### AI & PDF
-- **Google Gemini Pro** - AI generation
-- **Puppeteer** - PDF generation
+### Процесс входа
 
-### Integrations
-- **Eskiz.uz** - SMS OTP
-- **Click.uz** - Payment gateway
-- **Payme.uz** - Payment gateway
+1. Пользователь вводит номер телефона (+998XXXXXXXXX)
+2. Система отправляет 6-значный OTP код через Eskiz.uz
+3. Пользователь вводит OTP код
+4. Система создаёт JWT токен и сохраняет в localStorage
+5. Пользователь перенаправляется на dashboard
 
-## 🗄️ Database Schema
+### API Endpoints
 
-См. [prisma/schema.prisma](./prisma/schema.prisma)
+#### POST `/api/auth/send-otp`
+Отправка OTP кода на номер телефона.
 
-Основные модели:
-- **User** - Пользователи
-- **Worksheet** - Сгенерированные worksheet'ы
-- **Template** - Шаблоны PDF
-- **Payment** - Платежи
-- **CurriculumTopic** - Темы по предметам
+**Request:**
+```json
+{
+  "phone": "+998901234567"
+}
+```
 
-## 🔧 Доступные скрипты
+**Response:**
+```json
+{
+  "success": true,
+  "message": "OTP код отправлен на ваш номер",
+  "data": {
+    "phone": "+998901234567",
+    "expiresIn": 300
+  }
+}
+```
+
+#### POST `/api/auth/verify-otp`
+Проверка OTP кода и получение JWT токена.
+
+**Request:**
+```json
+{
+  "phone": "+998901234567",
+  "otp": "123456"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Авторизация успешна",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "uuid",
+      "phone": "+998901234567",
+      "name": "Иван Иванов",
+      "specialty": "MATHEMATICS",
+      "school": "Школа №1",
+      "subscriptionPlan": "FREE"
+    }
+  }
+}
+```
+
+#### GET `/api/user/profile`
+Получение профиля пользователя (требуется авторизация).
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+#### PUT `/api/user/profile`
+Обновление профиля пользователя (требуется авторизация).
+
+**Request:**
+```json
+{
+  "name": "Иван Иванов",
+  "specialty": "MATHEMATICS",
+  "school": "Школа №1"
+}
+```
+
+## 👤 Профиль пользователя
+
+### Специальности (16 вариантов)
+
+- Начальные классы (1-4) - `PRIMARY_SCHOOL`
+- Математика - `MATHEMATICS`
+- Русский язык - `RUSSIAN_LANGUAGE`
+- Узбекский язык - `UZBEK_LANGUAGE`
+- Английский язык - `ENGLISH_LANGUAGE`
+- Физика - `PHYSICS`
+- Химия - `CHEMISTRY`
+- Биология - `BIOLOGY`
+- География - `GEOGRAPHY`
+- История - `HISTORY`
+- Литература - `LITERATURE`
+- Информатика - `INFORMATICS`
+- Физическая культура - `PHYSICAL_EDUCATION`
+- Музыка - `MUSIC`
+- Изобразительное искусство - `ART`
+- Другое - `OTHER`
+
+### Тарифные планы
+
+- **FREE** - 10 worksheets в месяц, доступ к 3 шаблонам
+- **PRO** - 100 worksheets в месяц, доступ ко всем шаблонам
+- **SCHOOL** - Безлимит для школ
+
+## 🛠️ Разработка
+
+### Доступные команды
 
 ```bash
-# Development
-npm run dev              # Запуск dev сервера
-npm run build            # Production build
-npm run start            # Production сервер
-npm run lint             # ESLint
-npm run type-check       # TypeScript проверка
+# Разработка
+npm run dev          # Запуск dev сервера на порту 3000
+npm run build        # Сборка продакшн версии
+npm run start        # Запуск продакшн сервера
+npm run lint         # Проверка ESLint
 
-# Prisma
-npm run prisma:generate  # Генерация Prisma Client
-npm run prisma:migrate   # Создание миграции
-npm run prisma:studio    # Prisma Studio (GUI)
-npm run prisma:seed      # Заполнение тестовыми данными
-npm run prisma:reset     # Сброс БД
+# Docker
+docker-compose up -d           # Запустить контейнеры
+docker-compose down            # Остановить контейнеры
+docker-compose logs -f         # Просмотр логов
+
+# База данных
+docker exec -it edubaza_postgres psql -U edubaza -d edubaza  # Подключиться к PostgreSQL
+docker exec -it edubaza_redis redis-cli                       # Подключиться к Redis
 ```
 
-## 🔑 Переменные окружения
+### Тестовые endpoints
 
-См. [.env.example](./.env.example)
+Доступны по адресу http://localhost:3000/test:
 
-Обязательные:
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - JWT secret key
-- `GEMINI_API_KEY` - Google Gemini API key
-- `ESKIZ_EMAIL` & `ESKIZ_PASSWORD` - Eskiz.uz credentials
+- `/api/test/db` - проверка PostgreSQL
+- `/api/test/redis` - проверка Redis
+- `/api/test/eskiz` - проверка Eskiz.uz API
+- `/api/test/gemini` - проверка Google Gemini API
+- `/api/test/all` - проверка всех сервисов
 
-## 🎯 Модули
+## 📊 База данных
 
-### 🔐 Auth Module
-- SMS OTP авторизация через Eskiz.uz
-- JWT токены (httpOnly cookies)
-- Middleware для защиты routes
+### Схема пользователя (users)
 
-### 📝 Worksheets Module
-- AI генерация заданий через Gemini
-- PDF генерация через Puppeteer
-- Управление worksheet'ами
-- Queue system для асинхронной обработки
-
-### 💳 Payments Module
-- Интеграция с Click.uz
-- Интеграция с Payme.uz
-- Webhook обработка
-- История платежей
-
-### 🎫 Subscriptions Module
-- Управление тарифными планами (FREE/PRO/SCHOOL)
-- Проверка лимитов
-- Auto-renewal
-
-### 🎨 Templates Module
-- Библиотека PDF шаблонов
-- Premium шаблоны
-
-## 📐 Архитектурные принципы
-
-1. **Модульность** - каждый модуль изолирован
-2. **Слоистая архитектура** - API → Service → Repository
-3. **Готовность к микросервисам** - модули легко выделяются
-4. **Type Safety** - строгая типизация TypeScript
-5. **Error Handling** - централизованная обработка ошибок
-
-## 🔄 Workflow: Генерация worksheet
-
-```
-User Input (form)
-  → API Route Handler
-    → Worksheet Service
-      → AI Generator Service (Gemini)
-        → Worksheet Repository (save to DB)
-          → PDF Queue (BullMQ)
-            → PDF Generator Service (Puppeteer)
-              → File Storage
-                → DB Update (pdf_url)
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone VARCHAR(15) UNIQUE NOT NULL,
+  name VARCHAR(100),
+  email VARCHAR(255) UNIQUE,
+  specialty "TeacherSpecialty",
+  school VARCHAR(200),
+  "subscriptionPlan" "SubscriptionPlan" DEFAULT 'FREE',
+  "subscriptionExpiresAt" TIMESTAMP,
+  "subscriptionStartedAt" TIMESTAMP,
+  limits JSONB DEFAULT '{"worksheetsPerMonth": 10, "templatesAccess": 3, "taskTypesAccess": 15}',
+  usage JSONB DEFAULT '{"worksheetsThisMonth": 0, "lastResetAt": null}',
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW(),
+  "lastLoginAt" TIMESTAMP,
+  "isActive" BOOLEAN DEFAULT true
+);
 ```
 
-## 🚀 Deployment
+### Энумы
 
-### Development
+```sql
+CREATE TYPE "TeacherSpecialty" AS ENUM (
+  'PRIMARY_SCHOOL', 'MATHEMATICS', 'RUSSIAN_LANGUAGE',
+  'UZBEK_LANGUAGE', 'ENGLISH_LANGUAGE', 'PHYSICS',
+  'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY', 'HISTORY',
+  'LITERATURE', 'INFORMATICS', 'PHYSICAL_EDUCATION',
+  'MUSIC', 'ART', 'OTHER'
+);
+
+CREATE TYPE "SubscriptionPlan" AS ENUM ('FREE', 'PRO', 'SCHOOL');
+```
+
+## ⚠️ Известные ограничения
+
+### 1. Windows + Docker + Prisma
+Prisma ORM не работает на Windows с Docker из-за проблем аутентификации. Используется временное решение через `docker exec` для SQL запросов. На Linux/Mac и в продакшне Prisma будет работать нормально.
+
+### 2. localStorage для JWT
+В текущей версии JWT токен хранится в `localStorage`. Для продакшна рекомендуется использовать `httpOnly` cookies для большей безопасности.
+
+### 3. SMS шаблон
+Используется временный шаблон от Mediazona.uz. После утверждения собственного шаблона в Eskiz.uz нужно обновить текст сообщения в [lib/sms.ts](lib/sms.ts):
+
+```typescript
+export async function sendOTP(phone: string, otp: string): Promise<boolean> {
+  const message = `EduBaza.uz platformasiga kirish uchun tasdiqlash kodi: ${otp}`;
+  return sendSMS(phone, message);
+}
+```
+
+## 🎯 Прогресс разработки
+
+### ✅ Sprint 1 (Завершён)
+
+- ✅ SMS OTP авторизация через Eskiz.uz
+- ✅ JWT токены и защищённые роуты
+- ✅ Профиль пользователя (имя, специальность, школа)
+- ✅ Rate limiting (3 попытки за 15 минут)
+- ✅ Страницы: login, dashboard, profile
+- ✅ Docker setup (PostgreSQL + Redis)
+- ✅ Database migrations
+- ✅ Auto-loading user data from API
+
+### 🚧 Sprint 2 (Планируется)
+
+- [ ] Главная страница (Landing)
+- [ ] Форма генерации worksheet
+- [ ] Интеграция с Gemini API для генерации заданий
+- [ ] Создание PDF шаблонов
+- [ ] История генераций пользователя
+- [ ] Библиотека тем по предметам
+
+### 📅 Будущие спринты
+
+- [ ] Система подписок и оплаты (Click.uz, Payme.uz)
+- [ ] Библиотека готовых шаблонов
+- [ ] Экспорт в Word/PDF
+- [ ] Мобильная версия (PWA)
+- [ ] Админ панель
+- [ ] Аналитика и статистика
+- [ ] AI тьютор чатбот
+
+## 🔄 Git Workflow
+
+### Сохранение изменений
+
 ```bash
-docker-compose up -d
-npm run dev
+# Посмотреть что изменилось
+git status
+
+# Добавить все изменения
+git add .
+
+# Создать коммит
+git commit -m "feat: Add new feature"
+
+# Загрузить на GitHub
+git push
 ```
 
-### Production
+### Примеры коммитов
+
 ```bash
-# 1. Build
-npm run build
-
-# 2. Start production server
-npm run start
-
-# Or with Docker
-docker-compose -f docker-compose.prod.yml up -d
+git commit -m "feat: Add worksheet generation form"
+git commit -m "fix: Fix specialty display in dashboard"
+git commit -m "docs: Update README with API documentation"
+git commit -m "refactor: Improve error handling in auth"
+git commit -m "style: Update UI colors and spacing"
 ```
 
-## 📚 Документация
+## 🤝 Вклад в проект
 
-- [ARCHITECTURE.md](../ARCHITECTURE.md) - Детальная архитектура
-- [TECHNICAL_SPECIFICATION.md](../TECHNICAL_SPECIFICATION.md) - Техническая спецификация
-- [TASKS_CHECKLIST.md](../TASKS_CHECKLIST.md) - Задачи и прогресс
+Если вы хотите внести вклад в проект:
 
-## 🛣️ Roadmap
+1. Fork репозитория
+2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit изменения (`git commit -m 'feat: Add amazing feature'`)
+4. Push в branch (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
 
-### MVP (1 месяц)
-- [x] Инфраструктура setup
-- [ ] Auth module (SMS OTP)
-- [ ] Worksheets generator
-- [ ] PDF generation
-- [ ] Payments (Click/Payme)
+## 📝 Лицензия
 
-### Phase 2 (3 месяца)
-- [ ] Test generator
-- [ ] Library module
-- [ ] PWA
-- [ ] Analytics dashboard
+Этот проект является частной разработкой EduBaza.uz.
 
-### Phase 3 (6 месяцев)
-- [ ] Mobile app
-- [ ] Team collaboration
-- [ ] AI tutor chatbot
+## 👨‍💻 Автор
 
-## 📄 License
+**Ibrohim Kadirov**
+- GitHub: [@iakadirov](https://github.com/iakadirov)
+- Repository: [edubaza-platform](https://github.com/iakadirov/edubaza-platform)
 
-Private - All rights reserved
-
-## 📞 Contact
+## 📞 Контакты
 
 - Email: support@edubaza.uz
 - Website: https://edubaza.uz
 
 ---
 
-**Made with ❤️ for O'zbekiston teachers**
+<div align="center">
+
+**EduBaza.uz** - Делаем образование доступнее!
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+</div>
