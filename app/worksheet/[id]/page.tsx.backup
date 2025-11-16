@@ -45,6 +45,22 @@ interface Worksheet {
   viewCount: number;
 }
 
+const taskTypeLabels: Record<string, string> = {
+  SINGLE_CHOICE: '☑️ Bir tanlov',
+  MULTIPLE_CHOICE: '✅ Koʻp tanlov',
+  TRUE_FALSE: '✓✗ Toʻgʻri/Notoʻgʻri',
+  SHORT_ANSWER: '✍️ Qisqa javob',
+  FILL_BLANKS: '___ Boʻshliqlarni toʻldirish',
+  MATCHING: '🔗 Moslashtirish',
+  ESSAY: '📝 Kengaytirilgan javob',
+};
+
+const difficultyLabels: Record<string, string> = {
+  EASY: 'Oson',
+  MEDIUM: 'Oʻrta',
+  HARD: 'Qiyin',
+};
+
 export default function WorksheetViewPage() {
   const router = useRouter();
   const params = useParams();
@@ -143,10 +159,10 @@ export default function WorksheetViewPage() {
             </Link>
             <div className="flex gap-3">
               <button
-                onClick={() => setInteractive(!interactive)}
-                className={`${interactive ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white px-4 py-2 rounded-lg transition-colors`}
+                onClick={() => setShowAnswers(!showAnswers)}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                {interactive ? '📝 Interfaol rejim' : '📄 Ko\'rish rejimi'}
+                {showAnswers ? 'Javoblarni yashirish' : 'Javoblarni koʻrsatish'}
               </button>
               <button
                 onClick={handleDownloadPDF}
@@ -183,10 +199,7 @@ export default function WorksheetViewPage() {
                   worksheet.config.difficulty === 'HARD' ? 'bg-red-500' :
                   'bg-yellow-500'
                 }`}></span>
-                {worksheet.config.difficulty === 'EASY' ? 'Oson' :
-                 worksheet.config.difficulty === 'HARD' ? 'Qiyin' :
-                 worksheet.config.difficulty === 'MEDIUM' ? 'Oʻrta' :
-                 worksheet.config.difficulty}
+                {difficultyLabels[worksheet.config.difficulty] || worksheet.config.difficulty}
               </span>
               <span>•</span>
               <span className="font-semibold">{worksheet.tasks.length} ta topshiriq</span>
@@ -218,15 +231,227 @@ export default function WorksheetViewPage() {
         </div>
 
         {/* Tasks */}
-        <div className="space-y-[5px]">
-          {worksheet.tasks.map((task, index) => (
-            <TaskRenderer
-              key={task.id}
-              task={task}
-              index={index}
-              interactive={interactive}
-            />
-          ))}
+        <div className="space-y-6">
+          {worksheet.tasks.map((task, index) => {
+            const taskType = task.content.task_type || task.type;
+            const questionText = task.content.questionText || task.content.statement || task.title;
+
+            return (
+              <div key={task.id || index} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 break-inside-avoid border-l-4 border-blue-500">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-md">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                      <span className="inline-block bg-blue-50 text-blue-700 text-xs px-3 py-1.5 rounded-md font-medium border border-blue-200">
+                        {taskTypeLabels[taskType] || taskType}
+                      </span>
+                      {task.difficulty && (
+                        <span className={`text-xs px-3 py-1.5 rounded-md font-semibold ${
+                          task.difficulty === 'EASY' ? 'bg-green-100 text-green-700 border border-green-200' :
+                          task.difficulty === 'HARD' ? 'bg-red-100 text-red-700 border border-red-200' :
+                          'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                        }`}>
+                          {difficultyLabels[task.difficulty] || task.difficulty}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mb-4 bg-gray-50 border-l-4 border-gray-300 pl-4 py-3 rounded-r">
+                      <p className="text-lg text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">
+                        {questionText}
+                      </p>
+                    </div>
+
+                    {/* Question Image */}
+                    {task.content.questionImage && (
+                      <div className="mb-5 flex justify-center">
+                        <div className="relative inline-block">
+                          <img
+                            src={task.content.questionImage}
+                            alt="Savol rasmi"
+                            className="max-w-full h-auto rounded-lg border-4 border-gray-100 shadow-lg"
+                            style={{ maxHeight: '400px' }}
+                          />
+                          <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md print:hidden">
+                            📸
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SINGLE_CHOICE or MULTIPLE_CHOICE */}
+                    {(taskType === 'SINGLE_CHOICE' || taskType === 'MULTIPLE_CHOICE') && task.content.options && (
+                      <div className="space-y-3 mb-5">
+                        {task.content.options.map((option, optIndex) => (
+                          <div key={optIndex} className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border-2 border-gray-200 hover:border-blue-300 transition-all">
+                            <div className={`flex-shrink-0 w-6 h-6 mt-0.5 border-2 border-blue-400 bg-white ${
+                              taskType === 'SINGLE_CHOICE' ? 'rounded-full' : 'rounded'
+                            }`}></div>
+                            <div className="flex-1">
+                              <span className="inline-block bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">
+                                {String.fromCharCode(65 + optIndex)}
+                              </span>
+                              <span className="text-gray-800 font-medium">{option}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* TRUE_FALSE */}
+                    {taskType === 'TRUE_FALSE' && (
+                      <div className="grid grid-cols-2 gap-3 mb-5">
+                        <div className="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg border-2 border-green-300 transition-all cursor-pointer">
+                          <div className="flex-shrink-0 w-6 h-6 border-2 border-green-500 bg-white rounded"></div>
+                          <span className="text-green-800 font-semibold">✓ Toʻgʻri</span>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg border-2 border-red-300 transition-all cursor-pointer">
+                          <div className="flex-shrink-0 w-6 h-6 border-2 border-red-500 bg-white rounded"></div>
+                          <span className="text-red-800 font-semibold">✗ Notoʻgʻri</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* MATCHING */}
+                    {taskType === 'MATCHING' && task.content.pairs && (
+                      <div className="mb-5">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <div className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-2">
+                              <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                              Chapdan tanlang
+                            </div>
+                            {task.content.pairs.map((pair, idx) => (
+                              <div key={idx} className="p-3 bg-blue-50 rounded-lg border-2 border-blue-300 shadow-sm">
+                                <span className="inline-block bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">
+                                  {idx + 1}
+                                </span>
+                                <span className="text-gray-800 font-medium">{pair.left}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                              <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                              Oʻngdan tanlang
+                            </div>
+                            {task.content.pairs.map((pair, idx) => (
+                              <div key={idx} className="p-3 bg-green-50 rounded-lg border-2 border-green-300 shadow-sm">
+                                <span className="inline-block bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">
+                                  {String.fromCharCode(65 + idx)}
+                                </span>
+                                <span className="text-gray-800 font-medium">{pair.right}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* FILL_BLANKS */}
+                    {taskType === 'FILL_BLANKS' && task.content.textWithBlanks && (
+                      <div className="mb-5">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-5 mb-5 shadow-inner">
+                          <p className="text-lg text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">
+                            {task.content.textWithBlanks}
+                          </p>
+                        </div>
+                        <div className="space-y-3 bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+                          <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">✍</span>
+                            Boʻshliqlarni toʻldiring:
+                          </p>
+                          {task.content.blanks && task.content.blanks.map((blank, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                              <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                                {idx + 1}
+                              </span>
+                              <div className="flex-1 border-b-2 border-blue-400 pb-2 min-h-[36px] bg-white rounded-t px-2"></div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Answer space for SHORT_ANSWER, ESSAY */}
+                    {(taskType === 'SHORT_ANSWER' || taskType === 'ESSAY' || (!taskType && taskType !== 'FILL_BLANKS')) && (
+                      <div className="border-t-2 border-gray-300 pt-5 mt-5">
+                        <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">✍</span>
+                          Javob yozing:
+                        </p>
+                        <div className={`border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 ${
+                          taskType === 'ESSAY' ? 'min-h-[160px]' : 'min-h-[80px]'
+                        }`}>
+                          {/* Lines for writing */}
+                          {Array.from({ length: taskType === 'ESSAY' ? 6 : 3 }).map((_, lineIdx) => (
+                            <div key={lineIdx} className="border-b border-gray-300 h-8 mb-2"></div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show answers if enabled */}
+                    {showAnswers && task.content && (
+                      <div className="mt-4 p-4 bg-green-50 border-l-4 border-green-500 rounded print:hidden">
+                        {task.content.correctAnswer !== undefined && (
+                          <>
+                            <p className="text-sm font-semibold text-green-800 mb-1">
+                              ✓ Toʻgʻri javob:
+                            </p>
+                            <p className="text-green-700 mb-2">
+                              {typeof task.content.correctAnswer === 'number'
+                                ? (task.content.options?.[task.content.correctAnswer] || task.content.correctAnswer)
+                                : task.content.correctAnswer === true ? 'Toʻgʻri'
+                                : task.content.correctAnswer === false ? 'Notoʻgʻri'
+                                : task.content.correctAnswer}
+                            </p>
+                          </>
+                        )}
+                        {task.content.answer && (
+                          <>
+                            <p className="text-sm font-semibold text-green-800 mb-1">
+                              ✓ Javob:
+                            </p>
+                            <p className="text-green-700 mb-2">{task.content.answer}</p>
+                          </>
+                        )}
+                        {taskType === 'FILL_BLANKS' && task.content.blanks && (
+                          <>
+                            <p className="text-sm font-semibold text-green-800 mb-1">
+                              ✓ Toʻgʻri javoblar:
+                            </p>
+                            <div className="space-y-1">
+                              {task.content.blanks.map((blank, idx) => (
+                                <p key={idx} className="text-green-700">
+                                  {idx + 1}. {blank.correctAnswer}
+                                  {blank.acceptableAnswers && blank.acceptableAnswers.length > 0 && (
+                                    <span className="text-green-600 text-sm ml-2">
+                                      (yoki: {blank.acceptableAnswers.join(', ')})
+                                    </span>
+                                  )}
+                                </p>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                        {task.content.explanation && (
+                          <>
+                            <p className="text-sm font-semibold text-green-800 mt-3 mb-1">
+                              💡 Tushuntirish:
+                            </p>
+                            <p className="text-green-700 whitespace-pre-wrap">{task.content.explanation}</p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Footer */}

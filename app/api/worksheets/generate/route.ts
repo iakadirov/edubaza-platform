@@ -75,7 +75,8 @@ async function fetchTasksFromDatabase(params: {
     `;
 
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`
+      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
+      { maxBuffer: 50 * 1024 * 1024 } // 50MB buffer
     );
 
     if (!stdout || stdout.trim() === '') {

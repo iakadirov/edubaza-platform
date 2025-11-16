@@ -20,6 +20,50 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Global fixes for better contrast and readability */
+@layer base {
+  /* Fix low contrast text in inputs */
+  input::placeholder,
+  textarea::placeholder {
+    color: #1f2937 !important;
+    opacity: 0.4 !important;
+  }
+
+  /* Ensure input text is always dark and readable */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    color: #111827 !important;
+  }
+
+  /* Fix disabled inputs to be more readable */
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    color: #374151 !important;
+    background-color: #f3f4f6 !important;
+  }
+
+  /* Ensure labels are readable */
+  label {
+    color: #1f2937 !important;
+  }
+
+  /* Fix all gray text to have better contrast */
+  .text-gray-500 {
+    color: #374151 !important;
+  }
+
+  .text-gray-600 {
+    color: #1f2937 !important;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
