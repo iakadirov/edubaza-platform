@@ -32,6 +32,7 @@ export interface User {
   specialty: TeacherSpecialty | null;
   school: string | null;
   subscriptionPlan: 'FREE' | 'PRO' | 'SCHOOL';
+  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,8 +49,8 @@ export async function findUserByPhone(phone: string): Promise<User | null> {
     }
 
     const parts = stdout.trim().split('|');
-    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school
-    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school] = parts;
+    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role
+    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role] = parts;
 
     return {
       id,
@@ -59,6 +60,7 @@ export async function findUserByPhone(phone: string): Promise<User | null> {
       specialty: (specialty || null) as TeacherSpecialty | null,
       school: school || null,
       subscriptionPlan: subscriptionPlan as 'FREE' | 'PRO' | 'SCHOOL',
+      role: (role || 'USER') as 'USER' | 'ADMIN' | 'SUPER_ADMIN',
       createdAt: new Date(createdAt),
       updatedAt: new Date(updatedAt),
     };
@@ -82,8 +84,8 @@ export async function createUser(phone: string): Promise<User | null> {
     }
 
     const parts = stdout.trim().split('|');
-    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school
-    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school] = parts;
+    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role
+    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role] = parts;
 
     return {
       id,
@@ -93,6 +95,7 @@ export async function createUser(phone: string): Promise<User | null> {
       specialty: (specialty || null) as TeacherSpecialty | null,
       school: school || null,
       subscriptionPlan: subscriptionPlan as 'FREE' | 'PRO' | 'SCHOOL',
+      role: (role || 'USER') as 'USER' | 'ADMIN' | 'SUPER_ADMIN',
       createdAt: new Date(createdAt),
       updatedAt: new Date(updatedAt),
     };
@@ -138,8 +141,8 @@ export async function updateUserProfile(
     }
 
     const parts = stdout.trim().split('|');
-    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school
-    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school] = parts;
+    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role
+    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role] = parts;
 
     return {
       id,
@@ -149,6 +152,7 @@ export async function updateUserProfile(
       specialty: (specialty || null) as TeacherSpecialty | null,
       school: school || null,
       subscriptionPlan: subscriptionPlan as 'FREE' | 'PRO' | 'SCHOOL',
+      role: (role || 'USER') as 'USER' | 'ADMIN' | 'SUPER_ADMIN',
       createdAt: new Date(createdAt),
       updatedAt: new Date(updatedAt),
     };
@@ -166,4 +170,9 @@ export async function findOrCreateUser(phone: string): Promise<User | null> {
   }
 
   return user;
+}
+
+// Helper function to check if user is admin
+export function isAdmin(user: User | null): boolean {
+  return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 }

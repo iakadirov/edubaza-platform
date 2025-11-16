@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0);
 
-  // Отправка OTP
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -29,19 +28,18 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('otp');
-        setCountdown(300); // 5 минут
+        setCountdown(300); // 5 дақиқа
         startCountdown();
       } else {
         setError(data.message);
       }
     } catch (err) {
-      setError('Ошибка отправки SMS');
+      setError('SMS yuborishda xatolik');
     } finally {
       setLoading(false);
     }
   };
 
-  // Верификация OTP
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -57,23 +55,19 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Сохраняем токен в localStorage
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-
-        // Перенаправляем на главную
         router.push('/dashboard');
       } else {
         setError(data.message);
       }
     } catch (err) {
-      setError('Ошибка верификации');
+      setError('Tekshirishda xatolik');
     } finally {
       setLoading(false);
     }
   };
 
-  // Таймер обратного отсчёта
   const startCountdown = () => {
     const interval = setInterval(() => {
       setCountdown((prev) => {
@@ -102,8 +96,8 @@ export default function LoginPage() {
           </h1>
           <p className="text-gray-600">
             {step === 'phone'
-              ? 'Войдите с помощью номера телефона'
-              : 'Введите код из SMS'}
+              ? 'Telefon raqamingiz orqali kiring'
+              : 'SMS dan kelgan kodni kiriting'}
           </p>
         </div>
 
@@ -112,16 +106,16 @@ export default function LoginPage() {
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Номер телефона
+                Telefon raqam
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-3 text-gray-500">+998</span>
+                <span className="absolute left-3 top-3 text-gray-800 font-semibold">+998</span>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="90 123 45 67"
-                  className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                   required
                   maxLength={9}
                 />
@@ -139,7 +133,7 @@ export default function LoginPage() {
               disabled={loading || phone.length !== 9}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
             >
-              {loading ? 'Отправка...' : 'Получить код'}
+              {loading ? 'Yuborilmoqda...' : 'Kod olish'}
             </button>
           </form>
         )}
@@ -149,14 +143,14 @@ export default function LoginPage() {
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Код подтверждения
+                Tasdiqlash kodi
               </label>
               <input
                 type="text"
                 value={otp}
                 onChange={(e) => setOTP(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                 required
                 maxLength={6}
                 autoFocus
@@ -165,7 +159,7 @@ export default function LoginPage() {
 
             {countdown > 0 && (
               <div className="text-center text-sm text-gray-600">
-                Код действителен: <span className="font-semibold">{formatTime(countdown)}</span>
+                Kod amal qiladi: <span className="font-semibold">{formatTime(countdown)}</span>
               </div>
             )}
 
@@ -181,7 +175,7 @@ export default function LoginPage() {
                 disabled={loading || otp.length !== 6}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
               >
-                {loading ? 'Проверка...' : 'Войти'}
+                {loading ? 'Tekshirilmoqda...' : 'Kirish'}
               </button>
 
               <button
@@ -194,7 +188,7 @@ export default function LoginPage() {
                 }}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors"
               >
-                Изменить номер
+                Raqamni oʻzgartirish
               </button>
             </div>
           </form>
@@ -202,8 +196,8 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Отправив номер, вы соглашаетесь с</p>
-          <p>условиями использования сервиса</p>
+          <p>Raqamni yuborish orqali siz xizmat shartlariga</p>
+          <p>rozilik bildirasiz</p>
         </div>
       </div>
     </div>

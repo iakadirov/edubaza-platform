@@ -15,22 +15,22 @@ interface UserProfile {
 }
 
 const specialtyLabels: Record<string, string> = {
-  PRIMARY_SCHOOL: 'Начальные классы (1-4)',
-  MATHEMATICS: 'Математика',
-  RUSSIAN_LANGUAGE: 'Русский язык',
-  UZBEK_LANGUAGE: 'Узбекский язык',
-  ENGLISH_LANGUAGE: 'Английский язык',
-  PHYSICS: 'Физика',
-  CHEMISTRY: 'Химия',
-  BIOLOGY: 'Биология',
-  GEOGRAPHY: 'География',
-  HISTORY: 'История',
-  LITERATURE: 'Литература',
-  INFORMATICS: 'Информатика',
-  PHYSICAL_EDUCATION: 'Физическая культура',
-  MUSIC: 'Музыка',
-  ART: 'Изобразительное искусство',
-  OTHER: 'Другое',
+  PRIMARY_SCHOOL: 'Boshlang\'ich sinflar (1-4)',
+  MATHEMATICS: 'Matematika',
+  RUSSIAN_LANGUAGE: 'Rus tili',
+  UZBEK_LANGUAGE: 'O\'zbek tili',
+  ENGLISH_LANGUAGE: 'Ingliz tili',
+  PHYSICS: 'Fizika',
+  CHEMISTRY: 'Kimyo',
+  BIOLOGY: 'Biologiya',
+  GEOGRAPHY: 'Geografiya',
+  HISTORY: 'Tarix',
+  LITERATURE: 'Adabiyot',
+  INFORMATICS: 'Informatika',
+  PHYSICAL_EDUCATION: 'Jismoniy tarbiya',
+  MUSIC: 'Musiqa',
+  ART: 'Tasviriy san\'at',
+  OTHER: 'Boshqa',
 };
 
 export default function ProfilePage() {
@@ -113,7 +113,7 @@ export default function ProfilePage() {
 
       if (response.ok && data.success) {
         setProfile(data.data);
-        setMessage({ type: 'success', text: 'Профиль успешно обновлён!' });
+        setMessage({ type: 'success', text: 'Profil muvaffaqiyatli yangilandi!' });
 
         // Обновляем localStorage
         const storedUser = localStorage.getItem('user');
@@ -123,11 +123,11 @@ export default function ProfilePage() {
           localStorage.setItem('user', JSON.stringify(user));
         }
       } else {
-        setMessage({ type: 'error', text: data.message || 'Ошибка обновления профиля' });
+        setMessage({ type: 'error', text: data.message || 'Profilni yangilashda xatolik' });
       }
     } catch (error) {
       console.error('Update profile error:', error);
-      setMessage({ type: 'error', text: 'Ошибка сервера' });
+      setMessage({ type: 'error', text: 'Server xatoligi' });
     } finally {
       setSaving(false);
     }
@@ -136,7 +136,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-gray-600">Загрузка...</div>
+        <div className="text-gray-600">Yuklanmoqda...</div>
       </div>
     );
   }
@@ -154,9 +154,9 @@ export default function ProfilePage() {
             href="/dashboard"
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
           >
-            ← Назад в панель управления
+            ← Boshqaruv paneliga qaytish
           </Link>
-          <h1 className="text-3xl font-bold text-gray-800">Мой профиль</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Mening profilim</h1>
         </div>
 
         {/* Message */}
@@ -178,42 +178,42 @@ export default function ProfilePage() {
             {/* Phone (readonly) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Телефон
+                Telefon
               </label>
               <input
                 type="text"
                 value={profile.phone}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-800 font-semibold cursor-not-allowed"
               />
             </div>
 
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                ФИО <span className="text-red-500">*</span>
+                F.I.SH <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Иванов Иван Иванович"
+                placeholder="Ivanov Ivan Ivanovich"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
             </div>
 
             {/* Specialty */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Специальность
+                Mutaxassislik
               </label>
               <select
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
-                <option value="">Выберите специальность</option>
+                <option value="">Mutaxassislikni tanlang</option>
                 {Object.entries(specialtyLabels).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -225,21 +225,21 @@ export default function ProfilePage() {
             {/* School */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Школа
+                Maktab
               </label>
               <input
                 type="text"
                 value={school}
                 onChange={(e) => setSchool(e.target.value)}
-                placeholder="Школа №1, г. Ташкент"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="1-maktab, Toshkent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
             </div>
 
             {/* Subscription Plan (readonly) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тарифный план
+                Tarif rejasi
               </label>
               <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
                 <span className="font-semibold text-blue-800">{profile.subscriptionPlan}</span>
@@ -252,7 +252,7 @@ export default function ProfilePage() {
               disabled={saving}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {saving ? 'Сохранение...' : 'Сохранить изменения'}
+              {saving ? 'Saqlanmoqda...' : 'O\'zgarishlarni saqlash'}
             </button>
           </form>
         </div>

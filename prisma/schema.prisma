@@ -180,10 +180,74 @@ model CurriculumTopic {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Relations
+  predefinedTasks PredefinedTask[]
+
   @@unique([subject, grade, topicUz])
   @@index([subject, grade])
   @@index([keywords])
   @@map("curriculum_topics")
+}
+
+// ============================================
+// PREDEFINED TASKS MODULE
+// ============================================
+
+model PredefinedTask {
+  id          String   @id @default(uuid())
+
+  // Task Classification
+  subject     String   @db.VarChar(50)    // MATHEMATICS, PHYSICS, etc.
+  grade       Int                          // 1-11
+  topicId     String?                      // Link to CurriculumTopic (optional)
+  topic       CurriculumTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  // Task Type & Difficulty
+  taskType    TaskType                     // TEST, PROBLEM, QUESTION, FILL_BLANK
+  difficulty  Difficulty                   // EASY, MEDIUM, HARD
+
+  // Task Content (Uzbek Latin)
+  question    String   @db.Text           // Savol matni
+
+  // Task-specific fields (JSON for flexibility)
+  content     Json                         // Different structure for each taskType:
+                                           // TEST: {options: string[], correctAnswer: number}
+                                           // PROBLEM: {solution: string, answer: string}
+                                           // QUESTION: {sampleAnswer?: string, rubric?: string}
+                                           // FILL_BLANK: {blanks: string[], answers: string[]}
+
+  // Metadata
+  tags        String[] @default([])        // Keywords for search
+  isActive    Boolean  @default(true)
+  quality     Int      @default(5)         // 1-10 rating
+  usageCount  Int      @default(0)         // How many times used
+
+  // Admin info
+  createdBy   String?  @db.VarChar(100)   // Admin username
+  reviewedBy  String?  @db.VarChar(100)   // Who reviewed/approved
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([subject, grade, taskType])
+  @@index([difficulty])
+  @@index([isActive])
+  @@index([quality])
+  @@index([topicId])
+  @@map("predefined_tasks")
+}
+
+enum TaskType {
+  TEST          // Testlar (javob tanlash)
+  PROBLEM       // Masalalar (yechim bilan)
+  QUESTION      // Savollar (ochiq)
+  FILL_BLANK    // Boʻsh joyni toʻldirish
+}
+
+enum Difficulty {
+  EASY    // Oson
+  MEDIUM  // Oʻrta
+  HARD    // Qiyin
 }
 
 // ============================================
