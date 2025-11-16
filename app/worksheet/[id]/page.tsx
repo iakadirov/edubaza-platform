@@ -8,6 +8,7 @@ interface TaskContent {
   task_type?: string;
   questionText?: string;
   statement?: string;
+  questionImage?: string;
   options?: string[];
   correctAnswer?: number | boolean | string;
   answer?: string;
@@ -144,29 +145,47 @@ export default function WorksheetViewPage() {
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Worksheet Header */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-8 mb-6 border-t-4 border-blue-600">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-semibold mb-3">
+              {worksheet.subject} • {worksheet.grade}-sinf
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
               {worksheet.topicUz}
             </h1>
-            <div className="flex items-center justify-center gap-4 text-gray-600">
-              <span>{worksheet.subject}</span>
+            <div className="flex items-center justify-center gap-4 text-gray-600 text-sm">
+              <span className="inline-flex items-center gap-1">
+                <span className={`w-3 h-3 rounded-full ${
+                  worksheet.config.difficulty === 'EASY' ? 'bg-green-500' :
+                  worksheet.config.difficulty === 'HARD' ? 'bg-red-500' :
+                  'bg-yellow-500'
+                }`}></span>
+                {difficultyLabels[worksheet.config.difficulty] || worksheet.config.difficulty}
+              </span>
               <span>•</span>
-              <span>{worksheet.grade}-sinf</span>
-              <span>•</span>
-              <span>{difficultyLabels[worksheet.config.difficulty] || worksheet.config.difficulty}</span>
-              <span>•</span>
-              <span>{worksheet.tasks.length} ta topshiriq</span>
+              <span className="font-semibold">{worksheet.tasks.length} ta topshiriq</span>
             </div>
           </div>
 
           <div className="border-t border-gray-200 pt-4 mt-4">
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
               <div>
-                <strong>Yaratilgan sana:</strong> {new Date(worksheet.generatedAt).toLocaleDateString('uz-UZ')}
+                <strong className="text-gray-700">Sana:</strong> {new Date(worksheet.generatedAt).toLocaleDateString('uz-UZ')}
               </div>
               <div className="print:hidden">
-                <strong>Koʻrishlar:</strong> {worksheet.viewCount}
+                <strong className="text-gray-700">Koʻrishlar:</strong> {worksheet.viewCount}
+              </div>
+            </div>
+          </div>
+
+          {/* Student Info Section for Print */}
+          <div className="hidden print:block border-t border-gray-200 mt-4 pt-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <strong>Oʻquvchi F.I.Sh.:</strong> _________________________________
+              </div>
+              <div>
+                <strong>Sana:</strong> _________________________________
               </div>
             </div>
           </div>
@@ -179,40 +198,64 @@ export default function WorksheetViewPage() {
             const questionText = task.content.questionText || task.content.statement || task.title;
 
             return (
-              <div key={task.id || index} className="bg-white rounded-lg shadow-sm p-6 break-inside-avoid">
+              <div key={task.id || index} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 break-inside-avoid border-l-4 border-blue-500">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-md">
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="inline-block bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded">
+                    <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                      <span className="inline-block bg-blue-50 text-blue-700 text-xs px-3 py-1.5 rounded-md font-medium border border-blue-200">
                         {taskTypeLabels[taskType] || taskType}
                       </span>
                       {task.difficulty && (
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          task.difficulty === 'EASY' ? 'bg-green-100 text-green-700' :
-                          task.difficulty === 'HARD' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
+                        <span className={`text-xs px-3 py-1.5 rounded-md font-semibold ${
+                          task.difficulty === 'EASY' ? 'bg-green-100 text-green-700 border border-green-200' :
+                          task.difficulty === 'HARD' ? 'bg-red-100 text-red-700 border border-red-200' :
+                          'bg-yellow-100 text-yellow-700 border border-yellow-200'
                         }`}>
                           {difficultyLabels[task.difficulty] || task.difficulty}
                         </span>
                       )}
                     </div>
 
-                    <p className="text-lg text-gray-800 mb-4 whitespace-pre-wrap leading-relaxed">
-                      {questionText}
-                    </p>
+                    <div className="mb-4 bg-gray-50 border-l-4 border-gray-300 pl-4 py-3 rounded-r">
+                      <p className="text-lg text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">
+                        {questionText}
+                      </p>
+                    </div>
+
+                    {/* Question Image */}
+                    {task.content.questionImage && (
+                      <div className="mb-5 flex justify-center">
+                        <div className="relative inline-block">
+                          <img
+                            src={task.content.questionImage}
+                            alt="Savol rasmi"
+                            className="max-w-full h-auto rounded-lg border-4 border-gray-100 shadow-lg"
+                            style={{ maxHeight: '400px' }}
+                          />
+                          <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md print:hidden">
+                            📸
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* SINGLE_CHOICE or MULTIPLE_CHOICE */}
                     {(taskType === 'SINGLE_CHOICE' || taskType === 'MULTIPLE_CHOICE') && task.content.options && (
-                      <div className="space-y-2 mb-4">
+                      <div className="space-y-3 mb-5">
                         {task.content.options.map((option, optIndex) => (
-                          <div key={optIndex} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
-                            <div className={`flex-shrink-0 w-5 h-5 mt-0.5 border-2 border-gray-300 ${
+                          <div key={optIndex} className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border-2 border-gray-200 hover:border-blue-300 transition-all">
+                            <div className={`flex-shrink-0 w-6 h-6 mt-0.5 border-2 border-blue-400 bg-white ${
                               taskType === 'SINGLE_CHOICE' ? 'rounded-full' : 'rounded'
                             }`}></div>
-                            <span className="text-gray-700">{String.fromCharCode(65 + optIndex)}) {option}</span>
+                            <div className="flex-1">
+                              <span className="inline-block bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">
+                                {String.fromCharCode(65 + optIndex)}
+                              </span>
+                              <span className="text-gray-800 font-medium">{option}</span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -220,54 +263,73 @@ export default function WorksheetViewPage() {
 
                     {/* TRUE_FALSE */}
                     {taskType === 'TRUE_FALSE' && (
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
-                          <div className="flex-shrink-0 w-5 h-5 border-2 border-gray-300 rounded"></div>
-                          <span className="text-gray-700">Toʻgʻri</span>
+                      <div className="grid grid-cols-2 gap-3 mb-5">
+                        <div className="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg border-2 border-green-300 transition-all cursor-pointer">
+                          <div className="flex-shrink-0 w-6 h-6 border-2 border-green-500 bg-white rounded"></div>
+                          <span className="text-green-800 font-semibold">✓ Toʻgʻri</span>
                         </div>
-                        <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
-                          <div className="flex-shrink-0 w-5 h-5 border-2 border-gray-300 rounded"></div>
-                          <span className="text-gray-700">Notoʻgʻri</span>
+                        <div className="flex items-center gap-3 p-4 bg-red-50 hover:bg-red-100 rounded-lg border-2 border-red-300 transition-all cursor-pointer">
+                          <div className="flex-shrink-0 w-6 h-6 border-2 border-red-500 bg-white rounded"></div>
+                          <span className="text-red-800 font-semibold">✗ Notoʻgʻri</span>
                         </div>
                       </div>
                     )}
 
                     {/* MATCHING */}
                     {taskType === 'MATCHING' && task.content.pairs && (
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="space-y-2">
-                          {task.content.pairs.map((pair, idx) => (
-                            <div key={idx} className="p-2 bg-blue-50 rounded border border-blue-200">
-                              {idx + 1}. {pair.left}
+                      <div className="mb-5">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <div className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-2">
+                              <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                              Chapdan tanlang
                             </div>
-                          ))}
-                        </div>
-                        <div className="space-y-2">
-                          {task.content.pairs.map((pair, idx) => (
-                            <div key={idx} className="p-2 bg-green-50 rounded border border-green-200">
-                              {String.fromCharCode(65 + idx)}. {pair.right}
+                            {task.content.pairs.map((pair, idx) => (
+                              <div key={idx} className="p-3 bg-blue-50 rounded-lg border-2 border-blue-300 shadow-sm">
+                                <span className="inline-block bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">
+                                  {idx + 1}
+                                </span>
+                                <span className="text-gray-800 font-medium">{pair.left}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                              <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                              Oʻngdan tanlang
                             </div>
-                          ))}
+                            {task.content.pairs.map((pair, idx) => (
+                              <div key={idx} className="p-3 bg-green-50 rounded-lg border-2 border-green-300 shadow-sm">
+                                <span className="inline-block bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded mr-2">
+                                  {String.fromCharCode(65 + idx)}
+                                </span>
+                                <span className="text-gray-800 font-medium">{pair.right}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {/* FILL_BLANKS */}
                     {taskType === 'FILL_BLANKS' && task.content.textWithBlanks && (
-                      <div className="mb-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                          <p className="text-lg text-gray-800 whitespace-pre-wrap leading-relaxed">
+                      <div className="mb-5">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-5 mb-5 shadow-inner">
+                          <p className="text-lg text-gray-900 whitespace-pre-wrap leading-relaxed font-medium">
                             {task.content.textWithBlanks}
                           </p>
                         </div>
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Boʻshliqlarni toʻldiring:</p>
+                        <div className="space-y-3 bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+                          <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">✍</span>
+                            Boʻshliqlarni toʻldiring:
+                          </p>
                           {task.content.blanks && task.content.blanks.map((blank, idx) => (
                             <div key={idx} className="flex items-center gap-3">
-                              <span className="flex-shrink-0 w-8 h-8 bg-gray-200 text-gray-700 rounded-full flex items-center justify-center font-medium text-sm">
+                              <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md">
                                 {idx + 1}
                               </span>
-                              <div className="flex-1 border-b-2 border-gray-300 pb-1 min-h-[32px]"></div>
+                              <div className="flex-1 border-b-2 border-blue-400 pb-2 min-h-[36px] bg-white rounded-t px-2"></div>
                             </div>
                           ))}
                         </div>
@@ -276,9 +338,19 @@ export default function WorksheetViewPage() {
 
                     {/* Answer space for SHORT_ANSWER, ESSAY */}
                     {(taskType === 'SHORT_ANSWER' || taskType === 'ESSAY' || (!taskType && taskType !== 'FILL_BLANKS')) && (
-                      <div className="border-t border-gray-200 pt-4 mt-4">
-                        <p className="text-sm text-gray-500 mb-2">Javob:</p>
-                        <div className="border border-gray-300 rounded p-3 min-h-[80px] bg-gray-50"></div>
+                      <div className="border-t-2 border-gray-300 pt-5 mt-5">
+                        <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">✍</span>
+                          Javob yozing:
+                        </p>
+                        <div className={`border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 ${
+                          taskType === 'ESSAY' ? 'min-h-[160px]' : 'min-h-[80px]'
+                        }`}>
+                          {/* Lines for writing */}
+                          {Array.from({ length: taskType === 'ESSAY' ? 6 : 3 }).map((_, lineIdx) => (
+                            <div key={lineIdx} className="border-b border-gray-300 h-8 mb-2"></div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
@@ -356,6 +428,7 @@ export default function WorksheetViewPage() {
           body {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+            background: white;
           }
           @page {
             size: A4;
@@ -364,6 +437,51 @@ export default function WorksheetViewPage() {
           .break-inside-avoid {
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+          img {
+            max-width: 100%;
+            height: auto;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: block;
+            margin: 0 auto;
+          }
+          /* Better spacing for printed version */
+          .task-card {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+          }
+          /* Ensure colors print correctly */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          /* Remove hover effects for print */
+          .hover\\:shadow-lg {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+          }
+          /* Better contrast for print */
+          .bg-gray-50 {
+            background-color: #fafafa !important;
+          }
+          .bg-blue-50 {
+            background-color: #eff6ff !important;
+          }
+          .bg-green-50 {
+            background-color: #f0fdf4 !important;
+          }
+          .bg-red-50 {
+            background-color: #fef2f2 !important;
+          }
+          .bg-yellow-50 {
+            background-color: #fefce8 !important;
+          }
+          /* Print header on every page */
+          @page {
+            @top-center {
+              content: "EduBaza.uz";
+            }
           }
         }
       `}} />
