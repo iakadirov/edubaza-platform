@@ -458,24 +458,7 @@ export default function WorksheetViewPage() {
             position: relative;
           }
 
-          /* Watermark - edubaza repeated pattern */
-          main::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: repeating-linear-gradient(
-              -15deg,
-              transparent,
-              transparent 100px,
-              rgba(23, 97, 255, 0.03) 100px,
-              rgba(23, 97, 255, 0.03) 125px
-            );
-            pointer-events: none;
-            z-index: 0;
-          }
+          /* Watermark removed */
 
           /* Header: 543x77px, centered, 26px from top */
           .bg-white.rounded-lg.shadow-sm.p-8 {
@@ -545,7 +528,7 @@ export default function WorksheetViewPage() {
           .space-y-6 {
             width: 543px !important;
             margin: 0 auto !important;
-            padding: 0 26px !important;
+            padding: 0 !important;
             display: flex !important;
             flex-direction: column !important;
             gap: 10px !important;
@@ -625,24 +608,29 @@ export default function WorksheetViewPage() {
             margin: 0 !important;
           }
 
-          /* Options - horizontal layout with gap */
-          .space-y-3 {
+          /* Options - horizontal layout with gap and flex-wrap */
+          .space-y-3.mb-5 {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            gap: 23px !important;
+            gap: 15px 23px !important;
             margin: 0 !important;
+            align-items: flex-start !important;
           }
 
-          .space-y-3 > * {
+          .space-y-3.mb-5 > * {
             margin: 0 !important;
             padding: 0 !important;
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            flex: 0 0 auto !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
           }
 
-          .space-y-3 > * + * {
+          .space-y-3.mb-5 > * + * {
             margin-top: 0 !important;
           }
 
@@ -654,9 +642,28 @@ export default function WorksheetViewPage() {
             color: #000000 !important;
           }
 
-          /* Hide checkboxes */
-          .w-6.h-6 {
-            display: none !important;
+          /* Checkboxes for MULTIPLE_CHOICE - show small squares */
+          .flex-shrink-0.w-6.h-6 {
+            width: 8px !important;
+            height: 8px !important;
+            min-width: 8px !important;
+            min-height: 8px !important;
+            border: 1px solid #000000 !important;
+            border-radius: 2px !important;
+            background: white !important;
+            display: inline-block !important;
+          }
+
+          /* Hide checkboxes for TRUE_FALSE */
+          .grid.grid-cols-2 .w-6.h-6 {
+            width: 8px !important;
+            height: 8px !important;
+            min-width: 8px !important;
+            min-height: 8px !important;
+            border: 1px solid #000000 !important;
+            border-radius: 2px !important;
+            background: white !important;
+            display: inline-block !important;
           }
 
           /* TRUE/FALSE grid */
@@ -686,11 +693,124 @@ export default function WorksheetViewPage() {
             box-shadow: none !important;
           }
 
-          /* Answer lines */
-          .border-b.border-gray-300.h-8 {
-            height: 0 !important;
+          /* SHORT_ANSWER - single line */
+          .border-t-2.border-gray-300 {
             border: none !important;
+            padding: 0 !important;
+            margin: 6px 0 0 0 !important;
+          }
+
+          .border-t-2.border-gray-300 p {
             display: none !important;
+          }
+
+          .border-t-2.border-gray-300 > div {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: 0 !important;
+          }
+
+          /* Answer line for SHORT_ANSWER */
+          .border-t-2.border-gray-300 .border-b.border-gray-300:first-child {
+            display: block !important;
+            height: 15px !important;
+            border: none !important;
+            border-bottom: 1px solid #000000 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+
+          /* Hide other lines */
+          .border-t-2.border-gray-300 .border-b.border-gray-300:not(:first-child) {
+            display: none !important;
+          }
+
+          /* FILL_BLANKS - horizontal auto layout */
+          .space-y-3.bg-gray-50 {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 6px 0 0 0 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 8px 15px !important;
+          }
+
+          .space-y-3.bg-gray-50 > p {
+            display: none !important;
+          }
+
+          .space-y-3.bg-gray-50 > div {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            min-width: 60px !important;
+            max-width: 120px !important;
+          }
+
+          .space-y-3.bg-gray-50 .w-8.h-8 {
+            width: 12px !important;
+            height: 12px !important;
+            font-size: 8px !important;
+            background: #BEDAFF !important;
+            color: #00275B !important;
+          }
+
+          .space-y-3.bg-gray-50 .border-b-2 {
+            border-bottom: 1px solid #000000 !important;
+            min-height: 15px !important;
+            height: 15px !important;
+            padding: 0 !important;
+            background: transparent !important;
+          }
+
+          /* ESSAY - 3 lines */
+          .border-t-2.border-gray-300 .border-b.border-gray-300 {
+            display: block !important;
+            height: 15px !important;
+            border: none !important;
+            border-bottom: 1px solid #000000 !important;
+            margin-bottom: 4px !important;
+            width: 100% !important;
+          }
+
+          .min-h-\\[160px\\] .border-b.border-gray-300:nth-child(1),
+          .min-h-\\[160px\\] .border-b.border-gray-300:nth-child(2),
+          .min-h-\\[160px\\] .border-b.border-gray-300:nth-child(3) {
+            display: block !important;
+          }
+
+          .min-h-\\[160px\\] .border-b.border-gray-300:nth-child(n+4) {
+            display: none !important;
+          }
+
+          /* MATCHING - 2 columns with center space */
+          .grid.grid-cols-2.gap-4:not(.gap-3) {
+            display: grid !important;
+            grid-template-columns: 1fr 30px 1fr !important;
+            gap: 0 !important;
+            margin: 0 !important;
+          }
+
+          .grid.grid-cols-2.gap-4:not(.gap-3) > div:first-child {
+            grid-column: 1 !important;
+          }
+
+          .grid.grid-cols-2.gap-4:not(.gap-3) > div:last-child {
+            grid-column: 3 !important;
+          }
+
+          .grid.grid-cols-2.gap-4:not(.gap-3) .space-y-3 {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+          }
+
+          .grid.grid-cols-2.gap-4:not(.gap-3) .p-3 {
+            font-size: 10px !important;
+            line-height: 13px !important;
           }
 
           /* Compact all margins */
