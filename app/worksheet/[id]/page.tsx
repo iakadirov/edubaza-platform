@@ -116,9 +116,13 @@ export default function WorksheetViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - hide on print */}
-      <header className="bg-white border-b border-gray-200 print:hidden">
+    <>
+      {/* Google Fonts - Onest */}
+      <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&display=swap" rel="stylesheet" />
+
+      <div className="min-h-screen bg-gray-50">
+        {/* Header - hide on print */}
+        <header className="bg-white border-b border-gray-200 print:hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="text-blue-600 hover:text-blue-700">
@@ -422,69 +426,298 @@ export default function WorksheetViewPage() {
         </div>
       </main>
 
-      {/* Print styles */}
+      {/* Print styles - Figma A4 Design */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-            background: white;
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif !important;
           }
+
+          body {
+            background: #F0F5FF !important;
+            margin: 0;
+            padding: 0;
+          }
+
           @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 10px;
           }
+
+          /* A4 Page Container: 595x842px */
+          main {
+            max-width: 595px !important;
+            min-height: 842px !important;
+            background: #FFFFFF !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+            position: relative;
+          }
+
+          /* Watermark - edubaza repeated pattern */
+          main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+              -15deg,
+              transparent,
+              transparent 100px,
+              rgba(23, 97, 255, 0.03) 100px,
+              rgba(23, 97, 255, 0.03) 125px
+            );
+            pointer-events: none;
+            z-index: 0;
+          }
+
+          /* Header: 543x77px, centered, 26px from top */
+          .bg-white.rounded-lg.shadow-sm.p-8 {
+            width: 543px !important;
+            height: 77px !important;
+            margin: 26px auto 10px auto !important;
+            padding: 12px !important;
+            border: 0.5px solid #E9E9E9 !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 15px !important;
+            position: relative;
+            z-index: 1;
+          }
+
+          /* Hide subject badge */
+          .inline-block.bg-blue-100 {
+            display: none !important;
+          }
+
+          /* Title */
+          h1 {
+            font-size: 14px !important;
+            line-height: 18px !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          /* Hide difficulty and count */
+          h1 + div {
+            display: none !important;
+          }
+
+          /* Student info fields */
+          .border-t.border-gray-200 {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 19px !important;
+            width: 100% !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          .border-t.border-gray-200 > div {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 4px !important;
+            margin: 0 !important;
+          }
+
+          .border-t.border-gray-200 strong {
+            font-size: 12px !important;
+            line-height: 15px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+          }
+
+          /* Task Cards */
+          .space-y-6 {
+            width: 543px !important;
+            margin: 0 auto !important;
+            padding: 0 26px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            position: relative;
+            z-index: 1;
+          }
+
+          .space-y-6 > * + * {
+            margin-top: 0 !important;
+          }
+
+          /* Individual task card */
+          .bg-white.rounded-lg.shadow-md {
+            width: 100% !important;
+            padding: 12px !important;
+            border: 0.5px solid #E9E9E9 !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 13px !important;
+          }
+
+          /* Task number circle: 15x15px */
+          .w-10.h-10 {
+            width: 15px !important;
+            height: 15px !important;
+            min-width: 15px !important;
+            min-height: 15px !important;
+            background: #BEDAFF !important;
+            border-radius: 39px !important;
+            font-size: 8px !important;
+            line-height: 10px !important;
+            font-weight: 700 !important;
+            color: #00275B !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: none !important;
+          }
+
+          /* Hide task type badges */
+          .mb-4.flex.items-center {
+            display: none !important;
+          }
+
+          /* Question text */
+          .mb-4.bg-gray-50 {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          .text-lg {
+            font-size: 10px !important;
+            line-height: 13px !important;
+            font-weight: 400 !important;
+            color: #000000 !important;
+          }
+
+          /* Images: 122.57x74.69px */
+          img {
+            max-width: 122.57px !important;
+            max-height: 74.69px !important;
+            width: 122.57px !important;
+            height: 74.69px !important;
+            border-radius: 5.75px !important;
+            border: none !important;
+            box-shadow: none !important;
+            object-fit: cover !important;
+          }
+
+          .mb-5.flex.justify-center {
+            justify-content: flex-start !important;
+            margin: 0 !important;
+          }
+
+          /* Options - horizontal layout with gap */
+          .space-y-3 {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 23px !important;
+            margin: 0 !important;
+          }
+
+          .space-y-3 > * {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+
+          .space-y-3 > * + * {
+            margin-top: 0 !important;
+          }
+
+          /* Option text */
+          .space-y-3 span {
+            font-size: 10px !important;
+            line-height: 13px !important;
+            font-weight: 400 !important;
+            color: #000000 !important;
+          }
+
+          /* Hide checkboxes */
+          .w-6.h-6 {
+            display: none !important;
+          }
+
+          /* TRUE/FALSE grid */
+          .grid.grid-cols-2.gap-3 {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 23px !important;
+          }
+
+          .grid.grid-cols-2 > div {
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+          }
+
+          /* Matching pairs - hide headers */
+          .text-sm.font-semibold {
+            display: none !important;
+          }
+
+          /* FILL_BLANKS gradient box */
+          .bg-gradient-to-r {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+
+          /* Answer lines */
+          .border-b.border-gray-300.h-8 {
+            height: 0 !important;
+            border: none !important;
+            display: none !important;
+          }
+
+          /* Compact all margins */
+          .p-3, .p-4, .p-5, .p-6 {
+            padding: 0 !important;
+          }
+
+          .mb-3, .mb-4, .mb-5, .mb-6 {
+            margin-bottom: 6px !important;
+          }
+
+          .mt-3, .mt-4, .mt-5 {
+            margin-top: 6px !important;
+          }
+
+          .gap-2, .gap-3, .gap-4 {
+            gap: 4px !important;
+          }
+
+          /* Break inside avoid */
           .break-inside-avoid {
             break-inside: avoid;
             page-break-inside: avoid;
           }
-          img {
-            max-width: 100%;
-            height: auto;
-            page-break-inside: avoid;
-            break-inside: avoid;
-            display: block;
-            margin: 0 auto;
-          }
-          /* Better spacing for printed version */
-          .task-card {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-          }
-          /* Ensure colors print correctly */
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          /* Remove hover effects for print */
-          .hover\\:shadow-lg {
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
-          }
-          /* Better contrast for print */
-          .bg-gray-50 {
-            background-color: #fafafa !important;
-          }
-          .bg-blue-50 {
-            background-color: #eff6ff !important;
-          }
-          .bg-green-50 {
-            background-color: #f0fdf4 !important;
-          }
-          .bg-red-50 {
-            background-color: #fef2f2 !important;
-          }
-          .bg-yellow-50 {
-            background-color: #fefce8 !important;
-          }
-          /* Print header on every page */
-          @page {
-            @top-center {
-              content: "EduBaza.uz";
-            }
-          }
         }
       `}} />
-    </div>
+      </div>
+    </>
   );
 }
