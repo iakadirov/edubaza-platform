@@ -31,6 +31,9 @@ export function ContentSettingsPanel({ settings, onChange }: ContentSettingsPane
             onChange={(e) => onChange('content.maxImageSizeMB', parseInt(e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
+          <p className="text-sm text-gray-500 mt-1">
+            Ограничивает размер загружаемых изображений к задачам
+          </p>
         </div>
 
         {/* Max Tasks Per Worksheet */}
@@ -46,40 +49,32 @@ export function ContentSettingsPanel({ settings, onChange }: ContentSettingsPane
             onChange={(e) => onChange('content.maxTasksPerWorksheet', parseInt(e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-        </div>
-
-        {/* Available Subjects */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Доступные предметы
-          </label>
-          <textarea
-            value={(settings['content.availableSubjects'] || []).join('\n')}
-            onChange={(e) => onChange('content.availableSubjects', e.target.value.split('\n').filter(Boolean))}
-            rows={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-            placeholder="Matematika&#10;Ona tili&#10;Ingliz tili"
-          />
           <p className="text-sm text-gray-500 mt-1">
-            По одному предмету на строку
+            Максимальное количество задач в одном worksheet
           </p>
         </div>
 
-        {/* Available Grades */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Доступные классы
-          </label>
-          <input
-            type="text"
-            value={(settings['content.availableGrades'] || []).join(', ')}
-            onChange={(e) => onChange('content.availableGrades', e.target.value.split(',').map(g => parseInt(g.trim())).filter(n => !isNaN(n)))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Через запятую (например: 1, 2, 3, 4, 5)
+        {/* Info about subjects and grades */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">
+            ℹ️ Предметы и классы
+          </h3>
+          <p className="text-sm text-blue-800 mb-2">
+            Доступные предметы и классы теперь управляются через раздел <strong>Структура</strong>.
           </p>
+          <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+            <li>Предметы: управляются в таблице <code className="bg-blue-100 px-1 rounded">subjects</code> через поле <code className="bg-blue-100 px-1 rounded">is_visible</code></li>
+            <li>Классы: управляются в таблице <code className="bg-blue-100 px-1 rounded">topics</code> через поле <code className="bg-blue-100 px-1 rounded">is_visible</code></li>
+            <li>Это позволяет избежать дублирования данных и упрощает управление</li>
+          </ul>
+          <div className="mt-3">
+            <a
+              href="/admin/structure"
+              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Перейти в Структуру →
+            </a>
+          </div>
         </div>
       </div>
     </div>

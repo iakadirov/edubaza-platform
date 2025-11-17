@@ -96,11 +96,11 @@ INSERT INTO site_settings ("settingKey", "settingValue", category, description) 
 ('subscription.trialDays', '7', 'subscription', 'Trial period in days'),
 
 -- Content Settings
+-- Note: availableSubjects and availableGrades removed - now managed via database
+-- through subjects.is_visible and topics table (grade_number + is_visible)
 ('content.maxImageSizeMB', '5', 'content', 'Maximum image upload size in MB'),
 ('content.allowedImageFormats', '["image/jpeg", "image/png", "image/gif", "image/webp"]', 'content', 'Allowed image formats'),
 ('content.maxTasksPerWorksheet', '20', 'content', 'Maximum tasks per worksheet'),
-('content.availableSubjects', '["Matematika", "Ona tili", "Ingliz tili", "Fizika", "Kimyo", "Biologiya", "Tarix", "Geografiya", "Informatika"]', 'content', 'Available subjects'),
-('content.availableGrades', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 'content', 'Available grades'),
 ('content.availableTaskTypes', '["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER", "FILL_BLANKS", "MATCHING", "ESSAY"]', 'content', 'Available task types'),
 ('content.availableDifficulties', '["EASY", "MEDIUM", "HARD"]', 'content', 'Available difficulty levels'),
 

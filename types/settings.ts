@@ -65,10 +65,10 @@ export interface ContentSettings {
   'content.maxImageSizeMB': number;
   'content.allowedImageFormats': string[];
   'content.maxTasksPerWorksheet': number;
-  'content.availableSubjects': string[];
-  'content.availableGrades': number[];
   'content.availableTaskTypes': string[];
   'content.availableDifficulties': string[];
+  // Note: availableSubjects and availableGrades are now managed via database
+  // through subjects.is_visible and topics.is_visible fields
 }
 
 export interface SecuritySettings {
