@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const { spawn } = require('child_process');
 
     const worksheets = await new Promise<any[]>((resolve, reject) => {
-      const sql = `SELECT id, subject, grade, "topicUz", status, "generatedAt", "viewCount",
+      const sql = `SELECT id, subject, grade, "topicUz", config, status, "generatedAt", "viewCount",
                    jsonb_array_length(tasks) as task_count
                    FROM worksheets
                    WHERE "userId" = '${user.id}'
@@ -70,10 +70,11 @@ export async function GET(request: NextRequest) {
               subject: parts[1],
               grade: parseInt(parts[2]),
               topicUz: parts[3],
-              status: parts[4],
-              generatedAt: parts[5],
-              viewCount: parseInt(parts[6] || '0'),
-              taskCount: parseInt(parts[7] || '0'),
+              config: parts[4] ? JSON.parse(parts[4]) : null,
+              status: parts[5],
+              generatedAt: parts[6],
+              viewCount: parseInt(parts[7] || '0'),
+              taskCount: parseInt(parts[8] || '0'),
             };
           });
           resolve(results);

@@ -54,6 +54,26 @@ export function ContentSettingsPanel({ settings, onChange }: ContentSettingsPane
           </p>
         </div>
 
+        {/* Allow Users to Delete Worksheets */}
+        <div>
+          <label className="flex items-center space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings['content.allowUsersToDeleteWorksheets'] ?? true}
+              onChange={(e) => onChange('content.allowUsersToDeleteWorksheets', e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <div>
+              <span className="text-sm font-medium text-gray-700">
+                Разрешить пользователям удалять свои worksheet'ы
+              </span>
+              <p className="text-sm text-gray-500 mt-1">
+                Если отключено, пользователи не смогут удалять созданные worksheet'ы
+              </p>
+            </div>
+          </label>
+        </div>
+
         {/* Info about subjects and grades */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-blue-900 mb-2">

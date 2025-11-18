@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View, Image } from '@react-pdf/renderer';
 import { commonStyles } from '../styles/common';
+import { MathText } from './MathText';
 
 interface TaskContent {
   task_type?: string;
@@ -19,13 +20,14 @@ interface TaskContent {
 // 1. SINGLE_CHOICE - Тест с одним правильным ответом
 export const SingleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
+  const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
-        Faqat bitta to‘g‘ri javobni tanlang
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
+        Faqat bitta to'g'ri javobni tanlang
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.questionImage && (
         <Image src={content.questionImage} style={commonStyles.questionImage} />
@@ -48,13 +50,14 @@ export const SingleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }
 // 2. MULTIPLE_CHOICE - Тест с несколькими правильными ответами
 export const MultipleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
+  const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
-        Bir nechta to‘g‘ri javoblarni belgilang
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
+        Bir nechta to'g'ri javoblarni belgilang
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.questionImage && (
         <Image src={content.questionImage} style={commonStyles.questionImage} />
@@ -77,13 +80,14 @@ export const MultipleChoiceTask: React.FC<{ content: TaskContent }> = ({ content
 // 3. TRUE_FALSE - Верно/Неверно
 export const TrueFalseTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
+  const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
-        To'g'ri yoki noto‘g‘rini tanlang
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
+        To'g'ri yoki noto'g'rini tanlang
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.questionImage && (
         <Image src={content.questionImage} style={commonStyles.questionImage} />
@@ -96,7 +100,7 @@ export const TrueFalseTask: React.FC<{ content: TaskContent }> = ({ content }) =
         </View>
         <View style={commonStyles.optionItem}>
           <View style={commonStyles.checkbox} />
-          <Text style={commonStyles.optionText}>✗ Noto‘g‘ri</Text>
+          <Text style={commonStyles.optionText}>✗ Noto'g'ri</Text>
         </View>
       </View>
     </View>
@@ -106,13 +110,14 @@ export const TrueFalseTask: React.FC<{ content: TaskContent }> = ({ content }) =
 // 4. SHORT_ANSWER - Короткий ответ (1 линия)
 export const ShortAnswerTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
+  const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
         Qisqa javob yozing
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.questionImage && (
         <Image src={content.questionImage} style={commonStyles.questionImage} />
@@ -126,13 +131,14 @@ export const ShortAnswerTask: React.FC<{ content: TaskContent }> = ({ content })
 // 5. FILL_BLANKS - Заполнить пропуски
 export const FillBlanksTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.textWithBlanks || content.questionText || content.statement || '';
+  const questionTextParts = (content as any).textWithBlanksParts || (content as any).questionTextParts || (content as any).statementParts;
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
-        Bo‘sh joylarni to‘ldiring
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
+        Bo'sh joylarni to'ldiring
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.blanks && content.blanks.length > 0 && (
         <View style={[commonStyles.optionsContainer, { gap: 15 }]}>
@@ -155,6 +161,7 @@ export const FillBlanksTask: React.FC<{ content: TaskContent }> = ({ content }) 
 // 6. MATCHING - Сопоставление
 export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
+  const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
 
   // Перемешиваем правую колонку
   const shuffleRight = (pairs: Array<{ left: string; right: string }>) => {
@@ -176,10 +183,10 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
-        Mos keluvchi javoblarni bog‘lang
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
+        Mos keluvchi javoblarni bog'lang
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.pairs && content.pairs.length > 0 && (
         <View style={{ flexDirection: 'row', gap: 30, marginTop: 6 }}>
@@ -258,22 +265,25 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
 // 7. ESSAY - Развернутый ответ (3 линии)
 export const EssayTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
+  const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
 
   return (
     <View>
-      <Text style={{ fontSize: 8, color: '#666666', marginBottom: 4 }}>
+      <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
         Batafsil javob yozing
       </Text>
-      <Text style={commonStyles.questionText}>{questionText}</Text>
+      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
 
       {content.questionImage && (
         <Image src={content.questionImage} style={commonStyles.questionImage} />
       )}
 
       {/* 3 линии для ответа */}
-      <View style={commonStyles.answerLine} />
-      <View style={commonStyles.answerLine} />
-      <View style={commonStyles.answerLine} />
+      <View>
+        <View style={commonStyles.answerLine} />
+        <View style={commonStyles.answerLine} />
+        <View style={commonStyles.answerLine} />
+      </View>
     </View>
   );
 };

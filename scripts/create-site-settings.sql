@@ -101,8 +101,9 @@ INSERT INTO site_settings ("settingKey", "settingValue", category, description) 
 ('content.maxImageSizeMB', '5', 'content', 'Maximum image upload size in MB'),
 ('content.allowedImageFormats', '["image/jpeg", "image/png", "image/gif", "image/webp"]', 'content', 'Allowed image formats'),
 ('content.maxTasksPerWorksheet', '20', 'content', 'Maximum tasks per worksheet'),
-('content.availableTaskTypes', '["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER", "FILL_BLANKS", "MATCHING", "ESSAY"]', 'content', 'Available task types'),
+('content.allowedTaskTypes', '["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER", "FILL_BLANKS", "MATCHING", "ESSAY"]', 'content', 'Available task types'),
 ('content.availableDifficulties', '["EASY", "MEDIUM", "HARD"]', 'content', 'Available difficulty levels'),
+('content.allowUsersToDeleteWorksheets', 'true', 'content', 'Allow users to delete their worksheets'),
 
 -- Security & Privacy
 ('security.jwtExpirationHours', '24', 'security', 'JWT token expiration in hours'),

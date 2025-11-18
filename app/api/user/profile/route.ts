@@ -33,6 +33,68 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Получаем информацию о тарифном плане из базы данных
+    const { spawn } = require('child_process');
+
+    // Получаем информацию о плане
+    const planSql = `SELECT plan_code, name_uz, name_ru, price_uzs, features, limits, show_watermark
+                     FROM subscription_plans
+                     WHERE plan_code = '${user.subscriptionPlan}' AND is_active = TRUE
+                     LIMIT 1`;
+
+    const planInfo = await new Promise<any>((resolve, reject) => {
+      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
+
+      let stdout = '';
+      let stderr = '';
+
+      proc.stdout.on('data', (data: any) => { stdout += data.toString(); });
+      proc.stderr.on('data', (data: any) => { stderr += data.toString(); });
+
+      proc.on('close', (code: number) => {
+        if (code !== 0) {
+          reject(new Error(`SQL execution failed: ${stderr}`));
+        } else {
+          const line = stdout.trim();
+          if (!line) {
+            resolve(null);
+            return;
+          }
+
+          const parts = line.split('|');
+          resolve({
+            planCode: parts[0],
+            nameUz: parts[1],
+            nameRu: parts[2],
+            priceUzs: parseInt(parts[3]),
+            features: JSON.parse(parts[4] || '{}'),
+            limits: JSON.parse(parts[5] || '{}'),
+            showWatermark: parts[6] === 't',
+          });
+        }
+      });
+
+      proc.on('error', (err: Error) => reject(err));
+      proc.stdin.write(planSql);
+      proc.stdin.end();
+    });
+
+    // Подсчитываем использованные ресурсы
+    const worksheetsThisMonth = await new Promise<number>((resolve, reject) => {
+      const countSql = `SELECT COUNT(*) FROM worksheets
+                        WHERE "userId" = '${user.id}'
+                        AND "generatedAt" >= DATE_TRUNC('month', CURRENT_DATE)`;
+
+      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
+
+      let stdout = '';
+      proc.stdout.on('data', (data: any) => { stdout += data.toString(); });
+      proc.on('close', () => resolve(parseInt(stdout.trim()) || 0));
+      proc.on('error', reject);
+      proc.stdin.write(countSql);
+      proc.stdin.end();
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -43,6 +105,10 @@ export async function GET(request: NextRequest) {
         specialty: user.specialty,
         school: user.school,
         subscriptionPlan: user.subscriptionPlan,
+        planInfo: planInfo,
+        usage: {
+          worksheetsThisMonth,
+        },
       },
     });
   } catch (error) {

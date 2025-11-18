@@ -42,9 +42,14 @@ export async function GET(
     const { spawn } = require('child_process');
 
     const worksheet = await new Promise<any>((resolve, reject) => {
+      // Админы могут просматривать все worksheets, обычные пользователи - только свои
+      const userCondition = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+        ? ''
+        : `AND "userId" = '${user.id}'`;
+
       const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount"
                    FROM worksheets
-                   WHERE id = '${worksheetId}' AND "userId" = '${user.id}'
+                   WHERE id = '${worksheetId}' ${userCondition}
                    LIMIT 1;`;
 
       const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);

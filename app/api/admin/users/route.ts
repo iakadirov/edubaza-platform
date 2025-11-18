@@ -11,7 +11,7 @@ interface JWTPayload {
 }
 
 async function findUserByPhone(phone: string) {
-  const sql = `SELECT id, phone, "fullName", role, "createdAt" FROM users WHERE phone = '${phone}' LIMIT 1`;
+  const sql = `SELECT id, phone, name, role, \\"createdAt\\" FROM users WHERE phone = '${phone}' LIMIT 1`;
 
   const { stdout } = await execAsync(
     `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
@@ -21,8 +21,8 @@ async function findUserByPhone(phone: string) {
   const lines = stdout.trim().split('\n').filter(Boolean);
   if (lines.length === 0) return null;
 
-  const [id, userPhone, fullName, role, createdAt] = lines[0].split('|');
-  return { id, phone: userPhone, fullName: fullName || null, role, createdAt };
+  const [id, userPhone, name, role, createdAt] = lines[0].split('|');
+  return { id, phone: userPhone, name: name || null, role, createdAt };
 }
 
 export async function GET(request: NextRequest) {
@@ -36,8 +36,12 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     const payload = jwt.verify(token, JWT_SECRET) as JWTPayload;
 
+    console.log('Finding user by phone:', payload.phone);
+
     // Check if user is admin
     const user = await findUserByPhone(payload.phone);
+    console.log('Found user:', user);
+
     if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json({ error: 'Доступ запрещен' }, { status: 403 });
     }
@@ -47,11 +51,11 @@ export async function GET(request: NextRequest) {
       SELECT
         id,
         phone,
-        "fullName",
+        name,
         role,
-        "createdAt"
+        \\"createdAt\\"
       FROM users
-      ORDER BY "createdAt" DESC
+      ORDER BY \\"createdAt\\" DESC
     `;
 
     const { stdout } = await execAsync(
@@ -61,11 +65,11 @@ export async function GET(request: NextRequest) {
 
     const lines = stdout.trim().split('\n').filter(Boolean);
     const users = lines.map(line => {
-      const [id, phone, fullName, role, createdAt] = line.split('|');
+      const [id, phone, name, role, createdAt] = line.split('|');
       return {
         id,
         phone,
-        fullName: fullName || null,
+        name: name || null,
         role,
         createdAt,
       };

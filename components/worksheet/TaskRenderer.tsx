@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { MathText } from '@/components/MathText';
 
 interface TaskContent {
   task_type?: string;
@@ -35,12 +36,10 @@ const SingleChoiceTask: React.FC<{ content: TaskContent; interactive?: boolean }
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         Faqat bitta to'g'ri javobni tanlang
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.questionImage && (
         <div className="mb-[6px]">
@@ -65,8 +64,9 @@ const SingleChoiceTask: React.FC<{ content: TaskContent; interactive?: boolean }
               }`}
             />
             <span className="text-sm text-black">
-              {String.fromCharCode(65 + index)}. {option}
+              {String.fromCharCode(65 + index)}.{' '}
             </span>
+            <MathText text={option} className="text-sm text-black inline" />
           </div>
         ))}
       </div>
@@ -91,12 +91,10 @@ const MultipleChoiceTask: React.FC<{ content: TaskContent; interactive?: boolean
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         Bir nechta to'g'ri javoblarni belgilang
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.questionImage && (
         <div className="mb-[6px]">
@@ -121,8 +119,9 @@ const MultipleChoiceTask: React.FC<{ content: TaskContent; interactive?: boolean
               }`}
             />
             <span className="text-sm text-black">
-              {String.fromCharCode(65 + index)}. {option}
+              {String.fromCharCode(65 + index)}.{' '}
             </span>
+            <MathText text={option} className="text-sm text-black inline" />
           </div>
         ))}
       </div>
@@ -137,12 +136,10 @@ const TrueFalseTask: React.FC<{ content: TaskContent; interactive?: boolean }> =
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         To'g'ri yoki noto'g'rini tanlang
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.questionImage && (
         <div className="mb-[6px]">
@@ -189,12 +186,10 @@ const ShortAnswerTask: React.FC<{ content: TaskContent; interactive?: boolean }>
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         Qisqa javob yozing
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.questionImage && (
         <div className="mb-[6px]">
@@ -236,12 +231,10 @@ const FillBlanksTask: React.FC<{ content: TaskContent; interactive?: boolean }> 
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         Bo'sh joylarni to'ldiring
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.blanks && content.blanks.length > 0 && (
         <div className="flex flex-wrap gap-4 mt-3">
@@ -289,12 +282,10 @@ const MatchingTask: React.FC<{ content: TaskContent; interactive?: boolean }> = 
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         Mos keluvchi javoblarni bog'lang
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.pairs && content.pairs.length > 0 && (
         <div className="flex gap-8 mt-3">
@@ -303,9 +294,8 @@ const MatchingTask: React.FC<{ content: TaskContent; interactive?: boolean }> = 
             {content.pairs.map((pair, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className="flex-1 border-[0.5px] border-[#E9E9E9] rounded-[3px] py-2 px-3">
-                  <span className="text-sm text-black">
-                    {index + 1}. {pair.left}
-                  </span>
+                  <span className="text-sm text-black">{index + 1}. </span>
+                  <MathText text={pair.left} className="text-sm text-black inline" />
                 </div>
                 <div className="w-1.5 h-1.5 rounded-full bg-[#666666]" />
               </div>
@@ -321,9 +311,8 @@ const MatchingTask: React.FC<{ content: TaskContent; interactive?: boolean }> = 
               <div key={index} className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#666666]" />
                 <div className="flex-1 border-[0.5px] border-[#E9E9E9] rounded-[3px] py-2 px-3">
-                  <span className="text-sm text-black">
-                    {item.letter}. {item.text}
-                  </span>
+                  <span className="text-sm text-black">{item.letter}. </span>
+                  <MathText text={item.text} className="text-sm text-black inline" />
                 </div>
               </div>
             ))}
@@ -341,12 +330,10 @@ const EssayTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ 
 
   return (
     <div>
-      <p className="text-sm text-[#666666] mb-2">
+      <p className="text-[15px] text-[#666666] mb-4">
         Batafsil javob yozing
       </p>
-      <p className="text-base text-black mb-3">
-        {questionText}
-      </p>
+      <MathText text={questionText} className="text-base text-black mb-3" />
 
       {content.questionImage && (
         <div className="mb-[6px]">

@@ -5,7 +5,9 @@ export const commonStyles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 10,
+    paddingTop: 25,
+    paddingBottom: 25,
+    paddingHorizontal: 15,
     fontFamily: 'Onest',
   },
 
@@ -29,26 +31,22 @@ export const commonStyles = StyleSheet.create({
   },
 
   // Информация об ученике
-  studentInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 12,
-    marginTop: 8,
-  },
-
   studentInfoItem: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
 
   studentInfoLabel: {
+    fontSize: 10,
     fontWeight: 600,
-    marginRight: 4,
+    marginRight: 6,
   },
 
   studentInfoValue: {
-    borderBottom: 1,
+    borderBottom: 0.5,
     borderColor: '#000000',
-    width: 150,
+    width: 180,
+    height: 12,
   },
 
   // Карточка задачи
@@ -58,9 +56,9 @@ export const commonStyles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingBottom: 2,
     borderWidth: 0.5,
-    borderColor: '#E9E9E9',
+    borderColor: '#E2E2E2',
     borderRadius: 6,
-    marginBottom: 5,
+    marginBottom: 8,
     backgroundColor: 'transparent',
   },
 
@@ -98,7 +96,7 @@ export const commonStyles = StyleSheet.create({
 
   // Изображение
   questionImage: {
-    height: 150,
+    height: 120,
     objectFit: 'contain',
     borderRadius: 5.75,
     marginBottom: 6,
@@ -145,7 +143,7 @@ export const commonStyles = StyleSheet.create({
   // Footer
   footer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 30,
     left: 0,
     right: 0,
     textAlign: 'center',

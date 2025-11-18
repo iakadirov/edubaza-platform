@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { generateWorksheetTitle } from '@/lib/worksheet-title';
 
 interface User {
   id: string;
@@ -18,6 +19,10 @@ interface Worksheet {
   subject: string;
   grade: number;
   topicUz: string;
+  config?: {
+    quarter?: number;
+    week?: number;
+  };
   status: string;
   generatedAt: string;
   viewCount: number;
@@ -238,7 +243,13 @@ export default function DashboardPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-lg text-gray-800">
-                          {worksheet.topicUz}
+                          {generateWorksheetTitle(
+                            worksheet.topicUz,
+                            worksheet.subject,
+                            worksheet.grade,
+                            worksheet.config?.quarter,
+                            worksheet.config?.week
+                          )}
                         </h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           worksheet.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :

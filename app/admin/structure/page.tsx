@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
 
 interface Grade {
   number: number;
@@ -394,33 +395,45 @@ export default function AdminStructurePage() {
           <div className="flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab('subjects')}
-              className={`px-6 py-4 font-semibold transition-colors ${
+              className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${
                 activeTab === 'subjects'
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              📚 Fanlar
+              <Icon
+                icon={activeTab === 'subjects' ? 'solar:book-2-bold-duotone' : 'solar:book-2-line-duotone'}
+                className="text-xl"
+              />
+              <span>Fanlar</span>
             </button>
             <button
               onClick={() => setActiveTab('topics')}
-              className={`px-6 py-4 font-semibold transition-colors ${
+              className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${
                 activeTab === 'topics'
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              📖 Mavzular
+              <Icon
+                icon={activeTab === 'topics' ? 'solar:notebook-bold-duotone' : 'solar:notebook-line-duotone'}
+                className="text-xl"
+              />
+              <span>Mavzular</span>
             </button>
             <button
               onClick={() => setActiveTab('grades')}
-              className={`px-6 py-4 font-semibold transition-colors ${
+              className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${
                 activeTab === 'grades'
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              🎓 Sinflar
+              <Icon
+                icon={activeTab === 'grades' ? 'solar:diploma-bold-duotone' : 'solar:diploma-line-duotone'}
+                className="text-xl"
+              />
+              <span>Sinflar</span>
             </button>
           </div>
         </div>
@@ -463,15 +476,19 @@ export default function AdminStructurePage() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => openSubjectModal(subject)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="group p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Редактировать"
                             >
-                              ✏️
+                              <Icon icon="solar:pen-line-duotone" className="text-lg group-hover:hidden" />
+                              <Icon icon="solar:pen-bold-duotone" className="text-lg hidden group-hover:block" />
                             </button>
                             <button
                               onClick={() => deleteSubject(subject.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
+                              className="group p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              title="Удалить"
                             >
-                              🗑️
+                              <Icon icon="solar:trash-bin-trash-line-duotone" className="text-lg group-hover:hidden" />
+                              <Icon icon="solar:trash-bin-trash-bold-duotone" className="text-lg hidden group-hover:block" />
                             </button>
                           </div>
                         </div>
@@ -523,15 +540,19 @@ export default function AdminStructurePage() {
                             <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() => openTopicModal(topic)}
-                                className="text-blue-600 hover:text-blue-800 mr-3"
+                                className="group inline-flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors mr-2"
                               >
-                                ✏️ Tahrirlash
+                                <Icon icon="solar:pen-line-duotone" className="text-base group-hover:hidden" />
+                                <Icon icon="solar:pen-bold-duotone" className="text-base hidden group-hover:block" />
+                                <span className="text-sm">Tahrirlash</span>
                               </button>
                               <button
                                 onClick={() => deleteTopic(topic.id)}
-                                className="text-red-600 hover:text-red-800"
+                                className="group inline-flex items-center gap-1 px-2 py-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                               >
-                                🗑️ O'chirish
+                                <Icon icon="solar:trash-bin-trash-line-duotone" className="text-base group-hover:hidden" />
+                                <Icon icon="solar:trash-bin-trash-bold-duotone" className="text-base hidden group-hover:block" />
+                                <span className="text-sm">O'chirish</span>
                               </button>
                             </td>
                           </tr>
@@ -577,8 +598,10 @@ export default function AdminStructurePage() {
                             {grade.isActive ? 'Faol' : 'Nofaol'}
                           </span>
                         </div>
-                        <div className="mt-2 text-xs text-blue-600">
-                          ✏️ Tahrirlash
+                        <div className="group mt-2 text-xs text-blue-600 flex items-center gap-1">
+                          <Icon icon="solar:pen-line-duotone" className="text-sm group-hover:hidden" />
+                          <Icon icon="solar:pen-bold-duotone" className="text-sm hidden group-hover:block" />
+                          <span>Tahrirlash</span>
                         </div>
                       </div>
                     ))}

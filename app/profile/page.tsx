@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
 
 interface UserProfile {
   id: string;
@@ -12,6 +13,18 @@ interface UserProfile {
   specialty: string | null;
   school: string | null;
   subscriptionPlan: string;
+  planInfo?: {
+    planCode: string;
+    nameUz: string;
+    nameRu: string;
+    priceUzs: number;
+    features: Record<string, any>;
+    limits: Record<string, any>;
+    showWatermark: boolean;
+  };
+  usage?: {
+    worksheetsThisMonth: number;
+  };
 }
 
 const specialtyLabels: Record<string, string> = {
@@ -152,9 +165,11 @@ export default function ProfilePage() {
         <div className="mb-6">
           <Link
             href="/dashboard"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+            className="group inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
           >
-            ← Boshqaruv paneliga qaytish
+            <Icon icon="solar:arrow-left-line-duotone" className="text-lg group-hover:hidden" />
+            <Icon icon="solar:arrow-left-bold-duotone" className="text-lg hidden group-hover:block" />
+            <span>Boshqaruv paneliga qaytish</span>
           </Link>
           <h1 className="text-3xl font-bold text-gray-800">Mening profilim</h1>
         </div>
@@ -236,16 +251,6 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Subscription Plan (readonly) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tarif rejasi
-              </label>
-              <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                <span className="font-semibold text-blue-800">{profile.subscriptionPlan}</span>
-              </div>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -256,6 +261,129 @@ export default function ProfilePage() {
             </button>
           </form>
         </div>
+
+        {/* Subscription Plan Info */}
+        {profile.planInfo && (
+          <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Obuna rejasi</h2>
+
+            <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+              <div>
+                <h3 className="text-xl font-bold text-blue-800">{profile.planInfo.nameUz}</h3>
+                <p className="text-sm text-gray-600">{profile.planInfo.nameRu}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-blue-600">
+                  {profile.planInfo.priceUzs.toLocaleString()} so'm
+                </p>
+                <p className="text-sm text-gray-600">oyiga</p>
+              </div>
+            </div>
+
+            {/* Limits & Usage */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                <Icon icon="solar:chart-square-bold-duotone" className="text-xl text-blue-600" />
+                Limitlar va foydalanish
+              </h4>
+
+              {/* Worksheets limit */}
+              {profile.planInfo.limits.worksheetsPerMonth !== undefined && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Icon icon="solar:document-text-bold-duotone" className="text-lg text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Ishchi varaqlar (oylik)</span>
+                  </div>
+                  <div className="text-right">
+                    {profile.planInfo.limits.worksheetsPerMonth === -1 ? (
+                      <span className="text-sm font-bold text-green-600">Cheksiz</span>
+                    ) : (
+                      <>
+                        <span className="text-sm font-bold text-blue-600">
+                          {profile.usage?.worksheetsThisMonth || 0} / {profile.planInfo.limits.worksheetsPerMonth}
+                        </span>
+                        <div className="w-32 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full transition-all"
+                            style={{
+                              width: `${Math.min(
+                                ((profile.usage?.worksheetsThisMonth || 0) / profile.planInfo.limits.worksheetsPerMonth) * 100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Saved worksheets limit */}
+              {profile.planInfo.limits.savedWorksheets !== undefined && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Icon icon="solar:folder-with-files-bold-duotone" className="text-lg text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Saqlangan varaqlar</span>
+                  </div>
+                  <div className="text-right">
+                    {profile.planInfo.limits.savedWorksheets === -1 ? (
+                      <span className="text-sm font-bold text-green-600">Cheksiz</span>
+                    ) : (
+                      <span className="text-sm font-bold text-gray-700">{profile.planInfo.limits.savedWorksheets} tagacha</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Watermark */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:waterdrops-bold-duotone" className="text-lg text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Suv belgisi</span>
+                </div>
+                <div className="text-right">
+                  {profile.planInfo.showWatermark ? (
+                    <span className="text-sm text-orange-600">Mavjud</span>
+                  ) : (
+                    <span className="text-sm font-bold text-green-600">Yo'q</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Features */}
+            {profile.planInfo.features && Object.keys(profile.planInfo.features).length > 0 && (
+              <div className="mt-6">
+                <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Icon icon="solar:star-bold-duotone" className="text-xl text-yellow-500" />
+                  Imkoniyatlar
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(profile.planInfo.features).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        {value === true ? (
+                          <Icon icon="solar:check-circle-bold-duotone" className="text-xl text-green-500" />
+                        ) : (
+                          <Icon icon="solar:close-circle-bold-duotone" className="text-xl text-gray-400" />
+                        )}
+                        <span className="text-sm font-medium text-gray-700">{key}</span>
+                      </div>
+                      <div className="text-right">
+                        {value === true ? (
+                          <span className="text-sm font-bold text-green-600">Faol</span>
+                        ) : (
+                          <span className="text-sm text-gray-500">Faol emas</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

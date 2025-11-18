@@ -113,7 +113,11 @@ export default function LoginPage() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    // Удаляем все нецифровые символы
+                    const digitsOnly = e.target.value.replace(/\D/g, '');
+                    setPhone(digitsOnly);
+                  }}
                   placeholder="90 123 45 67"
                   className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                   required
@@ -130,7 +134,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || phone.length !== 9}
+              disabled={loading || phone.length < 9}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
             >
               {loading ? 'Yuborilmoqda...' : 'Kod olish'}

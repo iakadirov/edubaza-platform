@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
 import { TaskRenderer } from '@/components/worksheet/TaskRenderer';
+import { generateWorksheetTitle } from '@/lib/worksheet-title';
 
 interface TaskContent {
   task_type?: string;
@@ -38,6 +40,8 @@ interface Worksheet {
     taskCount: number;
     difficulty: string;
     taskTypes: string[];
+    quarter?: number;
+    week?: number;
   };
   tasks: Task[];
   status: string;
@@ -101,11 +105,22 @@ export default function WorksheetViewPage() {
         throw new Error('Failed to generate PDF');
       }
 
+      // Extract filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `worksheet_${params.id}.pdf`; // fallback
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `worksheet_${params.id}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -138,27 +153,32 @@ export default function WorksheetViewPage() {
         <header className="bg-white border-b border-gray-200 print:hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="text-blue-600 hover:text-blue-700">
-              ← Boshqaruv paneliga qaytish
+            <Link href="/dashboard" className="group flex items-center gap-2 text-blue-600 hover:text-blue-700">
+              <Icon icon="solar:arrow-left-line-duotone" className="text-lg group-hover:hidden" />
+              <Icon icon="solar:arrow-left-bold-duotone" className="text-lg hidden group-hover:block" />
+              <span>Boshqaruv paneliga qaytish</span>
             </Link>
             <div className="flex gap-3">
               <button
                 onClick={() => setInteractive(!interactive)}
-                className={`${interactive ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white px-4 py-2 rounded-lg transition-colors`}
+                className={`flex items-center gap-2 ${interactive ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white px-4 py-2 rounded-lg transition-colors`}
               >
-                {interactive ? '📝 Interfaol rejim' : '📄 Ko\'rish rejimi'}
+                <Icon icon={interactive ? 'solar:pen-new-square-bold-duotone' : 'solar:document-bold-duotone'} className="text-xl" />
+                <span>{interactive ? 'Interfaol rejim' : 'Ko\'rish rejimi'}</span>
               </button>
               <button
                 onClick={handleDownloadPDF}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                ⬇️ PDF yuklash
+                <Icon icon="solar:download-bold-duotone" className="text-xl" />
+                <span>PDF yuklash</span>
               </button>
               <button
                 onClick={handlePrint}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                🖨️ Chop etish
+                <Icon icon="solar:printer-bold-duotone" className="text-xl" />
+                <span>Chop etish</span>
               </button>
             </div>
           </div>
@@ -170,11 +190,14 @@ export default function WorksheetViewPage() {
         {/* Worksheet Header */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-6 border-t-4 border-blue-600">
           <div className="text-center mb-6">
-            <div className="inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-semibold mb-3">
-              {worksheet.subject} • {worksheet.grade}-sinf
-            </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-3">
-              {worksheet.topicUz}
+              {generateWorksheetTitle(
+                worksheet.topicUz,
+                worksheet.subject,
+                worksheet.grade,
+                worksheet.config?.quarter,
+                worksheet.config?.week
+              )}
             </h1>
             <div className="flex items-center justify-center gap-4 text-gray-600 text-sm">
               <span className="inline-flex items-center gap-1">

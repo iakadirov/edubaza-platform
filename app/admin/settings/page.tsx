@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Icon } from '@iconify/react';
 import { SiteSettings, SETTING_CATEGORIES, SiteSettingDB } from '@/types/settings';
 
 // Import setting panels
@@ -134,41 +135,41 @@ export default function AdminSettingsPage() {
     {
       title: 'Основные',
       items: [
-        { key: 'general', label: 'Общие настройки', icon: '⚙️' },
-        { key: 'content', label: 'Контент', icon: '📝' },
+        { key: 'general', label: 'Общие настройки', icon: 'solar:settings-line-duotone', activeIcon: 'solar:settings-bold-duotone' },
+        { key: 'content', label: 'Контент', icon: 'solar:document-text-line-duotone', activeIcon: 'solar:document-text-bold-duotone' },
       ],
     },
     {
       title: 'Интеграции',
       items: [
-        { key: 'ai', label: 'AI сервисы', icon: '🤖' },
-        { key: 'sms', label: 'SMS (Eskiz)', icon: '💬' },
-        { key: 'analytics', label: 'Аналитика', icon: '📊' },
+        { key: 'ai', label: 'AI сервисы', icon: 'solar:atom-line-duotone', activeIcon: 'solar:atom-bold-duotone' },
+        { key: 'sms', label: 'SMS (Eskiz)', icon: 'solar:chat-round-line-line-duotone', activeIcon: 'solar:chat-round-line-bold-duotone' },
+        { key: 'analytics', label: 'Аналитика', icon: 'solar:chart-line-duotone', activeIcon: 'solar:chart-bold-duotone' },
       ],
     },
     {
       title: 'PDF и документы',
       items: [
-        { key: 'pdf', label: 'PDF настройки', icon: '📄' },
+        { key: 'pdf', label: 'PDF настройки', icon: 'solar:documents-line-duotone', activeIcon: 'solar:documents-bold-duotone' },
       ],
     },
     {
       title: 'Безопасность',
       items: [
-        { key: 'security', label: 'Безопасность', icon: '🔒' },
-        { key: 'backup', label: 'Резервные копии', icon: '💾' },
+        { key: 'security', label: 'Безопасность', icon: 'solar:lock-keyhole-line-duotone', activeIcon: 'solar:lock-keyhole-bold-duotone' },
+        { key: 'backup', label: 'Резервные копии', icon: 'solar:database-line-duotone', activeIcon: 'solar:database-bold-duotone' },
       ],
     },
     {
       title: 'Бизнес',
       items: [
-        { key: 'subscription', label: 'Подписки и тарифы', icon: '💳' },
+        { key: 'subscription', label: 'Подписки и тарифы', icon: 'solar:card-line-duotone', activeIcon: 'solar:card-bold-duotone' },
       ],
     },
     {
       title: 'Система',
       items: [
-        { key: 'maintenance', label: 'Обслуживание', icon: '🔧' },
+        { key: 'maintenance', label: 'Обслуживание', icon: 'solar:settings-minimalistic-line-duotone', activeIcon: 'solar:settings-minimalistic-bold-duotone' },
       ],
     },
   ];
@@ -199,7 +200,10 @@ export default function AdminSettingsPage() {
                         }
                       `}
                     >
-                      <span>{item.icon}</span>
+                      <Icon
+                        icon={activeTab === item.key ? item.activeIcon : item.icon}
+                        className="text-lg"
+                      />
                       <span>{item.label}</span>
                     </button>
                   ))}

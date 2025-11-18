@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
 import {
   PresentationFormComponent,
   LessonPlanFormComponent,
@@ -176,6 +177,7 @@ export default function AdminContentLibraryPage() {
   const [newContentType, setNewContentType] = useState<ContentType | null>(null);
   const [taskSubType, setTaskSubType] = useState<TaskSubType | null>(null);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
   // Task Form
   const [taskForm, setTaskForm] = useState<TaskForm>({
@@ -295,20 +297,20 @@ export default function AdminContentLibraryPage() {
   const getTypeIcon = (type: ContentType | TaskSubType | string): string => {
     const icons: Record<string, string> = {
       // Основные типы контента
-      'ALL': '📚',
-      'PRESENTATION': '📊',
-      'LESSON_PLAN': '📋',
-      'TASK': '✏️',
+      'ALL': 'solar:book-2-line-duotone',
+      'PRESENTATION': 'solar:presentation-graph-line-duotone',
+      'LESSON_PLAN': 'solar:clipboard-list-line-duotone',
+      'TASK': 'solar:pen-new-square-line-duotone',
       // Подтипы задач
-      'SINGLE_CHOICE': '☑️',
-      'MULTIPLE_CHOICE': '✅',
-      'TRUE_FALSE': '✓✗',
-      'SHORT_ANSWER': '✍️',
-      'FILL_BLANKS': '___',
-      'MATCHING': '🔗',
-      'ESSAY': '📝',
+      'SINGLE_CHOICE': 'solar:check-circle-line-duotone',
+      'MULTIPLE_CHOICE': 'solar:checklist-line-duotone',
+      'TRUE_FALSE': 'solar:verified-check-line-duotone',
+      'SHORT_ANSWER': 'solar:pen-line-duotone',
+      'FILL_BLANKS': 'solar:text-square-line-duotone',
+      'MATCHING': 'solar:link-line-duotone',
+      'ESSAY': 'solar:document-text-line-duotone',
     };
-    return icons[type] || '📄';
+    return icons[type] || 'solar:document-line-duotone';
   };
 
   const getTypeName = (type: ContentType | TaskSubType | string): string => {
@@ -483,9 +485,11 @@ export default function AdminContentLibraryPage() {
           </div>
           <Link
             href="/admin"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
+            className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
-            ← Admin paneliga qaytish
+            <Icon icon="solar:arrow-left-line-duotone" className="text-lg group-hover:hidden" />
+            <Icon icon="solar:arrow-left-bold-duotone" className="text-lg hidden group-hover:block" />
+            <span>Admin paneliga qaytish</span>
           </Link>
         </div>
 
@@ -559,33 +563,58 @@ export default function AdminContentLibraryPage() {
               </select>
             </div>
 
-            {/* Type Filter */}
-            <div>
+            {/* Type Filter - Custom Dropdown */}
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tur
               </label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value as ContentType)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              <button
+                type="button"
+                onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                onBlur={() => setTimeout(() => setIsTypeDropdownOpen(false), 200)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-left flex items-center justify-between"
               >
-                {(['ALL', 'PRESENTATION', 'LESSON_PLAN', 'TASK'] as ContentType[]).map(type => (
-                  <option key={type} value={type}>
-                    {getTypeIcon(type)} {getTypeName(type)}
-                  </option>
-                ))}
-              </select>
+                <div className="flex items-center gap-2">
+                  <Icon icon={getTypeIcon(selectedType)} className="text-xl text-blue-500" />
+                  <span className="text-gray-900 font-medium">{getTypeName(selectedType)}</span>
+                </div>
+                <Icon
+                  icon={isTypeDropdownOpen ? "solar:alt-arrow-up-line-duotone" : "solar:alt-arrow-down-line-duotone"}
+                  className="text-lg text-gray-400"
+                />
+              </button>
+
+              {isTypeDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {(['ALL', 'PRESENTATION', 'LESSON_PLAN', 'TASK'] as ContentType[]).map(type => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setSelectedType(type);
+                        setIsTypeDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-blue-50 transition-colors ${
+                        selectedType === type ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-900'
+                      }`}
+                    >
+                      <Icon icon={getTypeIcon(type)} className="text-xl text-blue-500" />
+                      <span className="font-medium">{getTypeName(type)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Add Material Button */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-gray-200">
             <button
               onClick={() => setShowAddModal(true)}
-              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2"
+              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all hover:scale-105"
             >
-              <span className="text-xl">+</span>
-              Material qoʻshish
+              <Icon icon="solar:add-square-bold-duotone" className="text-2xl" />
+              <span>Material qoʻshish</span>
             </button>
           </div>
         </div>
@@ -635,7 +664,7 @@ export default function AdminContentLibraryPage() {
                   {contentItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-2xl">{getTypeIcon(item.type.code)}</span>
+                        <Icon icon={getTypeIcon(item.type.code)} className="text-2xl text-blue-500" />
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">{item.titleUz}</div>
@@ -654,15 +683,19 @@ export default function AdminContentLibraryPage() {
                         <div className="flex gap-2 justify-end">
                           <button
                             onClick={() => openEditModal(item)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="group flex items-center gap-1 text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
                           >
-                            ✏️ Tahrirlash
+                            <Icon icon="solar:pen-line-duotone" className="text-lg group-hover:hidden" />
+                            <Icon icon="solar:pen-bold-duotone" className="text-lg hidden group-hover:block" />
+                            <span>Tahrirlash</span>
                           </button>
                           <button
                             onClick={() => deleteContentItem(item.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="group flex items-center gap-1 text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
                           >
-                            🗑️ Oʻchirish
+                            <Icon icon="solar:trash-bin-trash-line-duotone" className="text-lg group-hover:hidden" />
+                            <Icon icon="solar:trash-bin-trash-bold-duotone" className="text-lg hidden group-hover:block" />
+                            <span>Oʻchirish</span>
                           </button>
                         </div>
                       </td>
@@ -693,7 +726,9 @@ export default function AdminContentLibraryPage() {
                         onClick={() => openAddMaterialModal(type)}
                         className="p-8 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
                       >
-                        <div className="text-5xl mb-3">{getTypeIcon(type)}</div>
+                        <div className="mb-3">
+                          <Icon icon={getTypeIcon(type)} className="text-5xl text-blue-500 mx-auto" />
+                        </div>
                         <div className="font-bold text-lg">{getTypeName(type)}</div>
                       </button>
                     ))}
@@ -706,9 +741,11 @@ export default function AdminContentLibraryPage() {
                 <div>
                   <button
                     onClick={() => setNewContentType(null)}
-                    className="mb-4 text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                    className="group mb-4 text-blue-600 hover:text-blue-800 flex items-center gap-2 transition-colors"
                   >
-                    ← Orqaga
+                    <Icon icon="solar:arrow-left-line-duotone" className="text-lg group-hover:hidden" />
+                    <Icon icon="solar:arrow-left-bold-duotone" className="text-lg hidden group-hover:block" />
+                    <span>Orqaga</span>
                   </button>
                   <p className="text-gray-600 mb-4">Topshiriq turini tanlang:</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -718,7 +755,9 @@ export default function AdminContentLibraryPage() {
                         onClick={() => setTaskSubType(subType)}
                         className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
                       >
-                        <div className="text-3xl mb-2">{getTypeIcon(subType)}</div>
+                        <div className="mb-2">
+                          <Icon icon={getTypeIcon(subType)} className="text-3xl text-blue-500 mx-auto" />
+                        </div>
                         <div className="font-medium text-sm">{getTypeName(subType)}</div>
                       </button>
                     ))}
@@ -730,9 +769,10 @@ export default function AdminContentLibraryPage() {
               {((newContentType === 'PRESENTATION') || (newContentType === 'LESSON_PLAN') || (newContentType === 'TASK' && taskSubType)) && (
                 <div>
                   <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                    <p className="text-blue-800">
+                    <p className="text-blue-800 flex items-center gap-2">
+                      <Icon icon={getTypeIcon(taskSubType || newContentType)} className="text-2xl" />
                       <strong>
-                        {getTypeIcon(taskSubType || newContentType)} {getTypeName(taskSubType || newContentType)}
+                        {getTypeName(taskSubType || newContentType)}
                       </strong> qoʻshish
                     </p>
                   </div>

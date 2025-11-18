@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 interface User {
   id: string;
   phone: string;
-  fullName: string | null;
+  name: string | null;
   role: string;
   createdAt: string;
   subscriptionPlan?: string;
@@ -58,31 +58,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users/${userId}/role`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update role');
-      }
-
-      // Refresh users list
-      fetchUsers();
-      alert('Роль успешно обновлена');
-    } catch (error) {
-      console.error('Error updating role:', error);
-      alert('Ошибка при обновлении роли');
-    }
-  };
-
   if (loading) {
     return (
       <div className="p-8">
@@ -95,7 +70,7 @@ export default function AdminUsersPage() {
     const matchesFilter = filter === 'ALL' || user.role === filter;
     const matchesSearch = !searchQuery ||
       user.phone.includes(searchQuery) ||
-      (user.fullName && user.fullName.toLowerCase().includes(searchQuery.toLowerCase()));
+      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesFilter && matchesSearch;
   });
 
@@ -218,7 +193,7 @@ export default function AdminUsersPage() {
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
-                          {user.fullName || 'Без имени'}
+                          {user.name || 'Без имени'}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 font-mono">
@@ -240,20 +215,12 @@ export default function AdminUsersPage() {
                         {new Date(user.createdAt).toLocaleDateString('ru-RU')}
                       </td>
                       <td className="px-6 py-4">
-                        <select
-                          value={user.role}
-                          onChange={(e) => {
-                            if (confirm(`Изменить роль пользователя ${user.fullName || user.phone}?`)) {
-                              handleRoleChange(user.id, e.target.value);
-                            }
-                          }}
-                          className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        <button
+                          onClick={() => router.push(`/admin/users/${user.id}`)}
+                          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                          <option value="STUDENT">Ученик</option>
-                          <option value="TEACHER">Учитель</option>
-                          <option value="ADMIN">Админ</option>
-                          <option value="SUPER_ADMIN">Супер-админ</option>
-                        </select>
+                          Открыть профиль
+                        </button>
                       </td>
                     </tr>
                   ))

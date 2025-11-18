@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
 import TopicAutocomplete from '../admin/content/TopicAutocomplete';
 
 interface Grade {
@@ -40,14 +41,14 @@ const difficulties = [
 ];
 
 const taskTypes = [
-  { value: 'MIX', label: '🎲 Aralash (barcha turlar)' },
-  { value: 'SINGLE_CHOICE', label: '☑️ Bir tanlov (bitta toʻgʻri javob)' },
-  { value: 'MULTIPLE_CHOICE', label: '✅ Koʻp tanlov (bir nechta toʻgʻri javob)' },
-  { value: 'TRUE_FALSE', label: '✓✗ Toʻgʻri/Notoʻgʻri' },
-  { value: 'SHORT_ANSWER', label: '✍️ Qisqa javob' },
-  { value: 'FILL_BLANKS', label: '___ Boʻshliqlarni toʻldirish' },
-  { value: 'MATCHING', label: '🔗 Moslashtirish' },
-  { value: 'ESSAY', label: '📝 Kengaytirilgan javob' },
+  { value: 'MIX', label: 'Aralash (barcha turlar)', icon: 'solar:widget-4-line-duotone' },
+  { value: 'SINGLE_CHOICE', label: 'Bir tanlov (bitta toʻgʻri javob)', icon: 'solar:check-circle-line-duotone' },
+  { value: 'MULTIPLE_CHOICE', label: 'Koʻp tanlov (bir nechta toʻgʻri javob)', icon: 'solar:checklist-line-duotone' },
+  { value: 'TRUE_FALSE', label: 'Toʻgʻri/Notoʻgʻri', icon: 'solar:verified-check-line-duotone' },
+  { value: 'SHORT_ANSWER', label: 'Qisqa javob', icon: 'solar:pen-new-square-line-duotone' },
+  { value: 'FILL_BLANKS', label: 'Boʻshliqlarni toʻldirish', icon: 'solar:text-square-line-duotone' },
+  { value: 'MATCHING', label: 'Moslashtirish', icon: 'solar:link-line-duotone' },
+  { value: 'ESSAY', label: 'Kengaytirilgan javob', icon: 'solar:document-text-line-duotone' },
 ];
 
 export default function GenerateV2Page() {
@@ -483,13 +484,17 @@ export default function GenerateV2Page() {
               {taskTypes.map((type) => (
                 <label
                   key={type.value}
-                  className="flex items-center gap-2 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-2 border-gray-100"
+                  className="group flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-2 border-gray-100 transition-all"
                 >
                   <input
                     type="checkbox"
                     checked={selectedTaskTypes.includes(type.value)}
                     onChange={() => handleTaskTypeToggle(type.value)}
                     className="w-4 h-4 text-blue-600"
+                  />
+                  <Icon
+                    icon={type.icon}
+                    className="text-xl text-blue-500 group-hover:scale-110 transition-transform"
                   />
                   <span className="text-gray-700">{type.label}</span>
                 </label>
@@ -514,9 +519,19 @@ export default function GenerateV2Page() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
           >
-            {loading ? 'Yaratilmoqda...' : '✨ Topshiriq yaratish'}
+            {loading ? (
+              <>
+                <Icon icon="solar:refresh-circle-line-duotone" className="text-2xl animate-spin" />
+                <span>Yaratilmoqda...</span>
+              </>
+            ) : (
+              <>
+                <Icon icon="solar:add-square-bold-duotone" className="text-2xl" />
+                <span>Topshiriq yaratish</span>
+              </>
+            )}
           </button>
         </form>
       </div>

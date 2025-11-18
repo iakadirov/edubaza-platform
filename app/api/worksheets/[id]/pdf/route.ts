@@ -4,6 +4,8 @@ import { renderToBuffer, Font } from '@react-pdf/renderer';
 import { WorksheetPDF } from '@/lib/pdf/templates/WorksheetPDF';
 import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
+import { parseTextWithMath } from '@/lib/math-to-png';
+import { generateWorksheetTitle, generatePdfFileName } from '@/lib/worksheet-title';
 import path from 'path';
 
 let fontsRegistered = false;
@@ -77,9 +79,14 @@ export async function GET(
     const { spawn } = require('child_process');
 
     const worksheet = await new Promise<any>((resolve, reject) => {
+      // Админы могут скачивать PDF всех worksheets, обычные пользователи - только свои
+      const userCondition = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+        ? ''
+        : `AND "userId" = '${user.id}'`;
+
       const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount"
                    FROM worksheets
-                   WHERE id = '${worksheetId}' AND "userId" = '${user.id}'
+                   WHERE id = '${worksheetId}' ${userCondition}
                    LIMIT 1;`;
 
       const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
@@ -137,26 +144,111 @@ export async function GET(
       );
     }
 
+    // Pre-process all tasks to convert LaTeX to SVG
+    const processedTasks = await Promise.all(
+      (worksheet.tasks || []).map(async (task: any) => {
+        const content = task.content || {};
+        const processedContent = { ...content };
+
+        // Process questionText if it exists
+        if (content.questionText) {
+          const parts = await parseTextWithMath(content.questionText);
+          processedContent.questionTextParts = parts;
+        }
+
+        // Process statement if it exists
+        if (content.statement) {
+          const parts = await parseTextWithMath(content.statement);
+          processedContent.statementParts = parts;
+        }
+
+        // Process textWithBlanks if it exists
+        if (content.textWithBlanks) {
+          const parts = await parseTextWithMath(content.textWithBlanks);
+          processedContent.textWithBlanksParts = parts;
+        }
+
+        return {
+          ...task,
+          content: processedContent,
+        };
+      })
+    );
+
+    // Генерируем название на узбекском
+    const title = generateWorksheetTitle(
+      worksheet.topicUz,
+      worksheet.subject,
+      worksheet.grade,
+      worksheet.config?.quarter,
+      worksheet.config?.week
+    );
+
+    // Determine if watermark should be shown based on subscription plan from database
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role || 'USER');
+
+    // Fetch subscription plan settings from database
+    let showWatermark = true; // default: show watermark
+
+    if (!isAdmin && user.subscriptionPlan) {
+      const planSql = `SELECT show_watermark FROM subscription_plans WHERE plan_code = '${user.subscriptionPlan}' AND is_active = TRUE LIMIT 1`;
+      const planProc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
+
+      const planResult = await new Promise<string>((resolve, reject) => {
+        let stdout = '';
+        planProc.stdout.on('data', (data) => { stdout += data.toString(); });
+        planProc.on('close', () => resolve(stdout.trim()));
+        planProc.on('error', reject);
+        planProc.stdin.write(planSql);
+        planProc.stdin.end();
+      });
+
+      if (planResult && planResult !== '') {
+        showWatermark = planResult === 't'; // PostgreSQL boolean true = 't'
+      }
+    }
+
+    // Admins never see watermarks
+    if (isAdmin) {
+      showWatermark = false;
+    }
+
     // Подготавливаем данные для PDF
     const pdfData = {
-      title: worksheet.topicUz || 'Ish varaqasi',
+      title,
       subject: worksheet.subject,
       grade: worksheet.grade,
       quarter: worksheet.config?.quarter,
       week: worksheet.config?.week,
-      tasks: worksheet.tasks || [],
+      tasks: processedTasks,
+      showWatermark,
     };
 
     // Генерируем PDF
     const pdfBuffer = await renderToBuffer(
-      React.createElement(WorksheetPDF, { data: pdfData })
+      React.createElement(WorksheetPDF, { data: pdfData }) as any
     );
 
-    // Формируем имя файла
-    const fileName = `worksheet_${worksheetId}_${Date.now()}.pdf`;
+    // Формируем имя файла на узбекском
+    const fileName = generatePdfFileName(
+      worksheet.topicUz,
+      worksheet.subject,
+      worksheet.grade,
+      worksheet.config?.quarter,
+      worksheet.config?.week
+    );
 
-    // Возвращаем PDF файл
-    return new NextResponse(pdfBuffer, {
+    console.log('=== PDF FILENAME DEBUG ===');
+    console.log('topicUz:', worksheet.topicUz);
+    console.log('subject:', worksheet.subject);
+    console.log('grade:', worksheet.grade);
+    console.log('quarter:', worksheet.config?.quarter);
+    console.log('week:', worksheet.config?.week);
+    console.log('Generated fileName:', fileName);
+    console.log('========================');
+
+    // Возвращаем PDF файл с ASCII-safe именем файла
+    return new NextResponse(pdfBuffer as any, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${fileName}"`,

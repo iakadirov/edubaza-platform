@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
 
     const configJson = JSON.stringify(config).replace(/'/g, "''");
     const tasksJson = JSON.stringify(tasks).replace(/'/g, "''");
-    const topicEscaped = topic ? topic.replace(/'/g, "''") : (quarter ? `${quarter}-четверть${week ? ` ${week}-неделя` : ''}` : '');
+    const topicEscaped = topic ? topic.replace(/'/g, "''") : (quarter ? `${quarter}-chorak${week ? ` ${week}-hafta` : ''}` : '');
     const topicIdValue = topicId ? `'${topicId}'` : 'NULL';
 
     const sql = `INSERT INTO worksheets (id, "userId", subject, grade, "topicUz", "topicRu", topic_id, config, tasks, status, "generatedAt", "updatedAt") VALUES (gen_random_uuid()::text, '${user.id}', '${subject}', ${Number(grade)}, '${topicEscaped}', '${topicEscaped}', ${topicIdValue}, '${configJson}', '${tasksJson}', 'COMPLETED', NOW(), NOW()) RETURNING id;`;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { Icon } from '@iconify/react';
 
 export default function AdminLayout({
   children,
@@ -55,26 +56,28 @@ export default function AdminLayout({
     {
       title: 'Главная',
       items: [
-        { href: '/admin', label: 'Dashboard', icon: '📊' },
+        { href: '/admin', label: 'Dashboard', icon: 'solar:chart-line-duotone', activeIcon: 'solar:chart-bold-duotone' },
       ],
     },
     {
       title: 'Контент',
       items: [
-        { href: '/admin/structure', label: 'Структура', icon: '🏗️' },
-        { href: '/admin/content', label: 'Библиотека', icon: '📚' },
+        { href: '/admin/structure', label: 'Структура', icon: 'solar:buildings-2-line-duotone', activeIcon: 'solar:buildings-2-bold-duotone' },
+        { href: '/admin/content', label: 'Библиотека', icon: 'solar:book-2-line-duotone', activeIcon: 'solar:book-2-bold-duotone' },
+        { href: '/admin/worksheets', label: 'Рабочие листы', icon: 'solar:document-line-duotone', activeIcon: 'solar:document-bold-duotone' },
       ],
     },
     {
       title: 'Пользователи',
       items: [
-        { href: '/admin/users', label: 'Пользователи', icon: '👥' },
+        { href: '/admin/users', label: 'Пользователи', icon: 'solar:users-group-rounded-line-duotone', activeIcon: 'solar:users-group-rounded-bold-duotone' },
       ],
     },
     {
       title: 'Система',
       items: [
-        { href: '/admin/settings', label: 'Настройки', icon: '⚙️' },
+        { href: '/admin/subscription-plans', label: 'Тарифы', icon: 'solar:card-line-duotone', activeIcon: 'solar:card-bold-duotone' },
+        { href: '/admin/settings', label: 'Настройки', icon: 'solar:settings-line-duotone', activeIcon: 'solar:settings-bold-duotone' },
       ],
     },
   ];
@@ -86,8 +89,9 @@ export default function AdminLayout({
         <div className="sticky top-0 h-screen flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-gray-200">
-            <Link href="/dashboard" className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1">
-              <span>←</span>
+            <Link href="/dashboard" className="group text-blue-600 hover:text-blue-700 text-sm flex items-center gap-2 transition-colors">
+              <Icon icon="solar:arrow-left-line-duotone" className="text-base group-hover:hidden" />
+              <Icon icon="solar:arrow-left-bold-duotone" className="text-base hidden group-hover:block" />
               <span>На главную</span>
             </Link>
             <h1 className="text-xl font-bold text-gray-900 mt-3">
@@ -116,7 +120,7 @@ export default function AdminLayout({
                           key={item.href}
                           href={item.href}
                           className={`
-                            w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 block
+                            group w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 block
                             ${
                               isActive
                                 ? 'bg-blue-50 text-blue-700'
@@ -124,7 +128,10 @@ export default function AdminLayout({
                             }
                           `}
                         >
-                          <span>{item.icon}</span>
+                          <Icon
+                            icon={isActive ? item.activeIcon : item.icon}
+                            className={`text-lg transition-transform group-hover:scale-110 ${isActive ? 'text-blue-600' : 'text-gray-500'}`}
+                          />
                           <span>{item.label}</span>
                         </Link>
                       );
