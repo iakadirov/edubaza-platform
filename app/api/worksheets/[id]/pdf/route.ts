@@ -168,6 +168,45 @@ export async function GET(
           processedContent.textWithBlanksParts = parts;
         }
 
+        // Process options array if it exists (for multiple choice, single choice tasks)
+        if (content.options && Array.isArray(content.options)) {
+          processedContent.optionsParts = await Promise.all(
+            content.options.map(async (option: string) => {
+              return await parseTextWithMath(option);
+            })
+          );
+        }
+
+        // Process answer if it exists (for short answer tasks)
+        if (content.answer && typeof content.answer === 'string') {
+          const parts = await parseTextWithMath(content.answer);
+          processedContent.answerParts = parts;
+        }
+
+        // Process correctAnswer if it's a string (some task types have string answers)
+        if (content.correctAnswer && typeof content.correctAnswer === 'string') {
+          const parts = await parseTextWithMath(content.correctAnswer);
+          processedContent.correctAnswerParts = parts;
+        }
+
+        // Process explanation if it exists
+        if (content.explanation && typeof content.explanation === 'string') {
+          const parts = await parseTextWithMath(content.explanation);
+          processedContent.explanationParts = parts;
+        }
+
+        // Process matching pairs if they exist
+        if (content.pairs && Array.isArray(content.pairs)) {
+          processedContent.pairsParts = await Promise.all(
+            content.pairs.map(async (pair: any) => {
+              return {
+                left: await parseTextWithMath(pair.left),
+                right: await parseTextWithMath(pair.right),
+              };
+            })
+          );
+        }
+
         return {
           ...task,
           content: processedContent,

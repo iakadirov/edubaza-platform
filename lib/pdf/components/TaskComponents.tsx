@@ -21,6 +21,7 @@ interface TaskContent {
 export const SingleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
   const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
+  const optionsParts = (content as any).optionsParts;
 
   return (
     <View>
@@ -37,9 +38,16 @@ export const SingleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }
         {content.options?.map((option, index) => (
           <View key={index} style={commonStyles.optionItem}>
             <View style={[commonStyles.checkbox, { borderRadius: 8 }]} />
-            <Text style={commonStyles.optionText}>
-              {String.fromCharCode(65 + index)}. {option}
-            </Text>
+            {optionsParts && optionsParts[index] ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
+                <Text style={commonStyles.optionText}>{String.fromCharCode(65 + index)}. </Text>
+                <MathText parts={optionsParts[index]} text={option} style={commonStyles.optionText} />
+              </View>
+            ) : (
+              <Text style={commonStyles.optionText}>
+                {String.fromCharCode(65 + index)}. {option}
+              </Text>
+            )}
           </View>
         ))}
       </View>
@@ -51,6 +59,7 @@ export const SingleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }
 export const MultipleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
   const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
+  const optionsParts = (content as any).optionsParts;
 
   return (
     <View>
@@ -67,9 +76,16 @@ export const MultipleChoiceTask: React.FC<{ content: TaskContent }> = ({ content
         {content.options?.map((option, index) => (
           <View key={index} style={commonStyles.optionItem}>
             <View style={commonStyles.checkbox} />
-            <Text style={commonStyles.optionText}>
-              {String.fromCharCode(65 + index)}. {option}
-            </Text>
+            {optionsParts && optionsParts[index] ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
+                <Text style={commonStyles.optionText}>{String.fromCharCode(65 + index)}. </Text>
+                <MathText parts={optionsParts[index]} text={option} style={commonStyles.optionText} />
+              </View>
+            ) : (
+              <Text style={commonStyles.optionText}>
+                {String.fromCharCode(65 + index)}. {option}
+              </Text>
+            )}
           </View>
         ))}
       </View>
@@ -162,12 +178,14 @@ export const FillBlanksTask: React.FC<{ content: TaskContent }> = ({ content }) 
 export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) => {
   const questionText = content.questionText || content.statement || '';
   const questionTextParts = (content as any).questionTextParts || (content as any).statementParts;
+  const pairsParts = (content as any).pairsParts;
 
   // Перемешиваем правую колонку
-  const shuffleRight = (pairs: Array<{ left: string; right: string }>) => {
+  const shuffleRight = (pairs: Array<{ left: string; right: string }>, pairsParts?: any[]) => {
     const rightItems = pairs.map((pair, idx) => ({
       text: pair.right,
-      letter: String.fromCharCode(65 + idx)
+      letter: String.fromCharCode(65 + idx),
+      parts: pairsParts && pairsParts[idx] ? pairsParts[idx].right : null,
     }));
 
     // Простое перемешивание (Fisher-Yates)
@@ -179,7 +197,7 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
     return rightItems;
   };
 
-  const shuffledRight = content.pairs ? shuffleRight(content.pairs) : [];
+  const shuffledRight = content.pairs ? shuffleRight(content.pairs, pairsParts) : [];
 
   return (
     <View>
@@ -206,9 +224,16 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
                   paddingVertical: 4,
                   paddingHorizontal: 6,
                 }}>
-                  <Text style={commonStyles.optionText}>
-                    {index + 1}. {pair.left}
-                  </Text>
+                  {pairsParts && pairsParts[index] && pairsParts[index].left ? (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <Text style={commonStyles.optionText}>{index + 1}. </Text>
+                      <MathText parts={pairsParts[index].left} text={pair.left} style={commonStyles.optionText} />
+                    </View>
+                  ) : (
+                    <Text style={commonStyles.optionText}>
+                      {index + 1}. {pair.left}
+                    </Text>
+                  )}
                 </View>
                 {/* Точка справа */}
                 <View style={{
@@ -249,9 +274,16 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
                   paddingVertical: 4,
                   paddingHorizontal: 6,
                 }}>
-                  <Text style={commonStyles.optionText}>
-                    {item.letter}. {item.text}
-                  </Text>
+                  {item.parts ? (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <Text style={commonStyles.optionText}>{item.letter}. </Text>
+                      <MathText parts={item.parts} text={item.text} style={commonStyles.optionText} />
+                    </View>
+                  ) : (
+                    <Text style={commonStyles.optionText}>
+                      {item.letter}. {item.text}
+                    </Text>
+                  )}
                 </View>
               </View>
             ))}
