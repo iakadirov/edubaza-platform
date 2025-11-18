@@ -1,5 +1,112 @@
 # Changelog
 
+## [Inline Blanks Implementation] - 2024-11-19
+
+### Added
+
+#### FILL_BLANKS Inline Rendering - Революционное улучшение UX
+
+**Встроенные пропуски в тексте вопроса**
+Реализован новый подход к отображению задач FILL_BLANKS - пропуски теперь встраиваются **прямо в текст вопроса**, а не отображаются отдельными полями внизу.
+
+**Пример:**
+- **Было**: Вопрос отдельно, внизу: `1.___ 2.___ 3.___`
+- **Стало**: `Fotosintez jarayonida o'simliklar [___] va suvdan foydalanib [___] hosil qiladi.`
+
+**Синтаксис**: `[___]` - каждый `[___]` заменяется на:
+- В вебе (interactive): `<input>` поле
+- В вебе (non-interactive): подчеркивание
+- В обоих PDF: подчеркивание `__________`
+
+**Компоненты обновлены:**
+
+1. **Web версия** (`components/worksheet/TaskRenderer.tsx:227-278`):
+   - Парсинг текста с regex `/(\[___\])/g`
+   - Inline inputs в интерактивном режиме
+   - Inline underlines в non-interactive режиме
+   - State management для answers
+
+2. **Server PDF версия** (`lib/pdf/components/TaskComponents.tsx:167-250`):
+   - Парсинг `textWithBlanks` с regex
+   - Рендеринг через `flexDirection: 'row', flexWrap: 'wrap'`
+   - Поддержка Math формул между пропусками
+   - Fallback для plain text и math-enabled контента
+
+3. **Browser PDF версия** (`lib/pdf-html/template.ts:151-160`):
+   - Simple regex replace: `questionHTML.replace(/\[___\]/g, '...')`
+   - Inline `<span>` elements с border-bottom styling
+
+#### Admin форма улучшена - Кнопка вставки пропусков
+
+**Кнопка "Boʻshliq qoʻshish [___]"** (`app/admin/content/ContentForms.tsx:1-4, 1647-1687`):
+- Добавлен import `Icon` from '@iconify/react'
+- Автоматическая вставка `[___]` в позицию курсора
+- Фокус возвращается после вставки с правильной позицией курсора
+- Иконка `solar:add-square-bold-duotone`
+
+### Changed
+
+#### Стилизация инструкций в Browser PDF
+**Browser PDF** (`app/worksheet/[id]/page.tsx:364-367`):
+- Увеличен font-size инструкций с 12px до 14px
+- Убран margin-top у инструкций (было отступ сверху)
+
+```css
+.text-blue-600 {
+  font-size: 14px !important;
+  margin-top: 0 !important;
+}
+```
+
+#### Фон изображений в PDF
+**Server PDF** (`lib/pdf/styles/common.ts:98-104`):
+- Добавлен белый фон для изображений в вопросах
+- Убирает сероватый оттенок при печати
+
+```typescript
+questionImage: {
+  height: 120,
+  objectFit: 'contain',
+  borderRadius: 5.75,
+  marginBottom: 6,
+  backgroundColor: '#FFFFFF',  // ← Добавлено
+},
+```
+
+### Technical Details
+
+**Реализация парсинга**:
+1. **Regex split с сохранением разделителя**: `split(/(\[___\])/g)`
+   - Круглые скобки в regex сохраняют совпадение в массиве
+   - Результат: `['text1', '[___]', 'text2', '[___]', 'text3']`
+
+2. **Inline layout**:
+   - Web: `inline-flex flex-wrap items-center gap-1`
+   - PDF: `flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center'`
+   - Browser PDF: `display: inline-block` spans
+
+3. **Стилизация пропусков**:
+   - Width: 60-96px (адаптивно)
+   - Border-bottom для эффекта подчеркивания
+   - Margin для отступов от текста
+
+**Benefits:**
+1. **Естественный UX**: Ученики видят пропуски прямо в контексте предложения
+2. **Меньше визуального шума**: Убраны отдельные нумерованные поля внизу
+3. **Привычный формат**: Соответствует традиционным рабочим листам
+4. **Консистентность**: Одинаковое поведение во всех версиях (web, server PDF, browser PDF)
+5. **Гибкость**: Учителя могут размещать пропуски где угодно в тексте
+
+**Files Modified:**
+- `components/worksheet/TaskRenderer.tsx` - Web rendering с inline inputs
+- `lib/pdf/components/TaskComponents.tsx` - Server PDF с inline underlines
+- `lib/pdf-html/template.ts` - Browser PDF с inline underlines
+- `app/admin/content/ContentForms.tsx` - Кнопка вставки [___]
+- `lib/pdf/styles/common.ts` - Белый фон для изображений
+- `app/worksheet/[id]/page.tsx` - Стили инструкций (font-size, margin-top)
+
+---
+
 ## [Unreleased] - 2025-11-18
 
 ### Added

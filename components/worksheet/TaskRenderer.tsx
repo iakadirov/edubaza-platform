@@ -36,37 +36,39 @@ const SingleChoiceTask: React.FC<{ content: TaskContent; interactive?: boolean }
 
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
-        Faqat bitta to'g'ri javobni tanlang
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
+        Faqat bitta toʻgʻri javobni tanlang
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
+      <MathText text={questionText} className="text-lg font-medium text-gray-900 mb-4 leading-relaxed" />
 
       {content.questionImage && (
-        <div className="mb-[6px]">
+        <div className="mb-5 flex justify-center">
           <img
             src={content.questionImage}
             alt="Question"
-            className="h-[150px] object-contain rounded-[5.75px]"
+            className="max-h-[200px] object-contain rounded-xl"
           />
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4 mt-3">
+      <div className="flex flex-col gap-3 mt-4">
         {content.options?.map((option, index) => (
           <div
             key={index}
-            className={`flex items-center gap-2 ${interactive ? 'cursor-pointer hover:opacity-70' : ''}`}
+            className={`flex items-center gap-2.5 ${interactive ? 'cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors' : ''}`}
             onClick={() => interactive && setSelectedOption(index)}
           >
             <div
-              className={`w-4 h-4 border border-black rounded-full bg-white flex-shrink-0 ${
-                interactive && selectedOption === index ? 'bg-blue-500' : ''
+              className={`w-5 h-5 border-2 rounded-full flex-shrink-0 transition-colors ${
+                interactive && selectedOption === index
+                  ? 'bg-blue-600 border-blue-600'
+                  : 'border-gray-400 bg-white'
               }`}
             />
-            <span className="text-sm text-black">
-              {String.fromCharCode(65 + index)}.{' '}
+            <span className="text-base font-semibold text-gray-700">
+              {String.fromCharCode(65 + index)}.
             </span>
-            <MathText text={option} className="text-sm text-black inline" />
+            <MathText text={option} className="text-base text-gray-800 inline" />
           </div>
         ))}
       </div>
@@ -91,37 +93,39 @@ const MultipleChoiceTask: React.FC<{ content: TaskContent; interactive?: boolean
 
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
-        Bir nechta to'g'ri javoblarni belgilang
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
+        Bir nechta toʻgʻri javoblarni belgilang
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
+      <MathText text={questionText} className="text-lg font-medium text-gray-900 mb-4 leading-relaxed" />
 
       {content.questionImage && (
-        <div className="mb-[6px]">
+        <div className="mb-5 flex justify-center">
           <img
             src={content.questionImage}
             alt="Question"
-            className="h-[150px] object-contain rounded-[5.75px]"
+            className="max-h-[200px] object-contain rounded-xl"
           />
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4 mt-3">
+      <div className="flex flex-col gap-3 mt-4">
         {content.options?.map((option, index) => (
           <div
             key={index}
-            className={`flex items-center gap-2 ${interactive ? 'cursor-pointer hover:opacity-70' : ''}`}
+            className={`flex items-center gap-2.5 ${interactive ? 'cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors' : ''}`}
             onClick={() => interactive && toggleOption(index)}
           >
             <div
-              className={`w-4 h-4 border border-black rounded-[2px] bg-white flex-shrink-0 ${
-                interactive && selectedOptions.has(index) ? 'bg-blue-500' : ''
+              className={`w-5 h-5 border-2 rounded-[3px] flex-shrink-0 transition-colors ${
+                interactive && selectedOptions.has(index)
+                  ? 'bg-blue-600 border-blue-600'
+                  : 'border-gray-400 bg-white'
               }`}
             />
-            <span className="text-sm text-black">
-              {String.fromCharCode(65 + index)}.{' '}
+            <span className="text-base font-semibold text-gray-700">
+              {String.fromCharCode(65 + index)}.
             </span>
-            <MathText text={option} className="text-sm text-black inline" />
+            <MathText text={option} className="text-base text-gray-800 inline" />
           </div>
         ))}
       </div>
@@ -136,43 +140,47 @@ const TrueFalseTask: React.FC<{ content: TaskContent; interactive?: boolean }> =
 
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
-        To'g'ri yoki noto'g'rini tanlang
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
+        Toʻgʻri yoki notoʻgʻrini tanlang
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
+      <MathText text={questionText} className="text-lg font-medium text-gray-900 mb-4 leading-relaxed" />
 
       {content.questionImage && (
-        <div className="mb-[6px]">
+        <div className="mb-5 flex justify-center">
           <img
             src={content.questionImage}
             alt="Question"
-            className="h-[150px] object-contain rounded-[5.75px]"
+            className="max-h-[200px] object-contain rounded-xl"
           />
         </div>
       )}
 
-      <div className="flex gap-6 mt-3">
+      <div className="flex gap-6 mt-4">
         <div
-          className={`flex items-center gap-2 ${interactive ? 'cursor-pointer hover:opacity-70' : ''}`}
+          className={`flex items-center gap-2.5 ${interactive ? 'cursor-pointer hover:bg-green-50 px-3 py-2 rounded-lg transition-colors' : ''}`}
           onClick={() => interactive && setSelected(true)}
         >
           <div
-            className={`w-4 h-4 border border-black rounded-[2px] bg-white ${
-              interactive && selected === true ? 'bg-green-500' : ''
+            className={`w-5 h-5 border-2 rounded-[3px] flex-shrink-0 transition-colors ${
+              interactive && selected === true
+                ? 'bg-green-600 border-green-600'
+                : 'border-gray-400 bg-white'
             }`}
           />
-          <span className="text-sm text-black">✓ To'g'ri</span>
+          <span className="text-base font-medium text-gray-700">✓ Toʻgʻri</span>
         </div>
         <div
-          className={`flex items-center gap-2 ${interactive ? 'cursor-pointer hover:opacity-70' : ''}`}
+          className={`flex items-center gap-2.5 ${interactive ? 'cursor-pointer hover:bg-red-50 px-3 py-2 rounded-lg transition-colors' : ''}`}
           onClick={() => interactive && setSelected(false)}
         >
           <div
-            className={`w-4 h-4 border border-black rounded-[2px] bg-white ${
-              interactive && selected === false ? 'bg-red-500' : ''
+            className={`w-5 h-5 border-2 rounded-[3px] flex-shrink-0 transition-colors ${
+              interactive && selected === false
+                ? 'bg-red-600 border-red-600'
+                : 'border-gray-400 bg-white'
             }`}
           />
-          <span className="text-sm text-black">✗ Noto'g'ri</span>
+          <span className="text-base font-medium text-gray-700">✗ Notoʻgʻri</span>
         </div>
       </div>
     </div>
@@ -186,17 +194,17 @@ const ShortAnswerTask: React.FC<{ content: TaskContent; interactive?: boolean }>
 
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
         Qisqa javob yozing
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
+      <MathText text={questionText} className="text-lg font-medium text-gray-900 mb-4 leading-relaxed" />
 
       {content.questionImage && (
-        <div className="mb-[6px]">
+        <div className="mb-5 flex justify-center">
           <img
             src={content.questionImage}
             alt="Question"
-            className="h-[150px] object-contain rounded-[5.75px]"
+            className="max-h-[200px] object-contain rounded-xl"
           />
         </div>
       )}
@@ -219,8 +227,9 @@ const ShortAnswerTask: React.FC<{ content: TaskContent; interactive?: boolean }>
 // 5. FILL_BLANKS
 const FillBlanksTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ content, interactive }) => {
   const questionText = content.textWithBlanks || content.questionText || content.statement || '';
+  const blanksCount = content.blanks?.length || 0;
   const [answers, setAnswers] = React.useState<string[]>(
-    new Array(content.blanks?.length || 0).fill('')
+    new Array(blanksCount).fill('')
   );
 
   const updateAnswer = (index: number, value: string) => {
@@ -229,32 +238,41 @@ const FillBlanksTask: React.FC<{ content: TaskContent; interactive?: boolean }> 
     setAnswers(newAnswers);
   };
 
+  // Parse text and replace [___] with input fields
+  const renderTextWithBlanks = () => {
+    const parts = questionText.split(/(\[___\])/g);
+    let blankIndex = 0;
+
+    return (
+      <div className="text-lg font-medium text-gray-900 leading-relaxed inline-flex flex-wrap items-center gap-1">
+        {parts.map((part, index) => {
+          if (part === '[___]') {
+            const currentBlankIndex = blankIndex++;
+            return interactive ? (
+              <input
+                key={index}
+                type="text"
+                value={answers[currentBlankIndex] || ''}
+                onChange={(e) => updateAnswer(currentBlankIndex, e.target.value)}
+                className="inline-block w-24 h-8 border-b-2 border-gray-400 bg-transparent focus:outline-none focus:border-blue-500 text-base font-medium px-2 mx-1"
+                placeholder="___"
+              />
+            ) : (
+              <span key={index} className="inline-block w-24 h-8 border-b-2 border-gray-400 mx-1" />
+            );
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </div>
+    );
+  };
+
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
         Bo'sh joylarni to'ldiring
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
-
-      {content.blanks && content.blanks.length > 0 && (
-        <div className="flex flex-wrap gap-4 mt-3">
-          {content.blanks.map((_, index) => (
-            <div key={index} className="min-w-[80px] max-w-[160px]">
-              {interactive ? (
-                <input
-                  type="text"
-                  value={answers[index]}
-                  onChange={(e) => updateAnswer(index, e.target.value)}
-                  className="w-full h-8 border-b border-black bg-transparent focus:outline-none focus:border-blue-500 text-base"
-                  placeholder={`${index + 1}`}
-                />
-              ) : (
-                <div className="h-8 border-b border-black" />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      {renderTextWithBlanks()}
     </div>
   );
 };
@@ -282,22 +300,22 @@ const MatchingTask: React.FC<{ content: TaskContent; interactive?: boolean }> = 
 
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
         Mos keluvchi javoblarni bog'lang
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
+      <MathText text={questionText} className="text-lg font-medium text-gray-900 mb-4 leading-relaxed" />
 
       {content.pairs && content.pairs.length > 0 && (
-        <div className="flex gap-8 mt-3">
+        <div className="flex gap-8 mt-4">
           {/* Left column */}
-          <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 flex flex-col gap-3">
             {content.pairs.map((pair, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="flex-1 border-[0.5px] border-[#E9E9E9] rounded-[3px] py-2 px-3">
-                  <span className="text-sm text-black">{index + 1}. </span>
-                  <MathText text={pair.left} className="text-sm text-black inline" />
+                <div className="flex-1 border border-gray-200 rounded-lg py-3 px-4 bg-gray-50">
+                  <span className="text-base font-semibold text-gray-700">{index + 1}. </span>
+                  <MathText text={pair.left} className="text-base text-gray-800 inline" />
                 </div>
-                <div className="w-1.5 h-1.5 rounded-full bg-[#666666]" />
+                <div className="w-2 h-2 rounded-full bg-gray-500" />
               </div>
             ))}
           </div>
@@ -306,13 +324,13 @@ const MatchingTask: React.FC<{ content: TaskContent; interactive?: boolean }> = 
           <div className="w-8" />
 
           {/* Right column (shuffled) */}
-          <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 flex flex-col gap-3">
             {shuffledRight.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#666666]" />
-                <div className="flex-1 border-[0.5px] border-[#E9E9E9] rounded-[3px] py-2 px-3">
-                  <span className="text-sm text-black">{item.letter}. </span>
-                  <MathText text={item.text} className="text-sm text-black inline" />
+                <div className="w-2 h-2 rounded-full bg-gray-500" />
+                <div className="flex-1 border border-gray-200 rounded-lg py-3 px-4 bg-gray-50">
+                  <span className="text-base font-semibold text-gray-700">{item.letter}. </span>
+                  <MathText text={item.text} className="text-base text-gray-800 inline" />
                 </div>
               </div>
             ))}
@@ -330,17 +348,17 @@ const EssayTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ 
 
   return (
     <div>
-      <p className="text-[15px] text-[#666666] mb-4">
+      <p className="text-base text-blue-600 mt-2 mb-3 font-medium">
         Batafsil javob yozing
       </p>
-      <MathText text={questionText} className="text-base text-black mb-3" />
+      <MathText text={questionText} className="text-lg font-medium text-gray-900 mb-4 leading-relaxed" />
 
       {content.questionImage && (
-        <div className="mb-[6px]">
+        <div className="mb-5 flex justify-center">
           <img
             src={content.questionImage}
             alt="Question"
-            className="h-[150px] object-contain rounded-[5.75px]"
+            className="max-h-[200px] object-contain rounded-xl"
           />
         </div>
       )}
@@ -349,15 +367,16 @@ const EssayTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ 
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          className="w-full border-b border-black mt-3 mb-2 bg-transparent focus:outline-none focus:border-blue-500 text-base resize-none"
-          rows={4}
+          className="w-full border-b-2 border-gray-400 mt-4 mb-2 bg-transparent focus:outline-none focus:border-blue-500 text-base resize-none px-2 py-1"
+          rows={5}
           placeholder="Batafsil javobingizni yozing..."
         />
       ) : (
-        <div className="mt-3">
-          <div className="h-8 border-b border-black mb-2" />
-          <div className="h-8 border-b border-black mb-2" />
-          <div className="h-8 border-b border-black mb-2" />
+        <div className="mt-4">
+          <div className="h-10 border-b-2 border-gray-400 mb-3" />
+          <div className="h-10 border-b-2 border-gray-400 mb-3" />
+          <div className="h-10 border-b-2 border-gray-400 mb-3" />
+          <div className="h-10 border-b-2 border-gray-400 mb-3" />
         </div>
       )}
     </div>
@@ -396,9 +415,9 @@ export const TaskRenderer: React.FC<TaskRendererProps> = ({ task, index, interac
   }
 
   return (
-    <div className="w-full pt-3 px-3 pb-2 border-[0.5px] border-[#E9E9E9] rounded-lg mb-2 bg-transparent">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-6 h-6 bg-[#BEDAFF] rounded-full text-[#00275B] text-xs font-bold flex items-center justify-center flex-shrink-0">
+    <div className="w-full bg-white rounded-xl p-5 my-3" style={{ boxShadow: 'rgba(0, 0, 0, 0.2) 0px 0px 2px' }}>
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full text-blue-700 text-base font-bold flex items-center justify-center flex-shrink-0">
           {index + 1}
         </div>
         <div className="flex-1">

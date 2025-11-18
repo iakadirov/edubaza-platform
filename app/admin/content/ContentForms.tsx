@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import TopicAutocomplete from './TopicAutocomplete';
 
 // Common form props interface
@@ -1644,10 +1645,35 @@ export function FillBlanksFormComponent({
 
       {/* 3. Text with Blanks */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          3️⃣ Matn (boʻshliqlari bilan) *
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            3️⃣ Matn (boʻshliqlari bilan) *
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              const textarea = document.getElementById('textWithBlanks') as HTMLTextAreaElement;
+              if (textarea) {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = form.textWithBlanks;
+                const newText = text.substring(0, start) + '[___]' + text.substring(end);
+                setForm({ ...form, textWithBlanks: newText });
+                // Set cursor position after inserted text
+                setTimeout(() => {
+                  textarea.focus();
+                  textarea.setSelectionRange(start + 5, start + 5);
+                }, 0);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm hover:shadow"
+          >
+            <Icon icon="solar:add-square-bold-duotone" className="text-lg" />
+            Boʻshliq qoʻshish [___]
+          </button>
+        </div>
         <textarea
+          id="textWithBlanks"
           value={form.textWithBlanks}
           onChange={(e) => setForm({ ...form, textWithBlanks: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"

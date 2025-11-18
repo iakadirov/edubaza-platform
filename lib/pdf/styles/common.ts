@@ -100,6 +100,7 @@ export const commonStyles = StyleSheet.create({
     objectFit: 'contain',
     borderRadius: 5.75,
     marginBottom: 6,
+    backgroundColor: '#FFFFFF',
   },
 
   // Опции (горизонтальный layout)

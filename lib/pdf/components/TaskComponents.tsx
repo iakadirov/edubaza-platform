@@ -149,27 +149,82 @@ export const FillBlanksTask: React.FC<{ content: TaskContent }> = ({ content }) 
   const questionText = content.textWithBlanks || content.questionText || content.statement || '';
   const questionTextParts = (content as any).textWithBlanksParts || (content as any).questionTextParts || (content as any).statementParts;
 
+  // Parse text and replace [___] with inline underlines
+  const renderTextWithBlanks = () => {
+    if (!questionTextParts) {
+      // Fallback: parse plain text
+      const parts = questionText.split(/(\[___\])/g);
+      return (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+          {parts.map((part, index) => {
+            if (part === '[___]') {
+              return (
+                <View
+                  key={index}
+                  style={{
+                    borderBottomWidth: 0.5,
+                    borderColor: '#000000',
+                    width: 60,
+                    height: 15,
+                    marginHorizontal: 2,
+                  }}
+                />
+              );
+            }
+            return <Text key={index} style={commonStyles.questionText}>{part}</Text>;
+          })}
+        </View>
+      );
+    }
+
+    // With math support
+    return (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+        {questionTextParts.map((part: any, index: number) => {
+          if (part.type === 'text') {
+            // Split text by [___] and render
+            const textParts = part.content.split(/(\[___\])/g);
+            return textParts.map((textPart: string, subIndex: number) => {
+              if (textPart === '[___]') {
+                return (
+                  <View
+                    key={`${index}-${subIndex}`}
+                    style={{
+                      borderBottomWidth: 0.5,
+                      borderColor: '#000000',
+                      width: 60,
+                      height: 15,
+                      marginHorizontal: 2,
+                    }}
+                  />
+                );
+              }
+              return <Text key={`${index}-${subIndex}`} style={commonStyles.questionText}>{textPart}</Text>;
+            });
+          } else if (part.type === 'math' && part.pngDataUrl) {
+            return (
+              <Image
+                key={index}
+                src={part.pngDataUrl}
+                style={{
+                  height: part.display ? 14 : 11,
+                  marginHorizontal: 2,
+                }}
+              />
+            );
+          }
+          return null;
+        })}
+      </View>
+    );
+  };
+
   return (
     <View>
       <Text style={{ fontSize: 9, color: '#3677CC', fontWeight: 500, marginTop: 3, marginBottom: 8 }}>
         Bo'sh joylarni to'ldiring
       </Text>
-      <MathText parts={questionTextParts} text={questionText} style={commonStyles.questionText} />
-
-      {content.blanks && content.blanks.length > 0 && (
-        <View style={[commonStyles.optionsContainer, { gap: 15 }]}>
-          {content.blanks.map((_, index) => (
-            <View key={index} style={{
-              borderBottomWidth: 0.5,
-              borderColor: '#000000',
-              minWidth: 60,
-              maxWidth: 120,
-              height: 15,
-              marginRight: 15,
-            }} />
-          ))}
-        </View>
-      )}
+      {renderTextWithBlanks()}
     </View>
   );
 };
