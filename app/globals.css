@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Onest Font Face Definitions */
+@font-face {
+  font-family: 'Onest';
+  src: url('/fonts/Onest-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Onest';
+  src: url('/fonts/Onest-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Onest';
+  src: url('/fonts/Onest-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Onest';
+  src: url('/fonts/Onest-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -17,7 +50,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 /* Global fixes for better contrast and readability */
@@ -62,10 +95,169 @@ body {
   .text-gray-600 {
     color: #1f2937 !important;
   }
+
+  /* Fix all headings and text elements to have proper contrast */
+  h1, h2, h3, h4, h5, h6 {
+    color: #111827 !important;
+  }
+
+  /* Ensure all text has minimum readable contrast */
+  p, span, div, a, li {
+    color: inherit;
+  }
+
+  /* Override Tailwind's default gray colors for better WCAG compliance */
+  .text-gray-400 {
+    color: #6b7280 !important;
+  }
+
+  .text-gray-700 {
+    color: #374151 !important;
+  }
+
+  .text-gray-800 {
+    color: #1f2937 !important;
+  }
+
+  .text-gray-900 {
+    color: #111827 !important;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Brand Colors - Force generate all needed classes */
+  /* Primary */
+  .bg-brand-primary { background-color: #6466E9 !important; }
+  .text-brand-primary { color: #6466E9 !important; }
+  .border-brand-primary { border-color: #6466E9 !important; }
+  .ring-brand-primary { --tw-ring-color: #6466E9 !important; }
+
+  .bg-brand-primary-50 { background-color: #F0F0FE !important; }
+  .bg-brand-primary-100 { background-color: #E1E2FD !important; }
+  .bg-brand-primary-200 { background-color: #C4C5FB !important; }
+  .bg-brand-primary-300 { background-color: #A6A8F9 !important; }
+  .bg-brand-primary-600 { background-color: #4144D8 !important; }
+  .bg-brand-primary-700 { background-color: #2F31B8 !important; }
+
+  .text-brand-primary-600 { color: #4144D8 !important; }
+  .text-brand-primary-700 { color: #2F31B8 !important; }
+
+  .border-brand-primary-200 { border-color: #C4C5FB !important; }
+  .border-brand-primary-300 { border-color: #A6A8F9 !important; }
+
+  .hover\:bg-brand-primary-50:hover { background-color: #F0F0FE !important; }
+  .hover\:bg-brand-primary-100:hover { background-color: #E1E2FD !important; }
+  .hover\:bg-brand-primary-600:hover { background-color: #4144D8 !important; }
+  .hover\:bg-brand-primary-700:hover { background-color: #2F31B8 !important; }
+  .hover\:text-brand-primary-600:hover { color: #4144D8 !important; }
+
+  .focus\:border-brand-primary:focus { border-color: #6466E9 !important; }
+  .focus\:ring-brand-primary:focus { --tw-ring-color: #6466E9 !important; }
+  .focus\:bg-brand-primary-50:focus { background-color: #F0F0FE !important; }
+
+  .active\:bg-brand-primary-700:active { background-color: #2F31B8 !important; }
+  .active\:bg-brand-primary-100:active { background-color: #E1E2FD !important; }
+
+  /* Secondary */
+  .bg-brand-secondary { background-color: #584CE1 !important; }
+  .text-brand-secondary { color: #584CE1 !important; }
+  .border-brand-secondary { border-color: #584CE1 !important; }
+  .ring-brand-secondary { --tw-ring-color: #584CE1 !important; }
+
+  .bg-brand-secondary-50 { background-color: #EEECFE !important; }
+  .bg-brand-secondary-100 { background-color: #DDD9FD !important; }
+  .bg-brand-secondary-200 { background-color: #BBB3FB !important; }
+  .bg-brand-secondary-700 { background-color: #2D21A8 !important; }
+
+  .text-brand-secondary-700 { color: #2D21A8 !important; }
+  .border-brand-secondary-200 { border-color: #BBB3FB !important; }
+
+  .hover\:bg-brand-secondary-100:hover { background-color: #DDD9FD !important; }
+  .hover\:bg-brand-secondary-200:hover { background-color: #BBB3FB !important; }
+  .active\:bg-brand-secondary-200:active { background-color: #BBB3FB !important; }
+
+  /* Success */
+  .bg-brand-success { background-color: #64D990 !important; }
+  .text-brand-success { color: #64D990 !important; }
+  .border-brand-success { border-color: #64D990 !important; }
+  .ring-brand-success { --tw-ring-color: #64D990 !important; }
+
+  .bg-brand-success-50 { background-color: #F0FDF7 !important; }
+  .bg-brand-success-100 { background-color: #DCFCE8 !important; }
+  .bg-brand-success-200 { background-color: #BBF7D0 !important; }
+  .bg-brand-success-300 { background-color: #86EFAC !important; }
+  .bg-brand-success-600 { background-color: #22C55E !important; }
+  .bg-brand-success-700 { background-color: #16A34A !important; }
+  .bg-brand-success-900 { background-color: #14532D !important; }
+
+  .text-brand-success-400 { color: #64D990 !important; }
+  .text-brand-success-700 { color: #16A34A !important; }
+  .text-brand-success-900 { color: #14532D !important; }
+
+  .border-brand-success-200 { border-color: #BBF7D0 !important; }
+  .border-brand-success-300 { border-color: #86EFAC !important; }
+  .border-brand-success-600 { border-color: #22C55E !important; }
+
+  .hover\:bg-brand-success-50:hover { background-color: #F0FDF7 !important; }
+  .hover\:bg-brand-success-600:hover { background-color: #22C55E !important; }
+  .hover\:bg-brand-success-700:hover { background-color: #16A34A !important; }
+
+  .focus\:border-brand-success-600:focus { border-color: #22C55E !important; }
+  .focus\:ring-brand-success:focus { --tw-ring-color: #64D990 !important; }
+
+  .active\:bg-brand-success-700:active { background-color: #16A34A !important; }
+
+  /* Danger */
+  .bg-brand-danger { background-color: #DC4838 !important; }
+  .text-brand-danger { color: #DC4838 !important; }
+  .border-brand-danger { border-color: #DC4838 !important; }
+  .ring-brand-danger { --tw-ring-color: #DC4838 !important; }
+
+  .bg-brand-danger-50 { background-color: #FEF2F2 !important; }
+  .bg-brand-danger-100 { background-color: #FEE2E2 !important; }
+  .bg-brand-danger-200 { background-color: #FECACA !important; }
+  .bg-brand-danger-300 { background-color: #FCA5A5 !important; }
+  .bg-brand-danger-600 { background-color: #DC2626 !important; }
+  .bg-brand-danger-700 { background-color: #B91C1C !important; }
+  .bg-brand-danger-900 { background-color: #7F1D1D !important; }
+
+  .text-brand-danger-400 { color: #F87171 !important; }
+  .text-brand-danger-700 { color: #B91C1C !important; }
+  .text-brand-danger-900 { color: #7F1D1D !important; }
+
+  .border-brand-danger-200 { border-color: #FECACA !important; }
+  .border-brand-danger-300 { border-color: #FCA5A5 !important; }
+  .border-brand-danger-600 { border-color: #DC2626 !important; }
+
+  .hover\:bg-brand-danger-50:hover { background-color: #FEF2F2 !important; }
+  .hover\:bg-brand-danger-600:hover { background-color: #DC2626 !important; }
+  .hover\:bg-brand-danger-700:hover { background-color: #B91C1C !important; }
+
+  .focus\:border-brand-danger-600:focus { border-color: #DC2626 !important; }
+  .focus\:ring-brand-danger:focus { --tw-ring-color: #DC4838 !important; }
+
+  .active\:bg-brand-danger-700:active { background-color: #B91C1C !important; }
+
+  /* Warning */
+  .bg-brand-warning { background-color: #FFE600 !important; }
+  .bg-brand-warning-100 { background-color: #FFFCD1 !important; }
+  .bg-brand-warning-200 { background-color: #FFF9A3 !important; }
+  .bg-brand-warning-700 { background-color: #CA8A04 !important; }
+
+  .text-brand-warning-700 { color: #CA8A04 !important; }
+  .border-brand-warning-200 { border-color: #FFF9A3 !important; }
+
+  /* Info */
+  .bg-brand-info { background-color: #57A9DC !important; }
+  .bg-brand-info-100 { background-color: #E0F2FE !important; }
+  .bg-brand-info-200 { background-color: #BAE6FD !important; }
+  .bg-brand-info-700 { background-color: #0284C7 !important; }
+
+  .text-brand-info { color: #57A9DC !important; }
+  .text-brand-info-700 { color: #0284C7 !important; }
+  .border-brand-info-200 { border-color: #BAE6FD !important; }
 }

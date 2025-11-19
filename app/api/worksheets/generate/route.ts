@@ -14,7 +14,7 @@ async function fetchTasksFromDatabase(params: {
   quarter?: number | null;
   week?: number | null;
   taskCount: number;
-  difficulty: string;
+  difficulty: string | string[];
   taskTypes: string[];
 }) {
   const { subject, grade, topicId, quarter, week, taskCount, difficulty, taskTypes } = params;
@@ -44,8 +44,13 @@ async function fetchTasksFromDatabase(params: {
     }
 
     // Фильтр по сложности (если указана)
-    if (difficulty && difficulty !== 'ALL') {
-      whereConditions.push(`ci.difficulty = '${difficulty}'`);
+    if (difficulty) {
+      if (Array.isArray(difficulty) && difficulty.length > 0) {
+        const difficultyConditions = difficulty.map(d => `ci.difficulty = '${d}'`).join(' OR ');
+        whereConditions.push(`(${difficultyConditions})`);
+      } else if (typeof difficulty === 'string' && difficulty !== 'ALL') {
+        whereConditions.push(`ci.difficulty = '${difficulty}'`);
+      }
     }
 
     // Фильтр по типам задач (проверяем content.task_type)
@@ -73,6 +78,8 @@ async function fetchTasksFromDatabase(params: {
       ORDER BY RANDOM()
       LIMIT ${taskCount};
     `;
+
+    console.log('SQL Query:', sql.replace(/\n/g, ' ').replace(/\s+/g, ' '));
 
     const { stdout } = await execAsync(
       `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
@@ -150,13 +157,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверяем, что указана либо тема, либо четверть
-    if (!topicId && !quarter) {
-      return NextResponse.json(
-        { success: false, message: 'Укажите либо тему, либо четверть' },
-        { status: 400 }
-      );
-    }
+    // Проверяем, что указана либо тема, либо четверть (опционально)
+    // Если не указано - берем задачи из всех тем для данного предмета и класса
+    // if (!topicId && !quarter) {
+    //   return NextResponse.json(
+    //     { success: false, message: 'Укажите либо тему, либо четверть' },
+    //     { status: 400 }
+    //   );
+    // }
 
     if (!Array.isArray(taskTypes) || taskTypes.length === 0) {
       return NextResponse.json(

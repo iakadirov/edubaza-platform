@@ -6,7 +6,11 @@ import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
 import { parseTextWithMath } from '@/lib/math-to-png';
 import { generateWorksheetTitle, generatePdfFileName } from '@/lib/worksheet-title';
+import { generatePDFWithPuppeteer } from '@/lib/pdf-html';
 import path from 'path';
+
+// Subjects that require high-quality math rendering (use Puppeteer)
+const HIGH_QUALITY_MATH_SUBJECTS = ['MATHEMATICS', 'PHYSICS', 'CHEMISTRY'];
 
 let fontsRegistered = false;
 
@@ -170,11 +174,17 @@ export async function GET(
 
         // Process options array if it exists (for multiple choice, single choice tasks)
         if (content.options && Array.isArray(content.options)) {
+          console.log('=== Processing options ===');
+          console.log('Options:', content.options);
           processedContent.optionsParts = await Promise.all(
-            content.options.map(async (option: string) => {
-              return await parseTextWithMath(option);
+            content.options.map(async (option: string, idx: number) => {
+              console.log(`Processing option ${idx}:`, option);
+              const parts = await parseTextWithMath(option);
+              console.log(`Option ${idx} parts:`, parts);
+              return parts;
             })
           );
+          console.log('=== Options processed ===');
         }
 
         // Process answer if it exists (for short answer tasks)
@@ -263,10 +273,31 @@ export async function GET(
       showWatermark,
     };
 
-    // Генерируем PDF
-    const pdfBuffer = await renderToBuffer(
-      React.createElement(WorksheetPDF, { data: pdfData }) as any
-    );
+    // Decide which PDF generation method to use based on subject
+    const usePuppeteer = HIGH_QUALITY_MATH_SUBJECTS.includes(worksheet.subject?.toUpperCase() || '');
+
+    console.log('=== PDF Generation Method ===');
+    console.log('Subject:', worksheet.subject);
+    console.log('Using Puppeteer:', usePuppeteer);
+    console.log('===========================');
+
+    let pdfBuffer: Buffer;
+
+    if (usePuppeteer) {
+      // Use Puppeteer for high-quality math rendering
+      pdfBuffer = await generatePDFWithPuppeteer({
+        id: worksheet.id,
+        title,
+        description: worksheet.description,
+        tasks: processedTasks,
+        generatedAt: new Date(),
+      }, user.specialty || undefined);
+    } else {
+      // Use react-pdf for other subjects
+      pdfBuffer = await renderToBuffer(
+        React.createElement(WorksheetPDF, { data: pdfData }) as any
+      ) as Buffer;
+    }
 
     // Формируем имя файла на узбекском
     const fileName = generatePdfFileName(

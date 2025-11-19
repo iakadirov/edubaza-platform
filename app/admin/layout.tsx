@@ -47,37 +47,37 @@ export default function AdminLayout({
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Загрузка...</div>
+        <div className="text-gray-600">Yuklanmoqda...</div>
       </div>
     );
   }
 
   const menuItems = [
     {
-      title: 'Главная',
+      title: 'Asosiy',
       items: [
-        { href: '/admin', label: 'Dashboard', icon: 'solar:chart-line-duotone', activeIcon: 'solar:chart-bold-duotone' },
+        { href: '/admin', label: 'Boshqaruv paneli', icon: 'solar:chart-line-duotone', activeIcon: 'solar:chart-bold-duotone' },
       ],
     },
     {
-      title: 'Контент',
+      title: 'Kontent',
       items: [
-        { href: '/admin/structure', label: 'Структура', icon: 'solar:buildings-2-line-duotone', activeIcon: 'solar:buildings-2-bold-duotone' },
-        { href: '/admin/content', label: 'Библиотека', icon: 'solar:book-2-line-duotone', activeIcon: 'solar:book-2-bold-duotone' },
-        { href: '/admin/worksheets', label: 'Рабочие листы', icon: 'solar:document-line-duotone', activeIcon: 'solar:document-bold-duotone' },
+        { href: '/admin/structure', label: 'Tuzilma', icon: 'solar:buildings-2-line-duotone', activeIcon: 'solar:buildings-2-bold-duotone' },
+        { href: '/admin/content', label: 'Kutubxona', icon: 'solar:book-2-line-duotone', activeIcon: 'solar:book-2-bold-duotone' },
+        { href: '/admin/worksheets', label: 'Ish varaqalari', icon: 'solar:document-line-duotone', activeIcon: 'solar:document-bold-duotone' },
       ],
     },
     {
-      title: 'Пользователи',
+      title: 'Foydalanuvchilar',
       items: [
-        { href: '/admin/users', label: 'Пользователи', icon: 'solar:users-group-rounded-line-duotone', activeIcon: 'solar:users-group-rounded-bold-duotone' },
+        { href: '/admin/users', label: 'Foydalanuvchilar', icon: 'solar:users-group-rounded-line-duotone', activeIcon: 'solar:users-group-rounded-bold-duotone' },
       ],
     },
     {
-      title: 'Система',
+      title: 'Tizim',
       items: [
-        { href: '/admin/subscription-plans', label: 'Тарифы', icon: 'solar:card-line-duotone', activeIcon: 'solar:card-bold-duotone' },
-        { href: '/admin/settings', label: 'Настройки', icon: 'solar:settings-line-duotone', activeIcon: 'solar:settings-bold-duotone' },
+        { href: '/admin/subscription-plans', label: 'Tariflar', icon: 'solar:card-line-duotone', activeIcon: 'solar:card-bold-duotone' },
+        { href: '/admin/settings', label: 'Sozlamalar', icon: 'solar:settings-line-duotone', activeIcon: 'solar:settings-bold-duotone' },
       ],
     },
   ];
@@ -92,7 +92,7 @@ export default function AdminLayout({
             <Link href="/dashboard" className="group text-blue-600 hover:text-blue-700 text-sm flex items-center gap-2 transition-colors">
               <Icon icon="solar:arrow-left-line-duotone" className="text-base group-hover:hidden" />
               <Icon icon="solar:arrow-left-bold-duotone" className="text-base hidden group-hover:block" />
-              <span>На главную</span>
+              <span>Bosh sahifaga</span>
             </Link>
             <h1 className="text-xl font-bold text-gray-900 mt-3">
               Admin Panel
@@ -148,7 +148,7 @@ export default function AdminLayout({
               href="/dashboard"
               className="block text-center px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
             >
-              Выйти из админки
+              Adminkadan chiqish
             </Link>
           </div>
         </div>
