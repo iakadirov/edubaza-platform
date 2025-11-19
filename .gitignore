@@ -58,3 +58,19 @@ logs
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary test files
+test-*.html
+test-*.js
+test-*.ts
+
+# Backup files
+*.backup.*
+*-old.*
+*.old
+
+# SQL scripts (use Prisma migrations)
+migration_*.sql
+
+# Windows artifacts
+NUL
