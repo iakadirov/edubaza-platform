@@ -5,14 +5,90 @@ import { verifyToken } from '@/lib/jwt';
 
 const execAsync = promisify(exec);
 
-// GET - Получение всех материалов с фильтрами
+// GET - Получение всех материалов с фильтрами или одного материала по id
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     const grade = searchParams.get('grade');
     const subjectCode = searchParams.get('subject');
     const topicId = searchParams.get('topic');
     const typeCode = searchParams.get('type'); // TASK, TEST, PROBLEM, etc.
+
+    // Если запрашивается конкретный элемент по ID
+    if (id) {
+      const sql = `
+        SELECT
+          ci.id,
+          ci.title_uz,
+          ci.content,
+          ci.difficulty,
+          ci.duration_minutes,
+          ci.tags,
+          ci.status,
+          ci.created_at,
+          ci.updated_at,
+          ci.topic_id,
+          ct.code as content_type_code,
+          ct.name_uz as content_type_name,
+          t.id as topic_id,
+          t.title_uz as topic_name,
+          t.grade_number,
+          s.id as subject_id,
+          s.code as subject_code,
+          s.name_uz as subject_name
+        FROM content_items ci
+        JOIN content_types ct ON ci.content_type_id = ct.id
+        JOIN topics t ON ci.topic_id = t.id
+        JOIN subjects s ON t.subject_id = s.id
+        WHERE ci.id = '${id}' AND ci.is_active = TRUE;
+      `;
+
+      const { stdout } = await execAsync(
+        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
+        { maxBuffer: 50 * 1024 * 1024 }
+      );
+
+      if (!stdout || stdout.trim() === '') {
+        return NextResponse.json({
+          success: false,
+          message: 'Материал не найден',
+        }, { status: 404 });
+      }
+
+      const parts = stdout.trim().split('|');
+      const item = {
+        id: parts[0],
+        titleUz: parts[1],
+        content: parts[2] ? JSON.parse(parts[2]) : {},
+        difficulty: parts[3] || null,
+        durationMinutes: parts[4] ? parseInt(parts[4]) : null,
+        tags: parts[5] ? parts[5].replace(/[{}]/g, '').split(',').filter(t => t) : [],
+        status: parts[6],
+        createdAt: parts[7],
+        updatedAt: parts[8],
+        topicId: parts[9],
+        type: {
+          code: parts[10],
+          nameUz: parts[11],
+        },
+        topic: {
+          id: parts[12],
+          titleUz: parts[13],
+          gradeNumber: parseInt(parts[14]),
+        },
+        subject: {
+          id: parts[15],
+          code: parts[16],
+          nameUz: parts[17],
+        },
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: item,
+      });
+    }
 
     // Строим SQL запрос с фильтрами
     let whereConditions: string[] = ['ci.is_active = TRUE'];

@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View, Image } from '@react-pdf/renderer';
 import { commonStyles } from '../styles/common';
 import { MathText } from './MathText';
+import { normalizeUzbText } from '../utils/text-normalize';
 
 interface TaskContent {
   task_type?: string;
@@ -45,7 +46,7 @@ export const SingleChoiceTask: React.FC<{ content: TaskContent }> = ({ content }
               </View>
             ) : (
               <Text style={commonStyles.optionText}>
-                {String.fromCharCode(65 + index)}. {option}
+                {String.fromCharCode(65 + index)}. {normalizeUzbText(option)}
               </Text>
             )}
           </View>
@@ -83,7 +84,7 @@ export const MultipleChoiceTask: React.FC<{ content: TaskContent }> = ({ content
               </View>
             ) : (
               <Text style={commonStyles.optionText}>
-                {String.fromCharCode(65 + index)}. {option}
+                {String.fromCharCode(65 + index)}. {normalizeUzbText(option)}
               </Text>
             )}
           </View>
@@ -112,11 +113,11 @@ export const TrueFalseTask: React.FC<{ content: TaskContent }> = ({ content }) =
       <View style={[commonStyles.optionsContainer, { gap: 23 }]}>
         <View style={commonStyles.optionItem}>
           <View style={commonStyles.checkbox} />
-          <Text style={commonStyles.optionText}>✓ To'g'ri</Text>
+          <Text style={commonStyles.optionText}>{normalizeUzbText("✓ To'g'ri")}</Text>
         </View>
         <View style={commonStyles.optionItem}>
           <View style={commonStyles.checkbox} />
-          <Text style={commonStyles.optionText}>✗ Noto'g'ri</Text>
+          <Text style={commonStyles.optionText}>{normalizeUzbText("✗ Noto'g'ri")}</Text>
         </View>
       </View>
     </View>
@@ -171,7 +172,7 @@ export const FillBlanksTask: React.FC<{ content: TaskContent }> = ({ content }) 
                 />
               );
             }
-            return <Text key={index} style={commonStyles.questionText}>{part}</Text>;
+            return <Text key={index} style={commonStyles.questionText}>{normalizeUzbText(part)}</Text>;
           })}
         </View>
       );
@@ -199,7 +200,7 @@ export const FillBlanksTask: React.FC<{ content: TaskContent }> = ({ content }) 
                   />
                 );
               }
-              return <Text key={`${index}-${subIndex}`} style={commonStyles.questionText}>{textPart}</Text>;
+              return <Text key={`${index}-${subIndex}`} style={commonStyles.questionText}>{normalizeUzbText(textPart)}</Text>;
             });
           } else if (part.type === 'math' && part.pngDataUrl) {
             return (
@@ -286,7 +287,7 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
                     </View>
                   ) : (
                     <Text style={commonStyles.optionText}>
-                      {index + 1}. {pair.left}
+                      {index + 1}. {normalizeUzbText(pair.left)}
                     </Text>
                   )}
                 </View>
@@ -336,7 +337,7 @@ export const MatchingTask: React.FC<{ content: TaskContent }> = ({ content }) =>
                     </View>
                   ) : (
                     <Text style={commonStyles.optionText}>
-                      {item.letter}. {item.text}
+                      {item.letter}. {normalizeUzbText(item.text)}
                     </Text>
                   )}
                 </View>

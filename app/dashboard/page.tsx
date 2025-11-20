@@ -9,6 +9,9 @@ interface User {
   id: string;
   phone: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  role: string;
   specialty: string | null;
   school: string | null;
   subscriptionPlan: string;
@@ -29,11 +32,19 @@ interface Worksheet {
   taskCount: number;
 }
 
+const roleLabels: Record<string, string> = {
+  STUDENT: 'Oʻquvchi',
+  TEACHER: 'Oʻqituvchi',
+  PARENT: 'Ota-ona',
+  ADMIN: 'Administrator',
+  SUPER_ADMIN: 'Super Administrator',
+};
+
 const specialtyLabels: Record<string, string> = {
-  PRIMARY_SCHOOL: 'Boshlang\'ich sinflar (1-4)',
+  PRIMARY_SCHOOL: 'Boshlangʻich sinflar (1-4)',
   MATHEMATICS: 'Matematika',
   RUSSIAN_LANGUAGE: 'Rus tili',
-  UZBEK_LANGUAGE: 'O\'zbek tili',
+  UZBEK_LANGUAGE: 'Oʻzbek tili',
   ENGLISH_LANGUAGE: 'Ingliz tili',
   PHYSICS: 'Fizika',
   CHEMISTRY: 'Kimyo',
@@ -44,7 +55,7 @@ const specialtyLabels: Record<string, string> = {
   INFORMATICS: 'Informatika',
   PHYSICAL_EDUCATION: 'Jismoniy tarbiya',
   MUSIC: 'Musiqa',
-  ART: 'Tasviriy san\'at',
+  ART: 'Tasviriy sanʻat',
   OTHER: 'Boshqa',
 };
 
@@ -54,7 +65,7 @@ const subjectLabels: Record<string, string> = {
   CHEMISTRY: 'Kimyo',
   BIOLOGY: 'Biologiya',
   RUSSIAN_LANGUAGE: 'Rus tili',
-  UZBEK_LANGUAGE: 'O\'zbek tili',
+  UZBEK_LANGUAGE: 'Oʻzbek tili',
   ENGLISH_LANGUAGE: 'Ingliz tili',
   HISTORY: 'Tarix',
   GEOGRAPHY: 'Geografiya',
@@ -77,7 +88,7 @@ export default function DashboardPage() {
       return;
     }
 
-    // Загружаем актуальные данные с сервера
+    // Serverdan dolzarb ma'lumotlarni yuklaymiz
     fetch('/api/user/profile', {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -102,7 +113,7 @@ export default function DashboardPage() {
         setLoading(false);
       });
 
-    // Загружаем worksheets
+    // Topshiriqlarni yuklaymiz
     if (token) {
       fetch('/api/worksheets', {
         headers: {
@@ -193,15 +204,25 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-40">F.I.SH:</span>
-              <span className="text-gray-900 font-semibold">{user.name || 'Ko\'rsatilmagan'}</span>
+              <span className="text-gray-900 font-semibold">
+                {user.firstName && user.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user.name || 'Ko\'rsatilmagan'}
+              </span>
+            </div>
+            <div className="flex items-center">
+              <span className="text-gray-600 w-40">Rol:</span>
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                {roleLabels[user.role] || user.role}
+              </span>
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-40">Mutaxassislik:</span>
-              <span className="text-gray-900 font-medium">{user.specialty ? specialtyLabels[user.specialty] || user.specialty : 'Ko\'rsatilmagan'}</span>
+              <span className="text-gray-900 font-medium">{user.specialty ? specialtyLabels[user.specialty] || user.specialty : 'Koʻrsatilmagan'}</span>
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-40">Maktab:</span>
-              <span className="text-gray-900 font-medium">{user.school || 'Ko\'rsatilmagan'}</span>
+              <span className="text-gray-900 font-medium">{user.school || 'Koʻrsatilmagan'}</span>
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-40">Tarif rejasi:</span>

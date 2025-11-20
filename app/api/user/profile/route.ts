@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
-import { findUserByPhone, updateUserProfile, TeacherSpecialty } from '@/lib/db-users';
+import { findUserByPhone as findUserByPhoneOld, TeacherSpecialty } from '@/lib/db-users';
+import { findUserByPhone, findUserById, updateUserProfileExtended } from '@/lib/db-users-extended';
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,7 +102,10 @@ export async function GET(request: NextRequest) {
         id: user.id,
         phone: user.phone,
         name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
+        role: user.role,
         specialty: user.specialty,
         school: user.school,
         subscriptionPlan: user.subscriptionPlan,
@@ -147,12 +151,26 @@ export async function PUT(request: NextRequest) {
 
     // Парсим body
     const body = await request.json();
-    const { name, specialty, school } = body;
+    const { name, firstName, lastName, specialty, school } = body;
 
     // Валидация
     if (name !== undefined && typeof name !== 'string') {
       return NextResponse.json(
         { success: false, message: 'Имя должно быть строкой' },
+        { status: 400 }
+      );
+    }
+
+    if (firstName !== undefined && typeof firstName !== 'string') {
+      return NextResponse.json(
+        { success: false, message: 'Имя должно быть строкой' },
+        { status: 400 }
+      );
+    }
+
+    if (lastName !== undefined && typeof lastName !== 'string') {
+      return NextResponse.json(
+        { success: false, message: 'Фамилия должна быть строкой' },
         { status: 400 }
       );
     }
@@ -192,9 +210,20 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Получаем текущего пользователя
+    const currentUser = await findUserByPhone(payload.phone);
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, message: 'Пользователь не найден' },
+        { status: 404 }
+      );
+    }
+
     // Обновляем профиль
-    const user = await updateUserProfile(payload.phone, {
+    const user = await updateUserProfileExtended(currentUser.id, {
       name,
+      firstName,
+      lastName,
       specialty,
       school,
     });
@@ -213,7 +242,10 @@ export async function PUT(request: NextRequest) {
         id: user.id,
         phone: user.phone,
         name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
+        role: user.role,
         specialty: user.specialty,
         school: user.school,
         subscriptionPlan: user.subscriptionPlan,

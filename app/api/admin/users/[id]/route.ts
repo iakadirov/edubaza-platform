@@ -58,6 +58,8 @@ export async function GET(
         id,
         phone,
         name,
+        first_name,
+        last_name,
         email,
         role,
         specialty,
@@ -88,6 +90,8 @@ export async function GET(
       id,
       phone,
       name,
+      firstName,
+      lastName,
       email,
       role,
       specialty,
@@ -105,6 +109,8 @@ export async function GET(
       id,
       phone,
       name: name || null,
+      firstName: firstName || null,
+      lastName: lastName || null,
       email: email || null,
       role,
       specialty: specialty || null,
@@ -145,10 +151,10 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, email, role, specialty, school, subscriptionPlan, isActive } = body;
+    const { name, firstName, lastName, email, role, specialty, school, subscriptionPlan, isActive } = body;
 
     // Validate role
-    const validRoles = ['USER', 'ADMIN', 'SUPER_ADMIN'];
+    const validRoles = ['STUDENT', 'TEACHER', 'PARENT', 'USER', 'ADMIN', 'SUPER_ADMIN'];
     if (role && !validRoles.includes(role)) {
       return NextResponse.json({ error: 'Неверная роль' }, { status: 400 });
     }
@@ -169,6 +175,8 @@ export async function PUT(
     // Build update query
     const updates = [];
     if (name !== undefined) updates.push(`name = ${name ? `'${name.replace(/'/g, "''")}'` : 'NULL'}`);
+    if (firstName !== undefined) updates.push(`first_name = ${firstName ? `'${firstName.replace(/'/g, "''")}'` : 'NULL'}`);
+    if (lastName !== undefined) updates.push(`last_name = ${lastName ? `'${lastName.replace(/'/g, "''")}'` : 'NULL'}`);
     if (email !== undefined) updates.push(`email = ${email ? `'${email.replace(/'/g, "''")}'` : 'NULL'}`);
     if (role !== undefined) updates.push(`role = '${role}'`);
     if (specialty !== undefined) updates.push(`specialty = ${specialty ? `'${specialty.replace(/'/g, "''")}'` : 'NULL'}`);

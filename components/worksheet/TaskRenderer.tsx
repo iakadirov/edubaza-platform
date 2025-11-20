@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Icon } from '@iconify/react';
 import { MathText } from '@/components/MathText';
 
 interface TaskContent {
@@ -21,12 +22,21 @@ interface TaskContent {
 interface Task {
   id: string;
   content: TaskContent;
+  metadata?: {
+    isAiGenerated?: boolean;
+    generatedAt?: string;
+    approved?: boolean;
+  };
 }
 
 interface TaskRendererProps {
   task: Task;
   index: number;
   interactive?: boolean;
+  onDelete?: (taskId: string) => void;
+  onEdit?: (taskId: string) => void;
+  onRegenerate?: (taskId: string) => void;
+  onApprove?: (taskId: string) => void;
 }
 
 // 1. SINGLE_CHOICE
@@ -384,8 +394,17 @@ const EssayTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ 
 };
 
 // Main Task Renderer
-export const TaskRenderer: React.FC<TaskRendererProps> = ({ task, index, interactive = false }) => {
+export const TaskRenderer: React.FC<TaskRendererProps> = ({
+  task,
+  index,
+  interactive = false,
+  onDelete,
+  onEdit,
+  onRegenerate,
+  onApprove
+}) => {
   const taskType = task.content.task_type?.toUpperCase();
+  const [showActions, setShowActions] = React.useState(false);
 
   let TaskComponent;
   switch (taskType) {
@@ -414,16 +433,82 @@ export const TaskRenderer: React.FC<TaskRendererProps> = ({ task, index, interac
       return null;
   }
 
+  const isAiGenerated = task.metadata?.isAiGenerated;
+  const isApproved = task.metadata?.approved;
+
   return (
-    <div className="w-full bg-white rounded-xl p-5 my-3" style={{ boxShadow: 'rgba(0, 0, 0, 0.2) 0px 0px 2px' }}>
+    <div
+      className="w-full bg-white rounded-xl p-5 my-3 relative group"
+      style={{ boxShadow: 'rgba(0, 0, 0, 0.2) 0px 0px 2px' }}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
       <div className="flex items-start gap-4">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full text-blue-700 text-base font-bold flex items-center justify-center flex-shrink-0">
           {index + 1}
         </div>
         <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {isAiGenerated && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-full">
+                  <Icon icon="solar:magic-stick-3-bold-duotone" className="text-purple-600 text-sm" />
+                  <span className="text-xs font-semibold text-purple-700">AI tuzgan</span>
+                </div>
+              )}
+              {isAiGenerated && isApproved && (
+                <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 border border-green-200 rounded-full">
+                  <Icon icon="solar:check-circle-bold" className="text-green-600 text-xs" />
+                  <span className="text-xs font-medium text-green-700">Tasdiqlangan</span>
+                </div>
+              )}
+            </div>
+          </div>
           <TaskComponent content={task.content} interactive={interactive} />
         </div>
       </div>
+
+      {/* Action buttons for AI-generated tasks */}
+      {isAiGenerated && (onDelete || onEdit || onRegenerate || onApprove) && (
+        <div className={`absolute bottom-3 right-3 flex items-center gap-1 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          {!isApproved && onApprove && (
+            <button
+              onClick={() => onApprove(task.id)}
+              className="p-2 bg-green-50 hover:bg-green-100 text-green-600 rounded-lg transition-all hover:scale-110 shadow-sm border border-green-200"
+              title="Tasdiqlash"
+            >
+              <Icon icon="solar:check-circle-bold" className="text-lg" />
+            </button>
+          )}
+          {onRegenerate && (
+            <button
+              onClick={() => onRegenerate(task.id)}
+              className="p-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-all hover:scale-110 shadow-sm border border-purple-200"
+              title="Qayta yaratish"
+            >
+              <Icon icon="solar:restart-bold" className="text-lg" />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={() => onEdit(task.id)}
+              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-all hover:scale-110 shadow-sm border border-blue-200"
+              title="Tahrirlash"
+            >
+              <Icon icon="solar:pen-bold" className="text-lg" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(task.id)}
+              className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all hover:scale-110 shadow-sm border border-red-200"
+              title="O'chirish"
+            >
+              <Icon icon="solar:trash-bin-trash-bold" className="text-lg" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

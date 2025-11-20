@@ -30,6 +30,25 @@ export async function deleteOTP(phone: string): Promise<void> {
   await client.del(key);
 }
 
+// Проверка и удаление OTP
+export async function verifyOTP(phone: string, otp: string, deleteAfterVerify: boolean = true): Promise<boolean> {
+  const storedOTP = await getOTP(phone);
+
+  if (!storedOTP) {
+    return false; // OTP не найден или истек
+  }
+
+  if (storedOTP !== otp) {
+    return false; // OTP не совпадает
+  }
+
+  // OTP корректный - удаляем его только если требуется
+  if (deleteAfterVerify) {
+    await deleteOTP(phone);
+  }
+  return true;
+}
+
 // Rate limiting для предотвращения спама
 export async function checkRateLimit(phone: string): Promise<boolean> {
   const client = getRedisClient();

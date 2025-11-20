@@ -6,7 +6,7 @@ import { findOrCreateUser } from '@/lib/db-users';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone, otp } = body;
+    const { phone, otp, skipUserCreation } = body;
 
     // Валидация
     if (!phone || !otp) {
@@ -55,7 +55,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // OTP верный, удаляем его из Redis
+    // Если это только проверка OTP для регистрации - НЕ удаляем код и НЕ создаем пользователя
+    if (skipUserCreation) {
+      // Проверяем, существует ли пользователь
+      const { findUserByPhone } = await import('@/lib/db-users-extended');
+      const existingUser = await findUserByPhone(formattedPhone);
+
+      return NextResponse.json({
+        success: true,
+        message: 'OTP код верный',
+        userExists: !!existingUser,
+      });
+    }
+
+    // OTP верный, удаляем его из Redis (только для полной авторизации)
     await deleteOTP(formattedPhone);
 
     // Находим или создаём пользователя

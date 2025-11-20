@@ -1,14 +1,14 @@
 'use client';
 
 import { Icon } from '@iconify/react';
-import { TASK_SOURCES, DIFFICULTY_LEVELS, TASK_TYPES } from '@/lib/worksheet-generator-config';
+import { DIFFICULTY_LEVELS, TASK_TYPES } from '@/lib/worksheet-generator-config';
 
 interface GenerationParamsProps {
   taskCount: number;
   onTaskCountChange: (count: number) => void;
 
-  taskSource: string;
-  onTaskSourceChange: (source: string) => void;
+  aiPercentage: number;
+  onAiPercentageChange: (percentage: number) => void;
 
   selectedDifficulties: string[];
   onDifficultiesChange: (difficulties: string[]) => void;
@@ -20,13 +20,16 @@ interface GenerationParamsProps {
 export default function GenerationParams({
   taskCount,
   onTaskCountChange,
-  taskSource,
-  onTaskSourceChange,
+  aiPercentage,
+  onAiPercentageChange,
   selectedDifficulties,
   onDifficultiesChange,
   selectedTaskTypes,
   onTaskTypesChange,
 }: GenerationParamsProps) {
+  // Calculate task distribution
+  const aiTaskCount = Math.round(taskCount * aiPercentage / 100);
+  const dbTaskCount = taskCount - aiTaskCount;
   const toggleDifficulty = (difficulty: string) => {
     if (selectedDifficulties.includes(difficulty)) {
       const filtered = selectedDifficulties.filter((d) => d !== difficulty);
@@ -74,37 +77,105 @@ export default function GenerationParams({
           </select>
         </div>
 
-        {/* Источник */}
+        {/* Источник (Slider) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Icon icon="solar:database-bold-duotone" className="text-lg text-purple-600" />
-            Manba:
+            Manba tanlash:
           </label>
-          <div className="space-y-2">
-            {TASK_SOURCES.map((source) => (
-              <label
-                key={source.value}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border-2 transition-all ${
-                  taskSource === source.value
-                    ? 'border-purple-600 bg-purple-50'
-                    : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="taskSource"
-                  value={source.value}
-                  checked={taskSource === source.value}
-                  onChange={(e) => onTaskSourceChange(e.target.value)}
-                  className="w-4 h-4 text-purple-600"
-                />
-                <Icon icon={source.icon} className="text-xl text-purple-600" />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-800">{source.label}</div>
-                  <div className="text-xs text-gray-500">{source.description}</div>
-                </div>
-              </label>
-            ))}
+
+          {/* Slider Labels */}
+          <div className="flex justify-between items-center mb-2 text-sm font-medium">
+            <span className="text-green-700 flex items-center gap-1">
+              <Icon icon="solar:book-bold-duotone" className="text-lg" />
+              Darsliklar
+            </span>
+            <span className="text-purple-700 flex items-center gap-1">
+              <Icon icon="solar:magic-stick-3-bold-duotone" className="text-lg" />
+              AI
+            </span>
+          </div>
+
+          {/* Slider */}
+          <div className="relative py-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="10"
+              value={aiPercentage}
+              onChange={(e) => onAiPercentageChange(parseInt(e.target.value))}
+              className="w-full h-3 bg-gradient-to-r from-green-200 via-yellow-200 to-purple-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+              style={{
+                background: `linear-gradient(to right, #86efac ${100 - aiPercentage}%, #c084fc ${100 - aiPercentage}%)`,
+              }}
+            />
+          </div>
+
+          {/* Percentage Display */}
+          <div className="flex justify-between items-center mt-2 text-xs">
+            <span className={`font-semibold ${aiPercentage < 50 ? 'text-green-700' : 'text-gray-400'}`}>
+              {100 - aiPercentage}%
+            </span>
+            <span className={`font-semibold ${aiPercentage > 50 ? 'text-purple-700' : 'text-gray-400'}`}>
+              {aiPercentage}%
+            </span>
+          </div>
+
+          {/* Task Distribution Display */}
+          <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-purple-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <Icon icon="solar:book-bold" className="text-green-600" />
+                <span className="font-medium text-gray-700">
+                  {dbTaskCount} ta darslikdan
+                </span>
+              </div>
+              <div className="text-gray-400">+</div>
+              <div className="flex items-center gap-2">
+                <Icon icon="solar:magic-stick-3-bold" className="text-purple-600" />
+                <span className="font-medium text-gray-700">
+                  {aiTaskCount} ta AI
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Presets */}
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => onAiPercentageChange(0)}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                aiPercentage === 0
+                  ? 'bg-green-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              100% Darslik
+            </button>
+            <button
+              type="button"
+              onClick={() => onAiPercentageChange(50)}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                aiPercentage === 50
+                  ? 'bg-gradient-to-r from-green-600 to-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              50/50 Aralash
+            </button>
+            <button
+              type="button"
+              onClick={() => onAiPercentageChange(100)}
+              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                aiPercentage === 100
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              100% AI
+            </button>
           </div>
         </div>
       </div>

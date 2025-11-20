@@ -9,7 +9,10 @@ interface UserProfile {
   id: string;
   phone: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   email: string | null;
+  role: string;
   specialty: string | null;
   school: string | null;
   subscriptionPlan: string;
@@ -27,11 +30,19 @@ interface UserProfile {
   };
 }
 
+const roleLabels: Record<string, string> = {
+  STUDENT: 'Oʻquvchi',
+  TEACHER: 'Oʻqituvchi',
+  PARENT: 'Ota-ona',
+  ADMIN: 'Administrator',
+  SUPER_ADMIN: 'Super Administrator',
+};
+
 const specialtyLabels: Record<string, string> = {
-  PRIMARY_SCHOOL: 'Boshlang\'ich sinflar (1-4)',
+  PRIMARY_SCHOOL: 'Boshlangʻich sinflar (1-4)',
   MATHEMATICS: 'Matematika',
   RUSSIAN_LANGUAGE: 'Rus tili',
-  UZBEK_LANGUAGE: 'O\'zbek tili',
+  UZBEK_LANGUAGE: 'Oʻzbek tili',
   ENGLISH_LANGUAGE: 'Ingliz tili',
   PHYSICS: 'Fizika',
   CHEMISTRY: 'Kimyo',
@@ -42,7 +53,7 @@ const specialtyLabels: Record<string, string> = {
   INFORMATICS: 'Informatika',
   PHYSICAL_EDUCATION: 'Jismoniy tarbiya',
   MUSIC: 'Musiqa',
-  ART: 'Tasviriy san\'at',
+  ART: 'Tasviriy sanʻat',
   OTHER: 'Boshqa',
 };
 
@@ -55,6 +66,8 @@ export default function ProfilePage() {
 
   // Form state
   const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [school, setSchool] = useState('');
 
@@ -81,6 +94,8 @@ export default function ProfilePage() {
       if (response.ok && data.success) {
         setProfile(data.data);
         setName(data.data.name || '');
+        setFirstName(data.data.firstName || '');
+        setLastName(data.data.lastName || '');
         setSpecialty(data.data.specialty || '');
         setSchool(data.data.school || '');
       } else {
@@ -117,6 +132,8 @@ export default function ProfilePage() {
         },
         body: JSON.stringify({
           name: name.trim() || null,
+          firstName: firstName.trim() || null,
+          lastName: lastName.trim() || null,
           specialty: specialty || null,
           school: school.trim() || null,
         }),
@@ -128,7 +145,7 @@ export default function ProfilePage() {
         setProfile(data.data);
         setMessage({ type: 'success', text: 'Profil muvaffaqiyatli yangilandi!' });
 
-        // Обновляем localStorage
+        // localStorage'ni yangilaymiz
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const user = JSON.parse(storedUser);
@@ -203,19 +220,47 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Name */}
+            {/* Role (readonly) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                F.I.SH <span className="text-red-500">*</span>
+                Rol
               </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ivanov Ivan Ivanovich"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-              />
+              <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-800">
+                  {roleLabels[profile.role] || profile.role}
+                </span>
+              </div>
+            </div>
+
+            {/* First Name and Last Name */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ism <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Ivan"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Familiya <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Ivanov"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
             </div>
 
             {/* Specialty */}
@@ -257,7 +302,7 @@ export default function ProfilePage() {
               disabled={saving}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {saving ? 'Saqlanmoqda...' : 'O\'zgarishlarni saqlash'}
+              {saving ? 'Saqlanmoqda...' : 'Oʻzgarishlarni saqlash'}
             </button>
           </form>
         </div>
@@ -265,7 +310,15 @@ export default function ProfilePage() {
         {/* Subscription Plan Info */}
         {profile.planInfo && (
           <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Obuna rejasi</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Obuna rejasi</h2>
+              <Link
+                href="/pricing"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+              >
+                Rejani oʻzgartirish
+              </Link>
+            </div>
 
             <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
               <div>
@@ -346,7 +399,7 @@ export default function ProfilePage() {
                   {profile.planInfo.showWatermark ? (
                     <span className="text-sm text-orange-600">Mavjud</span>
                   ) : (
-                    <span className="text-sm font-bold text-green-600">Yo'q</span>
+                    <span className="text-sm font-bold text-green-600">Yoʻq</span>
                   )}
                 </div>
               </div>

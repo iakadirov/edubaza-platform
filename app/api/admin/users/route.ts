@@ -52,7 +52,10 @@ export async function GET(request: NextRequest) {
         id,
         phone,
         name,
+        first_name,
+        last_name,
         role,
+        \\"subscriptionPlan\\",
         \\"createdAt\\"
       FROM users
       ORDER BY \\"createdAt\\" DESC
@@ -65,12 +68,15 @@ export async function GET(request: NextRequest) {
 
     const lines = stdout.trim().split('\n').filter(Boolean);
     const users = lines.map(line => {
-      const [id, phone, name, role, createdAt] = line.split('|');
+      const [id, phone, name, firstName, lastName, role, subscriptionPlan, createdAt] = line.split('|');
       return {
         id,
         phone,
         name: name || null,
+        firstName: firstName || null,
+        lastName: lastName || null,
         role,
+        subscriptionPlan,
         createdAt,
       };
     });

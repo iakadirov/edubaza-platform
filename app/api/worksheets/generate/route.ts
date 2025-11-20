@@ -3,6 +3,7 @@ import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { generateTasks, GenerateTasksParams, Task } from '@/lib/gemini';
 
 const execAsync = promisify(exec);
 
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     // Парсим body
     const body = await request.json();
-    const { subject, grade, topic, topicId, quarter, week, taskCount, difficulty, taskTypes, language } = body;
+    const { subject, grade, topic, topicId, quarter, week, taskCount, difficulty, taskTypes, language, aiPercentage } = body;
 
     // Валидация
     if (!subject || !grade || !taskCount || !difficulty || !taskTypes) {
@@ -186,21 +187,185 @@ export async function POST(request: NextRequest) {
     //   );
     // }
 
-    console.log('Generating worksheet with params:', { subject, grade, topic, taskCount, difficulty, taskTypes, language: contentLanguage });
+    console.log('');
+    console.log('╔══════════════════════════════════════════════════════╗');
+    console.log('║      WORKSHEET GENERATION - DETAILED LOGS           ║');
+    console.log('╚══════════════════════════════════════════════════════╝');
+    console.log('');
+    console.log('📥 REQUEST PARAMETERS:');
+    console.log(`   User ID: ${user.id}`);
+    console.log(`   User Phone: ${payload.phone}`);
+    console.log(`   Subject: ${subject}`);
+    console.log(`   Grade: ${grade}`);
+    console.log(`   Topic: ${topic || 'not specified'}`);
+    console.log(`   Topic ID: ${topicId || 'not specified'}`);
+    console.log(`   Quarter: ${quarter || 'not specified'}`);
+    console.log(`   Week: ${week || 'not specified'}`);
+    console.log(`   Task Count: ${taskCount}`);
+    console.log(`   Difficulty: ${Array.isArray(difficulty) ? difficulty.join(', ') : difficulty}`);
+    console.log(`   Task Types: ${taskTypes.join(', ')}`);
+    console.log(`   Language: ${contentLanguage}`);
+    console.log(`   AI Percentage: ${aiPercentage}%`);
+    console.log('');
 
-    // Получаем задачи из базы данных вместо генерации через OpenAI
-    const tasks = await fetchTasksFromDatabase({
-      subject,
-      grade: Number(grade),
-      topicId,
-      quarter: quarter ? Number(quarter) : null,
-      week: week ? Number(week) : null,
-      taskCount: Number(taskCount),
-      difficulty,
-      taskTypes,
-    });
+    let tasks: any[];
 
-    console.log('Fetched tasks from database:', tasks.length);
+    // Calculate AI and DB task counts based on aiPercentage (0-100)
+    const aiPercent = aiPercentage !== undefined ? Number(aiPercentage) : 0;
+    const aiTaskCount = Math.round(taskCount * aiPercent / 100);
+    const dbTaskCount = taskCount - aiTaskCount;
+
+    console.log('🔢 TASK DISTRIBUTION CALCULATION:');
+    console.log(`   Total requested: ${taskCount} tasks`);
+    console.log(`   AI Percentage: ${aiPercent}%`);
+    console.log(`   AI Tasks: ${aiTaskCount} (${Math.round(taskCount * aiPercent / 100)} rounded)`);
+    console.log(`   DB Tasks: ${dbTaskCount}`);
+    console.log(`   Formula: AI = round(${taskCount} * ${aiPercent}/100) = ${aiTaskCount}`);
+    console.log('');
+
+    // Choose generation method: AI, Database, or Hybrid
+    if (aiPercent > 0 && aiTaskCount > 0) {
+      console.log('🤖 HYBRID MODE: Using both AI and Database');
+      console.log(`   AI Tasks to generate: ${aiTaskCount}`);
+      console.log(`   DB Tasks to fetch: ${dbTaskCount}`);
+      console.log('');
+
+      // Convert difficulty to Uzbek format for AI
+      let aiDifficulty = difficulty;
+      if (Array.isArray(difficulty)) {
+        aiDifficulty = difficulty[0]; // Take first difficulty level
+        console.log(`⚠️  Multiple difficulties selected: [${difficulty.join(', ')}]`);
+        console.log(`   Using first difficulty for AI: ${aiDifficulty}`);
+      }
+
+      const difficultyMap: Record<string, 'oson' | 'oʻrta' | 'qiyin'> = {
+        'EASY': 'oson',
+        'MEDIUM': 'oʻrta',
+        'HARD': 'qiyin',
+      };
+
+      const mappedDifficulty = difficultyMap[aiDifficulty] || 'oʻrta';
+      console.log(`   Difficulty mapping: ${aiDifficulty} → ${mappedDifficulty}`);
+      console.log('');
+
+      let aiTasks: any[] = [];
+      let dbTasks: any[] = [];
+
+      // Generate AI tasks
+      console.log('┌─────────────────────────────────────────┐');
+      console.log('│  STEP 1: AI TASK GENERATION             │');
+      console.log('└─────────────────────────────────────────┘');
+      try {
+        const aiParams: GenerateTasksParams = {
+          subject,
+          grade: Number(grade),
+          topic: topic || topicId || `${subject} - ${grade}-sinf`,
+          taskCount: aiTaskCount,
+          difficulty: mappedDifficulty,
+          taskTypes,
+        };
+
+        console.log('📋 AI Generation Parameters:');
+        console.log(`   Subject: ${aiParams.subject}`);
+        console.log(`   Grade: ${aiParams.grade}`);
+        console.log(`   Topic: ${aiParams.topic}`);
+        console.log(`   Task Count: ${aiParams.taskCount}`);
+        console.log(`   Difficulty: ${aiParams.difficulty}`);
+        console.log(`   Task Types: ${aiParams.taskTypes.join(', ')}`);
+        console.log('');
+        console.log('🚀 Calling generateTasks()...');
+        console.log('');
+
+        aiTasks = await generateTasks(aiParams);
+
+        console.log('');
+        console.log(`✅ AI Generation Complete: ${aiTasks.length} tasks generated`);
+        console.log('');
+      } catch (aiError) {
+        console.log('');
+        console.error('❌ AI GENERATION FAILED');
+        console.error('   Error:', aiError);
+        console.error('   Will compensate by fetching more tasks from database');
+        console.log('');
+        // If AI fails, we'll fetch more from DB to compensate
+      }
+
+      // Fetch DB tasks if needed
+      if (dbTaskCount > 0) {
+        console.log('┌─────────────────────────────────────────┐');
+        console.log('│  STEP 2: DATABASE TASK FETCHING        │');
+        console.log('└─────────────────────────────────────────┘');
+        try {
+          // If AI failed, fetch the full amount from DB
+          const dbFetchCount = aiTasks.length < aiTaskCount ? taskCount - aiTasks.length : dbTaskCount;
+
+          console.log('📋 Database Fetch Parameters:');
+          console.log(`   Originally needed: ${dbTaskCount} tasks`);
+          console.log(`   AI generated: ${aiTasks.length} tasks`);
+          console.log(`   AI expected: ${aiTaskCount} tasks`);
+          console.log(`   Compensating for shortfall: ${aiTasks.length < aiTaskCount ? 'YES' : 'NO'}`);
+          console.log(`   Fetching from DB: ${dbFetchCount} tasks`);
+          console.log('');
+
+          dbTasks = await fetchTasksFromDatabase({
+            subject,
+            grade: Number(grade),
+            topicId,
+            quarter: quarter ? Number(quarter) : null,
+            week: week ? Number(week) : null,
+            taskCount: dbFetchCount,
+            difficulty,
+            taskTypes,
+          });
+          console.log(`✅ Database Fetch Complete: ${dbTasks.length} tasks fetched`);
+          console.log('');
+        } catch (dbError) {
+          console.log('');
+          console.error('❌ DATABASE FETCH FAILED');
+          console.error('   Error:', dbError);
+          console.log('');
+        }
+      } else {
+        console.log('ℹ️  Skipping database fetch (0% database tasks requested)');
+        console.log('');
+      }
+
+      // Merge AI and DB tasks
+      tasks = [...aiTasks, ...dbTasks];
+      console.log('┌─────────────────────────────────────────┐');
+      console.log('│  FINAL RESULT                           │');
+      console.log('└─────────────────────────────────────────┘');
+      console.log(`   Total tasks: ${tasks.length}`);
+      console.log(`   AI tasks: ${aiTasks.length}`);
+      console.log(`   DB tasks: ${dbTasks.length}`);
+      console.log(`   Original request: ${taskCount} tasks`);
+      console.log(`   Fulfillment: ${Math.round(tasks.length / taskCount * 100)}%`);
+      console.log('');
+    } else {
+      // 100% database tasks
+      console.log('💾 DATABASE ONLY MODE (0% AI)');
+      console.log('');
+      console.log('┌─────────────────────────────────────────┐');
+      console.log('│  DATABASE TASK FETCHING                 │');
+      console.log('└─────────────────────────────────────────┘');
+      console.log('📋 Database Fetch Parameters:');
+      console.log(`   Fetching: ${taskCount} tasks`);
+      console.log('');
+
+      tasks = await fetchTasksFromDatabase({
+        subject,
+        grade: Number(grade),
+        topicId,
+        quarter: quarter ? Number(quarter) : null,
+        week: week ? Number(week) : null,
+        taskCount: Number(taskCount),
+        difficulty,
+        taskTypes,
+      });
+
+      console.log(`✅ Database Fetch Complete: ${tasks.length} tasks fetched`);
+      console.log('');
+    }
 
     if (tasks.length === 0) {
       return NextResponse.json(

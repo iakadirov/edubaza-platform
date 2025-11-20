@@ -26,7 +26,7 @@ interface ParametersPreviewProps {
 
   // Параметры
   taskCount: number;
-  taskSource: string;
+  aiPercentage: number;
   difficulties: string[];
   taskTypes: string[];
 }
@@ -112,11 +112,11 @@ export default function ParametersPreview(props: ParametersPreviewProps) {
           <Icon icon="solar:database-bold-duotone" className="text-lg text-purple-600" />
           <span className="text-sm text-gray-600">Manba:</span>
           <span className="font-semibold text-gray-800">
-            {props.taskSource === 'AI'
-              ? 'AI generatsiya'
-              : props.taskSource === 'TEXTBOOK'
-              ? 'Darsliklar'
-              : 'Aralash'}
+            {props.aiPercentage === 0
+              ? '100% Darsliklar'
+              : props.aiPercentage === 100
+              ? '100% AI'
+              : `${100 - props.aiPercentage}% Darslik + ${props.aiPercentage}% AI`}
           </span>
         </div>
       </div>

@@ -29,6 +29,11 @@ interface Task {
   content: TaskContent;
   topic: string;
   subject: string;
+  metadata?: {
+    isAiGenerated?: boolean;
+    generatedAt?: string;
+    approved?: boolean;
+  };
 }
 
 interface Worksheet {
@@ -90,6 +95,105 @@ export default function WorksheetViewPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Bu topshiriqni oʻchirib tashlamoqchimisiz?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/worksheets/${params.id}/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success && worksheet) {
+        // Remove task from local state
+        setWorksheet({
+          ...worksheet,
+          tasks: worksheet.tasks.filter(t => t.id !== taskId),
+        });
+        alert('Topshiriq muvaffaqiyatli oʻchirildi');
+      } else {
+        alert(data.message || 'Topshiriqni oʻchirishda xatolik yuz berdi');
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      alert('Topshiriqni oʻchirishda xatolik yuz berdi');
+    }
+  };
+
+  const handleEditTask = (taskId: string) => {
+    // TODO: Open edit modal or navigate to edit page
+    alert('Tahrirlash funksiyasi tez orada qoʻshiladi');
+  };
+
+  const handleRegenerateTask = async (taskId: string) => {
+    if (!confirm('Bu topshiriqni qayta yaratmoqchimisiz?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/worksheets/${params.id}/tasks/${taskId}/regenerate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success && worksheet) {
+        // Replace task in local state
+        setWorksheet({
+          ...worksheet,
+          tasks: worksheet.tasks.map(t =>
+            t.id === taskId ? data.data : t
+          ),
+        });
+        alert('Topshiriq muvaffaqiyatli qayta yaratildi');
+      } else {
+        alert(data.message || 'Topshiriqni qayta yaratishda xatolik yuz berdi');
+      }
+    } catch (error) {
+      console.error('Error regenerating task:', error);
+      alert('Topshiriqni qayta yaratishda xatolik yuz berdi');
+    }
+  };
+
+  const handleApproveTask = async (taskId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/worksheets/${params.id}/tasks/${taskId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success && worksheet) {
+        // Update task approval status in local state
+        setWorksheet({
+          ...worksheet,
+          tasks: worksheet.tasks.map(t =>
+            t.id === taskId && t.metadata
+              ? { ...t, metadata: { ...t.metadata, approved: true } }
+              : t
+          ),
+        });
+      } else {
+        alert(data.message || 'Topshiriqni tasdiqlashda xatolik yuz berdi');
+      }
+    } catch (error) {
+      console.error('Error approving task:', error);
+      alert('Topshiriqni tasdiqlashda xatolik yuz berdi');
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -292,6 +396,10 @@ export default function WorksheetViewPage() {
               task={task}
               index={index}
               interactive={interactive}
+              onDelete={handleDeleteTask}
+              onEdit={handleEditTask}
+              onRegenerate={handleRegenerateTask}
+              onApprove={handleApproveTask}
             />
           ))}
         </div>

@@ -115,6 +115,8 @@ export const commonStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minWidth: '48%',
+    maxWidth: '48%',
   },
 
   checkbox: {

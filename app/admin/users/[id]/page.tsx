@@ -9,6 +9,8 @@ interface UserProfile {
   id: string;
   phone: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   email: string | null;
   role: string;
   specialty: string | null;
@@ -42,6 +44,8 @@ export default function UserProfilePage() {
 
   // Editable fields
   const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('USER');
   const [specialty, setSpecialty] = useState('');
@@ -90,6 +94,8 @@ export default function UserProfilePage() {
 
       // Initialize editable fields
       setName(data.user.name || '');
+      setFirstName(data.user.firstName || '');
+      setLastName(data.user.lastName || '');
       setEmail(data.user.email || '');
       setRole(data.user.role);
       setSpecialty(data.user.specialty || '');
@@ -98,7 +104,7 @@ export default function UserProfilePage() {
       setIsActive(data.user.isActive);
     } catch (error) {
       console.error('Error fetching user:', error);
-      alert('Ошибка при загрузке профиля');
+      alert('Profilni yuklashda xatolik');
     } finally {
       setLoading(false);
     }
@@ -116,6 +122,8 @@ export default function UserProfilePage() {
         },
         body: JSON.stringify({
           name,
+          firstName,
+          lastName,
           email,
           role,
           specialty: specialty || null,
@@ -129,22 +137,22 @@ export default function UserProfilePage() {
         throw new Error('Failed to update user');
       }
 
-      alert('Профиль успешно обновлен');
+      alert('Profil muvaffaqiyatli yangilandi');
       fetchUserProfile();
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Ошибка при обновлении профиля');
+      alert('Profilni yangilashda xatolik');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Вы уверены, что хотите удалить пользователя ${user?.name || user?.phone}? Это действие необратимо!`)) {
+    if (!confirm(`${user?.name || user?.phone} foydalanuvchini oʻchirishni xohlaysizmi? Bu amalni ortga qaytarib boʻlmaydi!`)) {
       return;
     }
 
-    if (!confirm('Это точно удалит пользователя и все его данные. Продолжить?')) {
+    if (!confirm('Bu foydalanuvchi va uning barcha maʼlumotlarini oʻchiradi. Davom ettirilsinmi?')) {
       return;
     }
 
@@ -161,18 +169,18 @@ export default function UserProfilePage() {
         throw new Error('Failed to delete user');
       }
 
-      alert('Пользователь успешно удален');
+      alert('Foydalanuvchi muvaffaqiyatli oʻchirildi');
       router.push('/admin/users');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Ошибка при удалении пользователя');
+      alert('Foydalanuvchini oʻchirishda xatolik');
     }
   };
 
   if (loading) {
     return (
       <div className="p-8">
-        <div className="text-gray-600">Загрузка профиля...</div>
+        <div className="text-gray-600">Profil yuklanmoqda...</div>
       </div>
     );
   }
@@ -180,7 +188,7 @@ export default function UserProfilePage() {
   if (!user) {
     return (
       <div className="p-8">
-        <div className="text-red-600">Пользователь не найден</div>
+        <div className="text-red-600">Foydalanuvchi topilmadi</div>
       </div>
     );
   }
@@ -196,10 +204,10 @@ export default function UserProfilePage() {
           >
             <Icon icon="solar:arrow-left-line-duotone" className="text-lg group-hover:hidden" />
             <Icon icon="solar:arrow-left-bold-duotone" className="text-lg hidden group-hover:block" />
-            <span>Назад к списку пользователей</span>
+            <span>Foydalanuvchilar roʻyxatiga qaytish</span>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Профиль пользователя
+            Foydalanuvchi profili
           </h1>
           <p className="text-gray-600">{user.phone}</p>
         </div>
@@ -210,20 +218,35 @@ export default function UserProfilePage() {
             {/* Basic Info */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Основная информация
+                Asosiy maʼlumot
               </h2>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Имя
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Введите имя"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Имя
+                    </label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Ism"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Familiya
+                    </label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Familiya"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -249,19 +272,21 @@ export default function UserProfilePage() {
                     disabled
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Телефон нельзя изменить</p>
+                  <p className="text-xs text-gray-500 mt-1">Telefon raqamini oʻzgartirib boʻlmaydi</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Роль
+                    Rol
                   </label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="USER">USER</option>
+                    <option value="STUDENT">Oʻquvchi</option>
+                    <option value="TEACHER">Oʻqituvchi</option>
+                    <option value="PARENT">Ota-ona</option>
                     <option value="ADMIN">ADMIN</option>
                     <option value="SUPER_ADMIN">SUPER_ADMIN</option>
                   </select>
@@ -269,35 +294,35 @@ export default function UserProfilePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Специальность (для учителей)
+                    Mutaxassislik (oʻqituvchilar uchun)
                   </label>
                   <select
                     value={specialty}
                     onChange={(e) => setSpecialty(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Не выбрано</option>
-                    <option value="PRIMARY_SCHOOL">Начальная школа</option>
-                    <option value="MATHEMATICS">Математика</option>
-                    <option value="INFORMATICS">Информатика</option>
-                    <option value="PHYSICS">Физика</option>
-                    <option value="CHEMISTRY">Химия</option>
-                    <option value="BIOLOGY">Биология</option>
-                    <option value="LANGUAGES">Языки</option>
-                    <option value="OTHER">Другое</option>
+                    <option value="">Tanlanmagan</option>
+                    <option value="PRIMARY_SCHOOL">Boshlangʻich maktab</option>
+                    <option value="MATHEMATICS">Matematika</option>
+                    <option value="INFORMATICS">Informatika</option>
+                    <option value="PHYSICS">Fizika</option>
+                    <option value="CHEMISTRY">Kimyo</option>
+                    <option value="BIOLOGY">Biologiya</option>
+                    <option value="LANGUAGES">Tillar</option>
+                    <option value="OTHER">Boshqa</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Школа
+                    Maktab
                   </label>
                   <input
                     type="text"
                     value={school}
                     onChange={(e) => setSchool(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Название школы"
+                    placeholder="Maktab nomi"
                   />
                 </div>
               </div>
@@ -306,12 +331,12 @@ export default function UserProfilePage() {
             {/* Subscription */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Подписка
+                Obuna
               </h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    План подписки
+                    Obuna rejasi
                   </label>
                   <select
                     value={subscriptionPlan}
@@ -325,14 +350,14 @@ export default function UserProfilePage() {
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Текущий: {subscriptionPlans.find(p => p.planCode === subscriptionPlan)?.nameRu || subscriptionPlan}
+                    Joriy: {subscriptionPlans.find(p => p.planCode === subscriptionPlan)?.nameUz || subscriptionPlan}
                   </p>
                 </div>
 
                 {user.subscriptionStartedAt && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Дата начала подписки
+                      Obuna boshlangan sana
                     </label>
                     <input
                       type="text"
@@ -346,7 +371,7 @@ export default function UserProfilePage() {
                 {user.subscriptionExpiresAt && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Дата окончания подписки
+                      Obuna tugash sanasi
                     </label>
                     <input
                       type="text"
@@ -362,7 +387,7 @@ export default function UserProfilePage() {
             {/* Account Status */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Статус аккаунта
+                Akkaunt holati
               </h2>
               <div className="space-y-4">
                 <label className="flex items-center space-x-3 cursor-pointer">
@@ -374,10 +399,10 @@ export default function UserProfilePage() {
                   />
                   <div>
                     <span className="text-sm font-medium text-gray-700">
-                      Активный аккаунт
+                      Faol akkaunt
                     </span>
                     <p className="text-sm text-gray-500">
-                      {isActive ? 'Пользователь может войти в систему' : 'Пользователь заблокирован'}
+                      {isActive ? 'Foydalanuvchi tizimga kira oladi' : 'Foydalanuvchi bloklangan'}
                     </p>
                   </div>
                 </label>
@@ -391,13 +416,13 @@ export default function UserProfilePage() {
                 disabled={saving}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
               >
-                {saving ? 'Сохранение...' : 'Сохранить изменения'}
+                {saving ? 'Saqlanmoqda...' : 'Oʻzgarishlarni saqlash'}
               </button>
               <button
                 onClick={handleDelete}
                 className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
               >
-                Удалить пользователя
+                Foydalanuvchini oʻchirish
               </button>
             </div>
           </div>
@@ -407,22 +432,22 @@ export default function UserProfilePage() {
             {/* Stats */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                Статистика
+                Statistika
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Рабочих листов</span>
+                  <span className="text-sm text-gray-600">Ishchi varaqlar</span>
                   <span className="text-sm font-semibold text-gray-900">{user.worksheetsCount}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Дата регистрации</span>
+                  <span className="text-sm text-gray-600">Roʻyxatdan oʻtgan sana</span>
                   <span className="text-sm font-semibold text-gray-900">
                     {new Date(user.createdAt).toLocaleDateString('ru-RU')}
                   </span>
                 </div>
                 {user.lastLoginAt && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Последний вход</span>
+                    <span className="text-sm text-gray-600">Oxirgi kirish</span>
                     <span className="text-sm font-semibold text-gray-900">
                       {new Date(user.lastLoginAt).toLocaleDateString('ru-RU')}
                     </span>
@@ -434,20 +459,20 @@ export default function UserProfilePage() {
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                Быстрые действия
+                Tezkor amallar
               </h3>
               <div className="space-y-2">
                 <Link
                   href={`/admin/users/${userId}/worksheets`}
                   className="block w-full px-4 py-2 text-sm text-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Просмотреть рабочие листы
+                  Ishchi varaqlarni koʻrish
                 </Link>
                 <button
                   onClick={() => setIsActive(!isActive)}
                   className="w-full px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  {isActive ? 'Заблокировать' : 'Разблокировать'}
+                  {isActive ? 'Bloklash' : 'Blokdan chiqarish'}
                 </button>
               </div>
             </div>

@@ -68,7 +68,7 @@ export default function GenerateNewPage() {
 
   // Шаг 4: Параметры
   const [taskCount, setTaskCount] = useState(10);
-  const [taskSource, setTaskSource] = useState<string>('AI');
+  const [aiPercentage, setAiPercentage] = useState<number>(0);
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(['EASY', 'MEDIUM']);
   const [selectedTaskTypes, setSelectedTaskTypes] = useState<string[]>([]);
 
@@ -182,7 +182,7 @@ export default function GenerateNewPage() {
       const requestBody: any = {
         grade: selectedGrade,
         taskCount,
-        taskSource,
+        aiPercentage,
         difficulty: selectedDifficulties,
         taskTypes: selectedTaskTypes,
         language,
@@ -368,8 +368,8 @@ export default function GenerateNewPage() {
             <GenerationParams
               taskCount={taskCount}
               onTaskCountChange={setTaskCount}
-              taskSource={taskSource}
-              onTaskSourceChange={setTaskSource}
+              aiPercentage={aiPercentage}
+              onAiPercentageChange={setAiPercentage}
               selectedDifficulties={selectedDifficulties}
               onDifficultiesChange={setSelectedDifficulties}
               selectedTaskTypes={selectedTaskTypes}
@@ -401,7 +401,7 @@ export default function GenerateNewPage() {
             quarter={selectedQuarter}
             weeks={selectedWeeks}
             taskCount={taskCount}
-            taskSource={taskSource}
+            aiPercentage={aiPercentage}
             difficulties={selectedDifficulties}
             taskTypes={selectedTaskTypes}
           />

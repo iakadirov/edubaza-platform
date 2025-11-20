@@ -93,17 +93,20 @@ export async function GET(
                    WHERE id = '${worksheetId}' ${userCondition}
                    LIMIT 1;`;
 
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
+      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|'], {
+        encoding: 'utf8',
+        env: { ...process.env, PGCLIENTENCODING: 'UTF8' }
+      });
 
       let stdout = '';
       let stderr = '';
 
       proc.stdout.on('data', (data) => {
-        stdout += data.toString();
+        stdout += data.toString('utf8');
       });
 
       proc.stderr.on('data', (data) => {
-        stderr += data.toString();
+        stderr += data.toString('utf8');
       });
 
       proc.on('close', (code) => {
@@ -241,11 +244,14 @@ export async function GET(
 
     if (!isAdmin && user.subscriptionPlan) {
       const planSql = `SELECT show_watermark FROM subscription_plans WHERE plan_code = '${user.subscriptionPlan}' AND is_active = TRUE LIMIT 1`;
-      const planProc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
+      const planProc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A'], {
+        encoding: 'utf8',
+        env: { ...process.env, PGCLIENTENCODING: 'UTF8' }
+      });
 
       const planResult = await new Promise<string>((resolve, reject) => {
         let stdout = '';
-        planProc.stdout.on('data', (data) => { stdout += data.toString(); });
+        planProc.stdout.on('data', (data) => { stdout += data.toString('utf8'); });
         planProc.on('close', () => resolve(stdout.trim()));
         planProc.on('error', reject);
         planProc.stdin.write(planSql);

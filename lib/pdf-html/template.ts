@@ -1,4 +1,5 @@
 import { parseTextWithMath } from '../math-to-png';
+import { normalizeUzbText } from '../pdf/utils/text-normalize';
 
 interface Task {
   id: string;
@@ -56,7 +57,7 @@ export async function generateWorksheetHTML(worksheet: Worksheet, userSpecialty?
     return parts
       .map((part) => {
         if (part.type === 'text') {
-          return part.content;
+          return normalizeUzbText(part.content);
         } else if (part.type === 'math' && part.pngDataUrl) {
           const height = part.display ? '14px' : '11px';
           return `<img src="${part.pngDataUrl}" style="height: ${height}; vertical-align: middle; margin: 0 2px;" />`;
@@ -94,7 +95,7 @@ export async function generateWorksheetHTML(worksheet: Worksheet, userSpecialty?
                   const letter = String.fromCharCode(65 + optIdx);
                   const optionHTML = task.optionsParts?.[optIdx]
                     ? partsToHTML(task.optionsParts[optIdx])
-                    : option;
+                    : normalizeUzbText(option);
                   return `
                     <div style="display: flex; align-items: center; gap: 4px;">
                       <div style="width: 8px; height: 8px; border: 1px solid #000; border-radius: ${borderRadius}; background: #fff;"></div>

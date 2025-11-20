@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, View, Image } from '@react-pdf/renderer';
+import { normalizeUzbText } from '../utils/text-normalize';
 
 interface MathTextProps {
   parts?: Array<{
@@ -19,12 +20,12 @@ interface MathTextProps {
 export const MathText: React.FC<MathTextProps> = ({ parts, text, style }) => {
   // If no pre-processed parts, just render text
   if (!parts) {
-    return <Text style={style}>{text || ''}</Text>;
+    return <Text style={style}>{normalizeUzbText(text || '')}</Text>;
   }
 
   // If all parts are text, render as simple text
   if (parts.every(p => p.type === 'text')) {
-    return <Text style={style}>{parts.map(p => p.content).join('')}</Text>;
+    return <Text style={style}>{normalizeUzbText(parts.map(p => p.content).join(''))}</Text>;
   }
 
   return (
@@ -33,7 +34,7 @@ export const MathText: React.FC<MathTextProps> = ({ parts, text, style }) => {
         if (part.type === 'text') {
           return (
             <Text key={index} style={style}>
-              {part.content}
+              {normalizeUzbText(part.content)}
             </Text>
           );
         } else if (part.type === 'math') {
@@ -54,7 +55,7 @@ export const MathText: React.FC<MathTextProps> = ({ parts, text, style }) => {
             // Fallback to text if PNG generation failed
             return (
               <Text key={index} style={style}>
-                ({part.content})
+                ({normalizeUzbText(part.content)})
               </Text>
             );
           }

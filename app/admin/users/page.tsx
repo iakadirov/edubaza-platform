@@ -7,17 +7,18 @@ interface User {
   id: string;
   phone: string;
   name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   role: string;
   createdAt: string;
-  subscriptionPlan?: string;
-  subscriptionStatus?: string;
+  subscriptionPlan: string;
 }
 
 export default function AdminUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'ALL' | 'ADMIN' | 'TEACHER' | 'STUDENT'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function AdminUsersPage() {
       });
 
       if (response.status === 403) {
-        alert('У вас нет доступа к этой странице');
+        alert('Sizda ushbu sahifaga kirish huquqi yoʻq');
         router.push('/dashboard');
         return;
       }
@@ -52,7 +53,7 @@ export default function AdminUsersPage() {
       setUsers(data.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
-      alert('Ошибка при загрузке пользователей');
+      alert('Foydalanuvchilarni yuklashda xatolik');
     } finally {
       setLoading(false);
     }
@@ -61,7 +62,7 @@ export default function AdminUsersPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <div className="text-gray-600">Загрузка пользователей...</div>
+        <div className="text-gray-600">Foydalanuvchilar yuklanmoqda...</div>
       </div>
     );
   }
@@ -70,7 +71,9 @@ export default function AdminUsersPage() {
     const matchesFilter = filter === 'ALL' || user.role === filter;
     const matchesSearch = !searchQuery ||
       user.phone.includes(searchQuery) ||
-      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.firstName && user.firstName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.lastName && user.lastName.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesFilter && matchesSearch;
   });
 
@@ -79,13 +82,15 @@ export default function AdminUsersPage() {
     SUPER_ADMIN: 'bg-purple-100 text-purple-800 border-purple-200',
     TEACHER: 'bg-blue-100 text-blue-800 border-blue-200',
     STUDENT: 'bg-green-100 text-green-800 border-green-200',
+    PARENT: 'bg-orange-100 text-orange-800 border-orange-200',
   };
 
   const roleLabels = {
-    ADMIN: 'Админ',
-    SUPER_ADMIN: 'Супер-админ',
-    TEACHER: 'Учитель',
-    STUDENT: 'Ученик',
+    ADMIN: 'Admin',
+    SUPER_ADMIN: 'Super-admin',
+    TEACHER: 'Oʻqituvchi',
+    STUDENT: 'Oʻquvchi',
+    PARENT: 'Ota-ona',
   };
 
   return (
@@ -94,10 +99,10 @@ export default function AdminUsersPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Управление пользователями
+            Foydalanuvchilarni boshqarish
           </h1>
           <p className="text-gray-600">
-            Всего пользователей: {users.length}
+            Jami foydalanuvchilar: {users.length}
           </p>
         </div>
 
@@ -112,7 +117,7 @@ export default function AdminUsersPage() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Все ({users.length})
+              Hammasi ({users.length})
             </button>
             <button
               onClick={() => setFilter('STUDENT')}
@@ -122,7 +127,7 @@ export default function AdminUsersPage() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Ученики ({users.filter(u => u.role === 'STUDENT').length})
+              Oʻquvchilar ({users.filter(u => u.role === 'STUDENT').length})
             </button>
             <button
               onClick={() => setFilter('TEACHER')}
@@ -132,7 +137,17 @@ export default function AdminUsersPage() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Учителя ({users.filter(u => u.role === 'TEACHER').length})
+              Oʻqituvchilar ({users.filter(u => u.role === 'TEACHER').length})
+            </button>
+            <button
+              onClick={() => setFilter('PARENT')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filter === 'PARENT'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Ota-onalar ({users.filter(u => u.role === 'PARENT').length})
             </button>
             <button
               onClick={() => setFilter('ADMIN')}
@@ -142,7 +157,7 @@ export default function AdminUsersPage() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Админы ({users.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length})
+              Adminlar ({users.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length})
             </button>
           </div>
 
@@ -150,7 +165,7 @@ export default function AdminUsersPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Поиск по имени или телефону..."
+            placeholder="Ism yoki telefon raqami boʻyicha qidirish..."
             className="flex-1 min-w-[300px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
@@ -162,22 +177,22 @@ export default function AdminUsersPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Пользователь
+                    Foydalanuvchi
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Телефон
+                    Telefon
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Роль
+                    Rol
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Подписка
+                    Obuna
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Дата регистрации
+                    Roʻyxatdan oʻtgan sana
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Действия
+                    Amallar
                   </th>
                 </tr>
               </thead>
@@ -185,7 +200,7 @@ export default function AdminUsersPage() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      Пользователи не найдены
+                      Foydalanuvchilar topilmadi
                     </td>
                   </tr>
                 ) : (
@@ -193,7 +208,9 @@ export default function AdminUsersPage() {
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">
-                          {user.name || 'Без имени'}
+                          {user.firstName && user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : user.name || 'Ismsiz'}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 font-mono">
@@ -219,7 +236,7 @@ export default function AdminUsersPage() {
                           onClick={() => router.push(`/admin/users/${user.id}`)}
                           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                          Открыть профиль
+                          Profilni ochish
                         </button>
                       </td>
                     </tr>
@@ -233,23 +250,23 @@ export default function AdminUsersPage() {
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">Всего</div>
+            <div className="text-sm text-gray-600 mb-1">Jami</div>
             <div className="text-2xl font-bold text-gray-900">{users.length}</div>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="text-sm text-green-700 mb-1">Ученики</div>
+            <div className="text-sm text-green-700 mb-1">Oʻquvchilar</div>
             <div className="text-2xl font-bold text-green-900">
               {users.filter(u => u.role === 'STUDENT').length}
             </div>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="text-sm text-blue-700 mb-1">Учителя</div>
+            <div className="text-sm text-blue-700 mb-1">Oʻqituvchilar</div>
             <div className="text-2xl font-bold text-blue-900">
               {users.filter(u => u.role === 'TEACHER').length}
             </div>
           </div>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="text-sm text-red-700 mb-1">Админы</div>
+            <div className="text-sm text-red-700 mb-1">Adminlar</div>
             <div className="text-2xl font-bold text-red-900">
               {users.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length}
             </div>
