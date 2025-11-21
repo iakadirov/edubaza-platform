@@ -7,7 +7,7 @@ import { generateTasks, GenerateTasksParams, Task } from '@/lib/gemini';
 
 const execAsync = promisify(exec);
 
-// Функция для получения задач из базы данных
+// Функция для получения задач из базы данных с прогрессивным упрощением фильтров
 async function fetchTasksFromDatabase(params: {
   subject: string;
   grade: number;
@@ -17,49 +17,12 @@ async function fetchTasksFromDatabase(params: {
   taskCount: number;
   difficulty: string | string[];
   taskTypes: string[];
+  format?: string;
 }) {
-  const { subject, grade, topicId, quarter, week, taskCount, difficulty, taskTypes } = params;
+  const { subject, grade, topicId, quarter, week, taskCount, difficulty, taskTypes, format } = params;
 
-  try {
-    // Строим SQL запрос для получения задач из content_items
-    let whereConditions: string[] = [
-      'ci.is_active = TRUE',
-      'ct.code = \'TASK\'',  // Только задачи
-      'ci.status = \'PUBLISHED\'',  // Только опубликованные
-    ];
-
-    // Фильтр по классу
-    whereConditions.push(`t.grade_number = ${grade}`);
-
-    // Фильтр по предмету
-    whereConditions.push(`s.code = '${subject}'`);
-
-    // Фильтр по теме ИЛИ по четверти/неделе
-    if (topicId) {
-      whereConditions.push(`ci.topic_id = '${topicId}'`);
-    } else if (quarter) {
-      whereConditions.push(`t.quarter = ${quarter}`);
-      if (week) {
-        whereConditions.push(`t.week_number = ${week}`);
-      }
-    }
-
-    // Фильтр по сложности (если указана)
-    if (difficulty) {
-      if (Array.isArray(difficulty) && difficulty.length > 0) {
-        const difficultyConditions = difficulty.map(d => `ci.difficulty = '${d}'`).join(' OR ');
-        whereConditions.push(`(${difficultyConditions})`);
-      } else if (typeof difficulty === 'string' && difficulty !== 'ALL') {
-        whereConditions.push(`ci.difficulty = '${difficulty}'`);
-      }
-    }
-
-    // Фильтр по типам задач (проверяем content.task_type)
-    if (taskTypes && taskTypes.length > 0) {
-      const taskTypeConditions = taskTypes.map(type => `ci.content->>'task_type' = '${type}'`).join(' OR ');
-      whereConditions.push(`(${taskTypeConditions})`);
-    }
-
+  // Вспомогательная функция для выполнения SQL запроса
+  async function executeQuery(whereConditions: string[], attemptLevel: number, attemptDescription: string): Promise<any[]> {
     const sql = `
       SELECT
         ci.id,
@@ -80,37 +43,198 @@ async function fetchTasksFromDatabase(params: {
       LIMIT ${taskCount};
     `;
 
-    console.log('SQL Query:', sql.replace(/\n/g, ' ').replace(/\s+/g, ' '));
+    console.log(`📍 Attempt ${attemptLevel}: ${attemptDescription}`);
+    console.log('   SQL:', sql.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim());
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-      { maxBuffer: 50 * 1024 * 1024 } // 50MB buffer
-    );
+    try {
+      const { stdout } = await execAsync(
+        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
+        { maxBuffer: 50 * 1024 * 1024 } // 50MB buffer
+      );
 
-    if (!stdout || stdout.trim() === '') {
+      if (!stdout || stdout.trim() === '') {
+        console.log(`   ❌ No results found`);
+        return [];
+      }
+
+      // Парсим результаты
+      const lines = stdout.trim().split('\n').filter(line => line.trim());
+      const tasks = lines.map(line => {
+        const parts = line.split('|');
+        const content = parts[2] ? JSON.parse(parts[2]) : {};
+
+        // Ensure questionText is in content for TaskRenderer compatibility
+        if (!content.questionText && content.question_text) {
+          content.questionText = content.question_text;
+        }
+
+        // FILL_BLANKS: Convert ___ to [___] format
+        if (content.task_type === 'FILL_BLANKS' && content.question_text) {
+          content.textWithBlanks = content.question_text.replace(/___/g, '[___]');
+        }
+
+        // MATCHING: Convert left_column/right_column format to pairs array
+        if (content.task_type === 'MATCHING' && content.left_column && content.right_column && content.correct_pairs) {
+          content.pairs = content.correct_pairs.map((pair: any) => ({
+            left: content.left_column[pair.left],
+            right: content.right_column[pair.right]
+          }));
+        }
+
+        return {
+          id: parts[0],
+          title: parts[1],
+          type: content.task_type || 'SINGLE_CHOICE',
+          difficulty: parts[3] || 'MEDIUM',
+          content: content,
+          topic: parts[6],
+          subject: parts[8],
+        };
+      });
+
+      console.log(`   ✅ Found ${tasks.length} tasks`);
+      return tasks;
+    } catch (error) {
+      console.error(`   ⚠️  Query failed:`, error);
       return [];
     }
+  }
 
-    // Парсим результаты
-    const lines = stdout.trim().split('\n').filter(line => line.trim());
-    const tasks = lines.map(line => {
-      const parts = line.split('|');
-      const content = parts[2] ? JSON.parse(parts[2]) : {};
+  try {
+    console.log('');
+    console.log('🔍 PROGRESSIVE FILTER STRATEGY - Attempting to maximize results');
+    console.log('');
 
-      return {
-        id: parts[0],
-        title: parts[1],
-        type: content.task_type || 'SINGLE_CHOICE',
-        difficulty: parts[3] || 'MEDIUM',
-        content: content,
-        topic: parts[6],
-        subject: parts[8],
-      };
-    });
+    // Базовые условия (всегда применяются)
+    const baseConditions: string[] = [
+      'ci.is_active = TRUE',
+      'ct.code = \'TASK\'',
+      'ci.status = \'PUBLISHED\'',
+      `t.grade_number = ${grade}`,
+      `s.code = '${subject}'`,
+    ];
 
-    return tasks;
+    // Фильтр по теме ИЛИ по четверти/неделе
+    if (topicId) {
+      baseConditions.push(`ci.topic_id = '${topicId}'`);
+    } else if (quarter) {
+      baseConditions.push(`t.quarter = ${quarter}`);
+      if (week) {
+        baseConditions.push(`t.week_number = ${week}`);
+      }
+    }
+
+    // УРОВЕНЬ 1: Полное соответствие всем фильтрам
+    let whereConditions = [...baseConditions];
+
+    // Фильтр по сложности
+    let hasDifficultyFilter = false;
+    if (difficulty) {
+      if (Array.isArray(difficulty) && difficulty.length > 0) {
+        const difficultyConditions = difficulty.map(d => `ci.difficulty = '${d}'`).join(' OR ');
+        whereConditions.push(`(${difficultyConditions})`);
+        hasDifficultyFilter = true;
+      } else if (typeof difficulty === 'string' && difficulty !== 'ALL') {
+        whereConditions.push(`ci.difficulty = '${difficulty}'`);
+        hasDifficultyFilter = true;
+      }
+    }
+
+    // Фильтр по типам задач
+    let hasTaskTypeFilter = false;
+    if (taskTypes && taskTypes.length > 0) {
+      const taskTypeConditions = taskTypes.map(type => `ci.content->>'task_type' = '${type}'`).join(' OR ');
+      whereConditions.push(`(${taskTypeConditions})`);
+      hasTaskTypeFilter = true;
+    }
+
+    // Фильтр по формату
+    let hasFormatFilter = false;
+    if (format && format !== 'STANDARD' && format !== 'ALL') {
+      whereConditions.push(`ci.tags @> ARRAY['${format}']::text[]`);
+      hasFormatFilter = true;
+    }
+
+    let tasks = await executeQuery(whereConditions, 1, 'Exact match (all filters)');
+
+    if (tasks.length >= taskCount) {
+      console.log(`✅ SUCCESS at Level 1: Found sufficient tasks (${tasks.length}/${taskCount})`);
+      console.log('');
+      return tasks;
+    }
+
+    // УРОВЕНЬ 2: Убираем фильтр по типам задач (берем любые доступные типы)
+    if (hasTaskTypeFilter) {
+      whereConditions = [...baseConditions];
+
+      if (hasDifficultyFilter) {
+        if (Array.isArray(difficulty) && difficulty.length > 0) {
+          const difficultyConditions = difficulty.map(d => `ci.difficulty = '${d}'`).join(' OR ');
+          whereConditions.push(`(${difficultyConditions})`);
+        } else if (typeof difficulty === 'string' && difficulty !== 'ALL') {
+          whereConditions.push(`ci.difficulty = '${difficulty}'`);
+        }
+      }
+
+      if (hasFormatFilter) {
+        whereConditions.push(`ci.tags @> ARRAY['${format}']::text[]`);
+      }
+
+      tasks = await executeQuery(whereConditions, 2, 'Relaxed task types (using any available types)');
+
+      if (tasks.length >= taskCount) {
+        console.log(`✅ SUCCESS at Level 2: Found sufficient tasks (${tasks.length}/${taskCount})`);
+        console.log('');
+        return tasks;
+      }
+    }
+
+    // УРОВЕНЬ 3: Убираем фильтр по сложности (берем MIX - все уровни)
+    if (hasDifficultyFilter) {
+      whereConditions = [...baseConditions];
+
+      if (hasFormatFilter) {
+        whereConditions.push(`ci.tags @> ARRAY['${format}']::text[]`);
+      }
+
+      tasks = await executeQuery(whereConditions, 3, 'Relaxed difficulty (MIX - all levels)');
+
+      if (tasks.length >= taskCount) {
+        console.log(`✅ SUCCESS at Level 3: Found sufficient tasks (${tasks.length}/${taskCount})`);
+        console.log('');
+        return tasks;
+      }
+    }
+
+    // УРОВЕНЬ 4: Убираем фильтр по формату
+    if (hasFormatFilter) {
+      whereConditions = [...baseConditions];
+
+      tasks = await executeQuery(whereConditions, 4, 'Relaxed format (any format)');
+
+      if (tasks.length >= taskCount) {
+        console.log(`✅ SUCCESS at Level 4: Found sufficient tasks (${tasks.length}/${taskCount})`);
+        console.log('');
+        return tasks;
+      }
+    }
+
+    // УРОВЕНЬ 5: Только базовые фильтры (класс + предмет + тема)
+    whereConditions = [...baseConditions];
+    tasks = await executeQuery(whereConditions, 5, 'Base filters only (grade + subject + topic)');
+
+    if (tasks.length > 0) {
+      console.log(`✅ SUCCESS at Level 5: Found ${tasks.length} tasks with minimal filters`);
+      console.log('');
+      return tasks;
+    }
+
+    console.log('❌ FAILED: No tasks found even with minimal filters');
+    console.log('');
+    return [];
+
   } catch (error) {
-    console.error('Error fetching tasks from database:', error);
+    console.error('Error in progressive filter strategy:', error);
     throw error;
   }
 }
@@ -148,7 +272,7 @@ export async function POST(request: NextRequest) {
 
     // Парсим body
     const body = await request.json();
-    const { subject, grade, topic, topicId, quarter, week, taskCount, difficulty, taskTypes, language, aiPercentage } = body;
+    const { subject, grade, topic, topicId, quarter, week, taskCount, difficulty, taskTypes, language, aiPercentage, format, customInstructions } = body;
 
     // Валидация
     if (!subject || !grade || !taskCount || !difficulty || !taskTypes) {
@@ -204,11 +328,14 @@ export async function POST(request: NextRequest) {
     console.log(`   Task Count: ${taskCount}`);
     console.log(`   Difficulty: ${Array.isArray(difficulty) ? difficulty.join(', ') : difficulty}`);
     console.log(`   Task Types: ${taskTypes.join(', ')}`);
+    console.log(`   Format: ${format || 'STANDARD'}`);
     console.log(`   Language: ${contentLanguage}`);
     console.log(`   AI Percentage: ${aiPercentage}%`);
+    console.log(`   Custom Instructions: ${customInstructions || 'none'}`);
     console.log('');
 
     let tasks: any[];
+    let aiDebugInfo: any = null; // Will store AI generation debug info
 
     // Calculate AI and DB task counts based on aiPercentage (0-100)
     const aiPercent = aiPercentage !== undefined ? Number(aiPercentage) : 0;
@@ -256,6 +383,19 @@ export async function POST(request: NextRequest) {
       console.log('│  STEP 1: AI TASK GENERATION             │');
       console.log('└─────────────────────────────────────────┘');
       try {
+        // DTS Format Conflict Resolution
+        // DTS (State Test) should only be used with SINGLE_CHOICE tasks
+        // If mixed task types are selected, use a different format
+        let effectiveFormat = format || 'STANDARD';
+        if (effectiveFormat === 'DTS' && !taskTypes.every((t: string) => t === 'SINGLE_CHOICE')) {
+          console.log('⚠️  FORMAT CONFLICT DETECTED:');
+          console.log('   DTS format requires ONLY SINGLE_CHOICE tasks');
+          console.log(`   But task types include: ${taskTypes.join(', ')}`);
+          console.log('   Changing format to: STANDARD');
+          effectiveFormat = 'STANDARD';
+        }
+        console.log('');
+
         const aiParams: GenerateTasksParams = {
           subject,
           grade: Number(grade),
@@ -263,6 +403,8 @@ export async function POST(request: NextRequest) {
           taskCount: aiTaskCount,
           difficulty: mappedDifficulty,
           taskTypes,
+          format: effectiveFormat,
+          customInstructions,
         };
 
         console.log('📋 AI Generation Parameters:');
@@ -272,11 +414,14 @@ export async function POST(request: NextRequest) {
         console.log(`   Task Count: ${aiParams.taskCount}`);
         console.log(`   Difficulty: ${aiParams.difficulty}`);
         console.log(`   Task Types: ${aiParams.taskTypes.join(', ')}`);
+        console.log(`   Format: ${aiParams.format}`);
         console.log('');
         console.log('🚀 Calling generateTasks()...');
         console.log('');
 
-        aiTasks = await generateTasks(aiParams);
+        const result = await generateTasks(aiParams);
+        aiTasks = result.tasks;
+        aiDebugInfo = result.debugInfo;
 
         console.log('');
         console.log(`✅ AI Generation Complete: ${aiTasks.length} tasks generated`);
@@ -316,6 +461,7 @@ export async function POST(request: NextRequest) {
             taskCount: dbFetchCount,
             difficulty,
             taskTypes,
+            format,
           });
           console.log(`✅ Database Fetch Complete: ${dbTasks.length} tasks fetched`);
           console.log('');
@@ -361,6 +507,7 @@ export async function POST(request: NextRequest) {
         taskCount: Number(taskCount),
         difficulty,
         taskTypes,
+        format,
       });
 
       console.log(`✅ Database Fetch Complete: ${tasks.length} tasks fetched`);
@@ -382,6 +529,7 @@ export async function POST(request: NextRequest) {
       taskCount,
       difficulty,
       taskTypes,
+      aiPercentage: aiPercent,
     };
 
     // Используем spawn для передачи SQL через stdin
@@ -389,10 +537,12 @@ export async function POST(request: NextRequest) {
 
     const configJson = JSON.stringify(config).replace(/'/g, "''");
     const tasksJson = JSON.stringify(tasks).replace(/'/g, "''");
+    const debugInfoJson = aiDebugInfo ? JSON.stringify(aiDebugInfo).replace(/'/g, "''") : null;
     const topicEscaped = topic ? topic.replace(/'/g, "''") : (quarter ? `${quarter}-chorak${week ? ` ${week}-hafta` : ''}` : '');
     const topicIdValue = topicId ? `'${topicId}'` : 'NULL';
+    const debugInfoValue = debugInfoJson ? `'${debugInfoJson}'` : 'NULL';
 
-    const sql = `INSERT INTO worksheets (id, "userId", subject, grade, "topicUz", "topicRu", topic_id, config, tasks, status, "generatedAt", "updatedAt") VALUES (gen_random_uuid()::text, '${user.id}', '${subject}', ${Number(grade)}, '${topicEscaped}', '${topicEscaped}', ${topicIdValue}, '${configJson}', '${tasksJson}', 'COMPLETED', NOW(), NOW()) RETURNING id;`;
+    const sql = `INSERT INTO worksheets (id, "userId", subject, grade, "topicUz", "topicRu", topic_id, config, tasks, ai_debug_info, status, "generatedAt", "updatedAt") VALUES (gen_random_uuid()::text, '${user.id}', '${subject}', ${Number(grade)}, '${topicEscaped}', '${topicEscaped}', ${topicIdValue}, '${configJson}', '${tasksJson}', ${debugInfoValue}, 'COMPLETED', NOW(), NOW()) RETURNING id;`;
 
     // Используем spawn с stdin для безопасной передачи SQL
     const worksheetId = await new Promise<string>((resolve, reject) => {

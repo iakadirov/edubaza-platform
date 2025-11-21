@@ -32,6 +32,7 @@ interface Topic {
   titleUz: string;
   gradeNumber: number;
   quarter: number | null;
+  weekNumber?: number | null;
   keywords: string[];
 }
 

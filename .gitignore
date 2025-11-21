@@ -43,6 +43,9 @@ next-env.d.ts
 # pdf files
 /public/worksheets/*.pdf
 
+# uploaded files
+/public/uploads/
+
 # logs
 logs
 *.log

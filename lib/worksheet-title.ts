@@ -80,7 +80,7 @@ export function generatePdfFileName(
 
   if (topicUz) {
     // Clean topic name for filename: transliterate cyrillic to latin, remove special chars
-    let cleanTopic = topicUz
+    const cleanTopic = topicUz
       // Replace common Cyrillic characters with Latin equivalents
       .replace(/[её]/g, 'e')
       .replace(/[ъь]/g, '')

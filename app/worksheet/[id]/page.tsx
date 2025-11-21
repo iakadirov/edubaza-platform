@@ -47,11 +47,20 @@ interface Worksheet {
     taskTypes: string[];
     quarter?: number;
     week?: number;
+    aiPercentage?: number;
   };
   tasks: Task[];
   status: string;
   generatedAt: string;
   viewCount: number;
+  aiDebugInfo?: {
+    params: any;
+    systemInstruction: string;
+    userPrompt: string;
+    rawResponse: string;
+    parseError?: string;
+    timestamp: string;
+  };
 }
 
 export default function WorksheetViewPage() {
@@ -403,6 +412,85 @@ export default function WorksheetViewPage() {
             />
           ))}
         </div>
+
+        {/* AI Debug Info Section */}
+        {worksheet?.aiDebugInfo && (
+          <div className="mt-12 print:hidden">
+            <div className="bg-gray-900 rounded-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <Icon icon="solar:code-bold-duotone" className="text-2xl text-white" />
+                  <h2 className="text-xl font-bold text-white">AI Generation Debug Logs</h2>
+                </div>
+                <p className="text-sm text-purple-100 mt-1">Информация о промпте и ответе AI для отладки</p>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Parameters */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Icon icon="solar:settings-bold-duotone" className="text-blue-400" />
+                    Параметры генерации
+                  </h3>
+                  <pre className="bg-gray-800 p-4 rounded-lg text-sm text-gray-300 overflow-x-auto border border-gray-700">
+                    {JSON.stringify(worksheet.aiDebugInfo.params, null, 2)}
+                  </pre>
+                </div>
+
+                {/* System Instruction */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Icon icon="solar:document-bold-duotone" className="text-green-400" />
+                    System Instruction ({worksheet.aiDebugInfo.systemInstruction.length} символов)
+                  </h3>
+                  <pre className="bg-gray-800 p-4 rounded-lg text-sm text-gray-300 overflow-x-auto max-h-96 border border-gray-700">
+                    {worksheet.aiDebugInfo.systemInstruction}
+                  </pre>
+                </div>
+
+                {/* User Prompt */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Icon icon="solar:chat-round-bold-duotone" className="text-yellow-400" />
+                    User Prompt ({worksheet.aiDebugInfo.userPrompt.length} символов)
+                  </h3>
+                  <pre className="bg-gray-800 p-4 rounded-lg text-sm text-gray-300 overflow-x-auto max-h-96 border border-gray-700">
+                    {worksheet.aiDebugInfo.userPrompt}
+                  </pre>
+                </div>
+
+                {/* Raw Response */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Icon icon="solar:code-square-bold-duotone" className="text-purple-400" />
+                    AI Response ({worksheet.aiDebugInfo.rawResponse.length} символов)
+                  </h3>
+                  <pre className="bg-gray-800 p-4 rounded-lg text-sm text-gray-300 overflow-x-auto max-h-96 border border-gray-700">
+                    {worksheet.aiDebugInfo.rawResponse}
+                  </pre>
+                </div>
+
+                {/* Parse Error (if any) */}
+                {worksheet.aiDebugInfo.parseError && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-400 mb-3 flex items-center gap-2">
+                      <Icon icon="solar:danger-triangle-bold-duotone" />
+                      Parse Error
+                    </h3>
+                    <div className="bg-red-900/30 border border-red-700 p-4 rounded-lg text-sm text-red-300">
+                      {worksheet.aiDebugInfo.parseError}
+                    </div>
+                  </div>
+                )}
+
+                {/* Timestamp */}
+                <div className="text-xs text-gray-500 text-right">
+                  Generated at: {new Date(worksheet.aiDebugInfo.timestamp).toLocaleString('ru-RU')}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-sm print:hidden">

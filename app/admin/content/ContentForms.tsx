@@ -11,6 +11,7 @@ interface FormProps {
   initialData?: any;
   onSave: (data: any) => void;
   onCancel: () => void;
+  onDelete?: () => void; // Optional delete handler
   taskSubType?: string; // For TASK subtypes
 }
 
@@ -314,6 +315,14 @@ export function PresentationFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -533,6 +542,14 @@ export function LessonPlanFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -547,19 +564,20 @@ export function SingleChoiceFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
   const [form, setForm] = useState({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'MEDIUM',
     durationMinutes: initialData?.durationMinutes || 2,
-    questionText: initialData?.content?.questionText || '',
-    questionImage: initialData?.content?.questionImage || '',
+    questionText: initialData?.content?.question_text || initialData?.content?.questionText || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
     option1: initialData?.content?.options?.[0] || '',
     option2: initialData?.content?.options?.[1] || '',
     option3: initialData?.content?.options?.[2] || '',
     option4: initialData?.content?.options?.[3] || '',
-    correctAnswer: initialData?.content?.correctAnswer || 0,
+    correctAnswer: initialData?.content?.correct_answer ?? initialData?.content?.correctAnswer ?? 0,
     explanation: initialData?.content?.explanation || '',
     tags: initialData?.tags?.join(', ') || '',
   });
@@ -570,13 +588,13 @@ export function SingleChoiceFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'MEDIUM',
         durationMinutes: initialData.durationMinutes || 2,
-        questionText: initialData.content?.questionText || '',
-        questionImage: initialData.content?.questionImage || '',
+        questionText: initialData.content?.question_text || initialData.content?.questionText || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
         option1: initialData.content?.options?.[0] || '',
         option2: initialData.content?.options?.[1] || '',
         option3: initialData.content?.options?.[2] || '',
         option4: initialData.content?.options?.[3] || '',
-        correctAnswer: initialData.content?.correctAnswer || 0,
+        correctAnswer: initialData.content?.correct_answer ?? initialData.content?.correctAnswer ?? 0,
         explanation: initialData.content?.explanation || '',
         tags: initialData.tags?.join(', ') || '',
       });
@@ -635,30 +653,18 @@ export function SingleChoiceFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
-      {/* 3. Question */}
+      {/* 2. Question */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          3️⃣ Savol matni *
+          2️⃣ Savol matni *
         </label>
         <textarea
           value={form.questionText}
@@ -675,10 +681,10 @@ export function SingleChoiceFormComponent({
         onChange={(url) => setForm({ ...form, questionImage: url })}
       />
 
-      {/* 4. Answer Options */}
+      {/* 3. Answer Options */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
-          4️⃣ Javob variantlari * (Faqat BITTA toʻgʻri javob)
+          3️⃣ Javob variantlari * (Faqat BITTA toʻgʻri javob)
         </label>
 
         <div className="flex items-center gap-2">
@@ -754,10 +760,10 @@ export function SingleChoiceFormComponent({
         </p>
       </div>
 
-      {/* 5. Explanation */}
+      {/* 4. Explanation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Tushuntirish (ixtiyoriy)
+          4️⃣ Tushuntirish (ixtiyoriy)
         </label>
         <textarea
           value={form.explanation}
@@ -768,10 +774,10 @@ export function SingleChoiceFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -795,6 +801,14 @@ export function SingleChoiceFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -809,19 +823,20 @@ export function MultipleChoiceFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
   const [form, setForm] = useState({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'MEDIUM',
     durationMinutes: initialData?.durationMinutes || 2,
-    questionText: initialData?.content?.questionText || '',
-    questionImage: initialData?.content?.questionImage || '',
+    questionText: initialData?.content?.question_text || initialData?.content?.questionText || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
     option1: initialData?.content?.options?.[0] || '',
     option2: initialData?.content?.options?.[1] || '',
     option3: initialData?.content?.options?.[2] || '',
     option4: initialData?.content?.options?.[3] || '',
-    correctAnswers: initialData?.content?.correctAnswers || [],
+    correctAnswers: initialData?.content?.correct_answers || initialData?.content?.correctAnswers || [],
     explanation: initialData?.content?.explanation || '',
     tags: initialData?.tags?.join(', ') || '',
   });
@@ -832,13 +847,13 @@ export function MultipleChoiceFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'MEDIUM',
         durationMinutes: initialData.durationMinutes || 2,
-        questionText: initialData.content?.questionText || '',
-        questionImage: initialData.content?.questionImage || '',
+        questionText: initialData.content?.question_text || initialData.content?.questionText || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
         option1: initialData.content?.options?.[0] || '',
         option2: initialData.content?.options?.[1] || '',
         option3: initialData.content?.options?.[2] || '',
         option4: initialData.content?.options?.[3] || '',
-        correctAnswers: initialData.content?.correctAnswers || [],
+        correctAnswers: initialData.content?.correct_answers || initialData.content?.correctAnswers || [],
         explanation: initialData.content?.explanation || '',
         tags: initialData.tags?.join(', ') || '',
       });
@@ -905,30 +920,18 @@ export function MultipleChoiceFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
-      {/* 3. Question */}
+      {/* 2. Question */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          3️⃣ Savol matni *
+          2️⃣ Savol matni *
         </label>
         <textarea
           value={form.questionText}
@@ -945,10 +948,10 @@ export function MultipleChoiceFormComponent({
         onChange={(url) => setForm({ ...form, questionImage: url })}
       />
 
-      {/* 4. Answer Options */}
+      {/* 3. Answer Options */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
-          4️⃣ Javob variantlari * (BIR NECHTA toʻgʻri javob mumkin)
+          3️⃣ Javob variantlari * (BIR NECHTA toʻgʻri javob mumkin)
         </label>
 
         <div className="flex items-center gap-2">
@@ -1020,10 +1023,10 @@ export function MultipleChoiceFormComponent({
         </p>
       </div>
 
-      {/* 5. Explanation */}
+      {/* 4. Explanation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Tushuntirish (ixtiyoriy)
+          4️⃣ Tushuntirish (ixtiyoriy)
         </label>
         <textarea
           value={form.explanation}
@@ -1034,10 +1037,10 @@ export function MultipleChoiceFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -1061,6 +1064,14 @@ export function MultipleChoiceFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1075,15 +1086,16 @@ export function TrueFalseFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
   const [form, setForm] = useState({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'EASY',
     durationMinutes: initialData?.durationMinutes || 2,
-    statement: initialData?.content?.statement || '',
-    questionImage: initialData?.content?.questionImage || '',
-    correctAnswer: initialData?.content?.correctAnswer !== undefined ? initialData.content.correctAnswer : true,
+    statement: initialData?.content?.question_text || initialData?.content?.statement || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
+    correctAnswer: (initialData?.content?.correct_answer !== undefined ? initialData.content.correct_answer : (initialData?.content?.correctAnswer !== undefined ? initialData.content.correctAnswer : true)),
     explanation: initialData?.content?.explanation || '',
     tags: initialData?.tags?.join(', ') || '',
   });
@@ -1094,9 +1106,9 @@ export function TrueFalseFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'EASY',
         durationMinutes: initialData.durationMinutes || 2,
-        statement: initialData.content?.statement || '',
-        questionImage: initialData.content?.questionImage || '',
-        correctAnswer: initialData.content?.correctAnswer !== undefined ? initialData.content.correctAnswer : true,
+        statement: initialData.content?.question_text || initialData.content?.statement || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
+        correctAnswer: (initialData.content?.correct_answer !== undefined ? initialData.content.correct_answer : (initialData.content?.correctAnswer !== undefined ? initialData.content.correctAnswer : true)),
         explanation: initialData.content?.explanation || '',
         tags: initialData.tags?.join(', ') || '',
       });
@@ -1153,24 +1165,12 @@ export function TrueFalseFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
       {/* 3. Statement */}
@@ -1193,10 +1193,10 @@ export function TrueFalseFormComponent({
         onChange={(url) => setForm({ ...form, questionImage: url })}
       />
 
-      {/* 4. Correct Answer */}
+      {/* 3. Correct Answer */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          4️⃣ Toʻgʻri javob *
+          3️⃣ Toʻgʻri javob *
         </label>
         <div className="flex gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -1222,10 +1222,10 @@ export function TrueFalseFormComponent({
         </div>
       </div>
 
-      {/* 5. Explanation */}
+      {/* 4. Explanation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Tushuntirish (ixtiyoriy)
+          4️⃣ Tushuntirish (ixtiyoriy)
         </label>
         <textarea
           value={form.explanation}
@@ -1236,10 +1236,10 @@ export function TrueFalseFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -1263,6 +1263,14 @@ export function TrueFalseFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1277,17 +1285,18 @@ export function ShortAnswerFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
   const [form, setForm] = useState({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'MEDIUM',
     durationMinutes: initialData?.durationMinutes || 2,
-    questionText: initialData?.content?.questionText || '',
-    questionImage: initialData?.content?.questionImage || '',
-    correctAnswer: initialData?.content?.correctAnswer || '',
-    acceptableAnswers: initialData?.content?.acceptableAnswers?.join(', ') || '',
-    caseSensitive: initialData?.content?.caseSensitive || false,
+    questionText: initialData?.content?.question_text || initialData?.content?.questionText || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
+    correctAnswer: initialData?.content?.correct_answer || initialData?.content?.correctAnswer || '',
+    acceptableAnswers: (initialData?.content?.acceptable_answers || initialData?.content?.acceptableAnswers)?.join(', ') || '',
+    caseSensitive: initialData?.content?.case_sensitive || initialData?.content?.caseSensitive || false,
     explanation: initialData?.content?.explanation || '',
     tags: initialData?.tags?.join(', ') || '',
   });
@@ -1298,11 +1307,11 @@ export function ShortAnswerFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'MEDIUM',
         durationMinutes: initialData.durationMinutes || 2,
-        questionText: initialData.content?.questionText || '',
-        questionImage: initialData.content?.questionImage || '',
-        correctAnswer: initialData.content?.correctAnswer || '',
-        acceptableAnswers: initialData.content?.acceptableAnswers?.join(', ') || '',
-        caseSensitive: initialData.content?.caseSensitive || false,
+        questionText: initialData.content?.question_text || initialData.content?.questionText || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
+        correctAnswer: initialData.content?.correct_answer || initialData.content?.correctAnswer || '',
+        acceptableAnswers: (initialData.content?.acceptable_answers || initialData.content?.acceptableAnswers)?.join(', ') || '',
+        caseSensitive: initialData.content?.case_sensitive || initialData.content?.caseSensitive || false,
         explanation: initialData.content?.explanation || '',
         tags: initialData.tags?.join(', ') || '',
       });
@@ -1365,30 +1374,18 @@ export function ShortAnswerFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
-      {/* 3. Question */}
+      {/* 2. Question */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          3️⃣ Savol matni *
+          2️⃣ Savol matni *
         </label>
         <textarea
           value={form.questionText}
@@ -1405,10 +1402,10 @@ export function ShortAnswerFormComponent({
         onChange={(url) => setForm({ ...form, questionImage: url })}
       />
 
-      {/* 4. Correct Answer */}
+      {/* 3. Correct Answer */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          4️⃣ Toʻgʻri javob *
+          3️⃣ Toʻgʻri javob *
         </label>
         <input
           type="text"
@@ -1449,10 +1446,10 @@ export function ShortAnswerFormComponent({
         </label>
       </div>
 
-      {/* 5. Explanation */}
+      {/* 4. Explanation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Tushuntirish (ixtiyoriy)
+          4️⃣ Tushuntirish (ixtiyoriy)
         </label>
         <textarea
           value={form.explanation}
@@ -1463,10 +1460,10 @@ export function ShortAnswerFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -1490,6 +1487,14 @@ export function ShortAnswerFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1504,6 +1509,7 @@ export function FillBlanksFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
   // Helper function to normalize blanks data
@@ -1523,8 +1529,8 @@ export function FillBlanksFormComponent({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'MEDIUM',
     durationMinutes: initialData?.durationMinutes || 2,
-    textWithBlanks: initialData?.content?.textWithBlanks || '',
-    questionImage: initialData?.content?.questionImage || '',
+    textWithBlanks: initialData?.content?.question_text || initialData?.content?.text_with_blanks || initialData?.content?.textWithBlanks || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
     blanks: normalizeBlanks(initialData?.content?.blanks),
     explanation: initialData?.content?.explanation || '',
     tags: initialData?.tags?.join(', ') || '',
@@ -1536,8 +1542,8 @@ export function FillBlanksFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'MEDIUM',
         durationMinutes: initialData.durationMinutes || 2,
-        textWithBlanks: initialData.content?.textWithBlanks || '',
-        questionImage: initialData.content?.questionImage || '',
+        textWithBlanks: initialData.content?.question_text || initialData.content?.text_with_blanks || initialData.content?.textWithBlanks || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
         blanks: normalizeBlanks(initialData.content?.blanks),
         explanation: initialData.content?.explanation || '',
         tags: initialData.tags?.join(', ') || '',
@@ -1623,24 +1629,12 @@ export function FillBlanksFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
       {/* 3. Text with Blanks */}
@@ -1691,10 +1685,10 @@ export function FillBlanksFormComponent({
         onChange={(url) => setForm({ ...form, questionImage: url })}
       />
 
-      {/* 4. Blanks Answers */}
+      {/* 3. Blanks Answers */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          4️⃣ Boʻshliklar uchun javoblar *
+          3️⃣ Boʻshliklar uchun javoblar *
         </label>
         {form.blanks.map((blank: any, index: number) => (
           <div key={index} className="border border-gray-200 rounded-lg p-3 mb-3">
@@ -1735,10 +1729,10 @@ export function FillBlanksFormComponent({
         </button>
       </div>
 
-      {/* 5. Explanation */}
+      {/* 4. Explanation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Tushuntirish (ixtiyoriy)
+          4️⃣ Tushuntirish (ixtiyoriy)
         </label>
         <textarea
           value={form.explanation}
@@ -1749,10 +1743,10 @@ export function FillBlanksFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -1776,6 +1770,14 @@ export function FillBlanksFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1790,15 +1792,40 @@ export function MatchingFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
+  // Helper function to normalize pairs data from different formats
+  const normalizePairs = (content: any) => {
+    // If pairs already exists (manual creation), use it
+    if (content?.pairs && Array.isArray(content.pairs)) {
+      return content.pairs;
+    }
+
+    // If imported data with left_column, right_column, correct_pairs
+    if (content?.left_column && content?.right_column && content?.correct_pairs) {
+      const leftColumn = content.left_column;
+      const rightColumn = content.right_column;
+      const correctPairs = content.correct_pairs;
+
+      // Convert to pairs format: [{left: ..., right: ...}, ...]
+      return correctPairs.map((pair: any) => ({
+        left: leftColumn[pair.left] || '',
+        right: rightColumn[pair.right] || ''
+      }));
+    }
+
+    // Default: 2 empty pairs
+    return [{ left: '', right: '' }, { left: '', right: '' }];
+  };
+
   const [form, setForm] = useState({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'MEDIUM',
     durationMinutes: initialData?.durationMinutes || 2,
-    instruction: initialData?.content?.instruction || '',
-    questionImage: initialData?.content?.questionImage || '',
-    pairs: initialData?.content?.pairs || [{ left: '', right: '' }, { left: '', right: '' }],
+    instruction: initialData?.content?.question_text || initialData?.content?.instruction || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
+    pairs: normalizePairs(initialData?.content),
     explanation: initialData?.content?.explanation || '',
     tags: initialData?.tags?.join(', ') || '',
   });
@@ -1809,9 +1836,9 @@ export function MatchingFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'MEDIUM',
         durationMinutes: initialData.durationMinutes || 2,
-        instruction: initialData.content?.instruction || '',
-        questionImage: initialData.content?.questionImage || '',
-        pairs: initialData.content?.pairs || [{ left: '', right: '' }, { left: '', right: '' }],
+        instruction: initialData.content?.question_text || initialData.content?.instruction || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
+        pairs: normalizePairs(initialData.content),
         explanation: initialData.content?.explanation || '',
         tags: initialData.tags?.join(', ') || '',
       });
@@ -1891,24 +1918,12 @@ export function MatchingFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
       {/* 3. Instruction */}
@@ -1931,10 +1946,10 @@ export function MatchingFormComponent({
         onChange={(url) => setForm({ ...form, questionImage: url })}
       />
 
-      {/* 4. Matching Pairs */}
+      {/* 3. Matching Pairs */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          4️⃣ Moslashtiriladigan juftliklar * (Kamida 2 ta)
+          3️⃣ Moslashtiriladigan juftliklar * (Kamida 2 ta)
         </label>
         {form.pairs.map((pair: any, index: number) => (
           <div key={index} className="border border-gray-200 rounded-lg p-3 mb-3">
@@ -1975,10 +1990,10 @@ export function MatchingFormComponent({
         </button>
       </div>
 
-      {/* 5. Explanation */}
+      {/* 4. Explanation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Tushuntirish (ixtiyoriy)
+          4️⃣ Tushuntirish (ixtiyoriy)
         </label>
         <textarea
           value={form.explanation}
@@ -1989,10 +2004,10 @@ export function MatchingFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -2016,6 +2031,14 @@ export function MatchingFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );
@@ -2030,18 +2053,19 @@ export function EssayFormComponent({
   initialData,
   onSave,
   onCancel,
+  onDelete,
   taskSubType
 }: FormProps) {
   const [form, setForm] = useState({
     topicId: initialData?.topicId || topicId,
     difficulty: initialData?.difficulty || 'HARD',
     durationMinutes: initialData?.durationMinutes || 2,
-    prompt: initialData?.content?.prompt || '',
-    questionImage: initialData?.content?.questionImage || '',
+    prompt: initialData?.content?.question_text || initialData?.content?.prompt || '',
+    questionImage: initialData?.content?.question_image || initialData?.content?.questionImage || '',
     rubric: initialData?.content?.rubric || '',
-    minWords: initialData?.content?.minWords || 100,
-    maxWords: initialData?.content?.maxWords || 500,
-    sampleAnswer: initialData?.content?.sampleAnswer || '',
+    minWords: initialData?.content?.min_words || initialData?.content?.minWords || 100,
+    maxWords: initialData?.content?.max_words || initialData?.content?.maxWords || 500,
+    sampleAnswer: initialData?.content?.sample_answer || initialData?.content?.sampleAnswer || '',
     tags: initialData?.tags?.join(', ') || '',
   });
 
@@ -2051,12 +2075,12 @@ export function EssayFormComponent({
         topicId: initialData.topicId || topicId,
         difficulty: initialData.difficulty || 'HARD',
         durationMinutes: initialData.durationMinutes || 2,
-        prompt: initialData.content?.prompt || '',
-        questionImage: initialData.content?.questionImage || '',
+        prompt: initialData.content?.question_text || initialData.content?.prompt || '',
+        questionImage: initialData.content?.question_image || initialData.content?.questionImage || '',
         rubric: initialData.content?.rubric || '',
-        minWords: initialData.content?.minWords || 100,
-        maxWords: initialData.content?.maxWords || 500,
-        sampleAnswer: initialData.content?.sampleAnswer || '',
+        minWords: initialData.content?.min_words || initialData.content?.minWords || 100,
+        maxWords: initialData.content?.max_words || initialData.content?.maxWords || 500,
+        sampleAnswer: initialData.content?.sample_answer || initialData.content?.sampleAnswer || '',
         tags: initialData.tags?.join(', ') || '',
       });
     }
@@ -2114,24 +2138,12 @@ export function EssayFormComponent({
         />
       </div>
 
-      {/* 2. Difficulty and Time */}
+      {/* 2. Difficulty */}
       <div className="grid grid-cols-2 gap-4">
         <DifficultyButtons
           value={form.difficulty}
           onChange={(difficulty) => setForm({ ...form, difficulty })}
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            2️⃣ Vaqt (daqiqa)
-          </label>
-          <input
-            type="number"
-            value={form.durationMinutes}
-            onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value) || 0 })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
       </div>
 
       {/* 3. Essay Prompt */}
@@ -2194,10 +2206,10 @@ export function EssayFormComponent({
         />
       </div>
 
-      {/* 5. Sample Answer */}
+      {/* 4. Sample Answer */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          5️⃣ Namunaviy javob
+          4️⃣ Namunaviy javob
         </label>
         <textarea
           value={form.sampleAnswer}
@@ -2208,10 +2220,10 @@ export function EssayFormComponent({
         />
       </div>
 
-      {/* 6. Tags */}
+      {/* 5. Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          6️⃣ Teglar (vergul bilan ajratilgan)
+          5️⃣ Teglar (vergul bilan ajratilgan)
         </label>
         <input
           type="text"
@@ -2235,6 +2247,14 @@ export function EssayFormComponent({
         >
           Saqlash
         </button>
+        {initialData && onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            O'chirish
+          </button>
+        )}
       </div>
     </div>
   );

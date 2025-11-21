@@ -15,7 +15,7 @@ import {
 } from '../ContentForms';
 import MathRenderer from '@/components/MathRenderer';
 
-type TaskSubType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'FILL_BLANKS' | 'MATCHING' | 'ESSAY';
+type TaskSubType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'FILL_BLANKS' | 'MATCHING' | 'ESSAY' | 'LONG_ANSWER';
 
 interface Topic {
   id: string;
@@ -66,12 +66,6 @@ export default function TasksPage() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Filters
-  const [sourceFilter, setSourceFilter] = useState<'ALL' | 'AI' | 'DB'>(
-    (searchParams?.get('filter')?.toUpperCase() as 'AI' | 'DB') || 'ALL'
-  );
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'APPROVED' | 'PENDING'>(
-    (searchParams?.get('status')?.toUpperCase() as 'APPROVED' | 'PENDING') || 'ALL'
-  );
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedTopic, setSelectedTopic] = useState<string>('');
@@ -95,7 +89,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     loadTasks();
-  }, [sourceFilter, statusFilter, selectedGrade, selectedSubject, selectedTopic, taskTypeFilter, difficultyFilter]);
+  }, [selectedGrade, selectedSubject, selectedTopic, taskTypeFilter, difficultyFilter]);
 
   const loadSubjectsAndGrades = async () => {
     try {
@@ -117,20 +111,21 @@ export default function TasksPage() {
       const topicsData = await topicsResponse.json();
       if (topicsData.success) {
         setTopics(topicsData.data);
+
+        // Extract unique grades from topics instead of tasks
+        // This way grades are available even if no tasks exist yet
+        const uniqueGrades = [...new Set(topicsData.data.map((topic: Topic) => topic.gradeNumber))].sort((a, b) => a - b);
+        setGrades(uniqueGrades as number[]);
       }
 
-      // Load tasks to extract grades that have actual tasks
-      const tasksResponse = await fetch('/api/content/items?type=TASK', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const tasksData = await tasksResponse.json();
-      if (tasksData.success && tasksData.data.length > 0) {
-        // Extract unique grades from tasks (not topics)
-        const uniqueGrades = [...new Set(tasksData.data.map((task: Task) => task.topic.gradeNumber))].sort((a, b) => a - b);
-        setGrades(uniqueGrades as number[]);
+      // If no topics exist, use default grades 1-11
+      if (!topicsData.success || topicsData.data.length === 0) {
+        setGrades([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
       }
     } catch (error) {
       console.error('Failed to load subjects and grades:', error);
+      // Fallback to default grades on error
+      setGrades([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
     }
   };
 
@@ -320,6 +315,7 @@ export default function TasksPage() {
       'FILL_BLANKS': 'Boʻshliqni toʻldirish',
       'MATCHING': 'Moslashtirish',
       'ESSAY': 'Esse',
+      'LONG_ANSWER': 'Batafsil javob',
     };
     return names[type] || type;
   };
@@ -334,20 +330,24 @@ export default function TasksPage() {
       'FILL_BLANKS': 'solar:text-bold-duotone',
       'MATCHING': 'solar:link-bold-duotone',
       'ESSAY': 'solar:document-text-bold-duotone',
+      'LONG_ANSWER': 'solar:document-text-bold-duotone',
     };
     return icons[type] || 'solar:document-bold-duotone';
   };
 
   const filteredTasks = tasks.filter(task => {
-    if (sourceFilter === 'AI' && !task.metadata?.isAiGenerated) return false;
-    if (sourceFilter === 'DB' && task.metadata?.isAiGenerated) return false;
-    if (statusFilter === 'APPROVED' && !task.metadata?.approved) return false;
-    if (statusFilter === 'PENDING' && task.metadata?.approved) return false;
     if (selectedTopic && task.topic.id !== selectedTopic) return false;
     if (taskTypeFilter !== 'ALL' && task.content?.task_type !== taskTypeFilter) return false;
     if (difficultyFilter !== 'ALL' && task.difficulty !== difficultyFilter) return false;
     return true;
   });
+
+  // Get available subjects based on selected grade
+  const availableSubjects = selectedGrade
+    ? subjects.filter(subject =>
+        topics.some(topic => topic.gradeNumber === selectedGrade && topic.subject.code === subject.code)
+      )
+    : subjects;
 
   // Get available topics based on selected grade and subject
   const availableTopics = topics.filter(topic => {
@@ -356,12 +356,16 @@ export default function TasksPage() {
     return true;
   });
 
-  const stats = {
-    total: tasks.length,
-    ai: tasks.filter(t => t.metadata?.isAiGenerated).length,
-    db: tasks.filter(t => !t.metadata?.isAiGenerated).length,
-    approved: tasks.filter(t => t.metadata?.approved).length,
-    pending: tasks.filter(t => !t.metadata?.approved && t.metadata?.isAiGenerated).length,
+  // Calculate task type statistics
+  const taskTypeStats = {
+    SINGLE_CHOICE: filteredTasks.filter(t => t.content?.task_type === 'SINGLE_CHOICE').length,
+    MULTIPLE_CHOICE: filteredTasks.filter(t => t.content?.task_type === 'MULTIPLE_CHOICE').length,
+    TRUE_FALSE: filteredTasks.filter(t => t.content?.task_type === 'TRUE_FALSE').length,
+    SHORT_ANSWER: filteredTasks.filter(t => t.content?.task_type === 'SHORT_ANSWER').length,
+    FILL_BLANKS: filteredTasks.filter(t => t.content?.task_type === 'FILL_BLANKS').length,
+    MATCHING: filteredTasks.filter(t => t.content?.task_type === 'MATCHING').length,
+    ESSAY: filteredTasks.filter(t => t.content?.task_type === 'ESSAY').length,
+    LONG_ANSWER: filteredTasks.filter(t => t.content?.task_type === 'LONG_ANSWER').length,
   };
 
   return (
@@ -386,101 +390,103 @@ export default function TasksPage() {
               </div>
             </div>
 
-            <button
-              onClick={openAddModal}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              <Icon icon="solar:add-circle-bold-duotone" className="text-xl" />
-              <span>Yangi qoʻshish</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin/content/import-json"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                <Icon icon="solar:import-bold-duotone" className="text-xl" />
+                <span>Import</span>
+              </Link>
+              <button
+                onClick={openAddModal}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                <Icon icon="solar:add-circle-bold-duotone" className="text-xl" />
+                <span>Yangi qoʻshish</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <button
-            onClick={() => setSourceFilter('ALL')}
-            className={`p-4 rounded-xl transition-all ${
-              sourceFilter === 'ALL'
-                ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg scale-105'
-                : 'bg-white border-2 border-gray-200 hover:border-blue-300'
-            }`}
-          >
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className={`text-sm ${sourceFilter === 'ALL' ? 'text-blue-100' : 'text-gray-600'}`}>
-              Jami topshiriqlar
+        {/* Summary Stats */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Jami topshiriqlar: {tasks.length}</h2>
+              <p className="text-sm text-gray-600 mt-1">Filtrlangan: {filteredTasks.length}</p>
             </div>
-          </button>
+            <Icon icon="solar:chart-bold-duotone" className="text-4xl text-blue-600" />
+          </div>
 
-          <button
-            onClick={() => setSourceFilter('AI')}
-            className={`p-4 rounded-xl transition-all ${
-              sourceFilter === 'AI'
-                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-105'
-                : 'bg-white border-2 border-gray-200 hover:border-purple-300'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Icon icon="solar:magic-stick-3-bold-duotone" className="text-xl" />
-              <div className="text-2xl font-bold">{stats.ai}</div>
+          {/* Detailed Task Type Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mt-4">
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:check-circle-bold-duotone" className="text-blue-600" />
+                <span className="text-xs text-gray-600">Bir javobli</span>
+              </div>
+              <div className="text-lg font-bold text-blue-900">{taskTypeStats.SINGLE_CHOICE}</div>
             </div>
-            <div className={`text-sm ${sourceFilter === 'AI' ? 'text-purple-100' : 'text-gray-600'}`}>
-              AI yaratgan
-            </div>
-          </button>
 
-          <button
-            onClick={() => setSourceFilter('DB')}
-            className={`p-4 rounded-xl transition-all ${
-              sourceFilter === 'DB'
-                ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg scale-105'
-                : 'bg-white border-2 border-gray-200 hover:border-green-300'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Icon icon="solar:book-bold-duotone" className="text-xl" />
-              <div className="text-2xl font-bold">{stats.db}</div>
+            <div className="p-3 bg-purple-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:check-square-bold-duotone" className="text-purple-600" />
+                <span className="text-xs text-gray-600">Koʻp javobli</span>
+              </div>
+              <div className="text-lg font-bold text-purple-900">{taskTypeStats.MULTIPLE_CHOICE}</div>
             </div>
-            <div className={`text-sm ${sourceFilter === 'DB' ? 'text-green-100' : 'text-gray-600'}`}>
-              Darslikdan
-            </div>
-          </button>
 
-          <button
-            onClick={() => setStatusFilter('APPROVED')}
-            className={`p-4 rounded-xl transition-all ${
-              statusFilter === 'APPROVED'
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg scale-105'
-                : 'bg-white border-2 border-gray-200 hover:border-emerald-300'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Icon icon="solar:check-circle-bold-duotone" className="text-xl" />
-              <div className="text-2xl font-bold">{stats.approved}</div>
+            <div className="p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:close-circle-bold-duotone" className="text-green-600" />
+                <span className="text-xs text-gray-600">Toʻgʻri/Notoʻgʻri</span>
+              </div>
+              <div className="text-lg font-bold text-green-900">{taskTypeStats.TRUE_FALSE}</div>
             </div>
-            <div className={`text-sm ${statusFilter === 'APPROVED' ? 'text-emerald-100' : 'text-gray-600'}`}>
-              Tasdiqlangan
-            </div>
-          </button>
 
-          <button
-            onClick={() => setStatusFilter('PENDING')}
-            className={`p-4 rounded-xl transition-all ${
-              statusFilter === 'PENDING'
-                ? 'bg-gradient-to-br from-yellow-500 to-orange-500 text-white shadow-lg scale-105'
-                : 'bg-white border-2 border-gray-200 hover:border-yellow-300'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Icon icon="solar:clock-circle-bold-duotone" className="text-xl" />
-              <div className="text-2xl font-bold">{stats.pending}</div>
+            <div className="p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:pen-bold-duotone" className="text-yellow-600" />
+                <span className="text-xs text-gray-600">Qisqa javob</span>
+              </div>
+              <div className="text-lg font-bold text-yellow-900">{taskTypeStats.SHORT_ANSWER}</div>
             </div>
-            <div className={`text-sm ${statusFilter === 'PENDING' ? 'text-yellow-100' : 'text-gray-600'}`}>
-              Kutilmoqda
+
+            <div className="p-3 bg-indigo-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:text-bold-duotone" className="text-indigo-600" />
+                <span className="text-xs text-gray-600">Boʻsh joylr</span>
+              </div>
+              <div className="text-lg font-bold text-indigo-900">{taskTypeStats.FILL_BLANKS}</div>
             </div>
-          </button>
+
+            <div className="p-3 bg-pink-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:link-bold-duotone" className="text-pink-600" />
+                <span className="text-xs text-gray-600">Moslashtirish</span>
+              </div>
+              <div className="text-lg font-bold text-pink-900">{taskTypeStats.MATCHING}</div>
+            </div>
+
+            <div className="p-3 bg-cyan-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:document-text-bold-duotone" className="text-cyan-600" />
+                <span className="text-xs text-gray-600">Esse</span>
+              </div>
+              <div className="text-lg font-bold text-cyan-900">{taskTypeStats.ESSAY}</div>
+            </div>
+
+            <div className="p-3 bg-orange-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon="solar:document-text-bold-duotone" className="text-orange-600" />
+                <span className="text-xs text-gray-600">Batafsil</span>
+              </div>
+              <div className="text-lg font-bold text-orange-900">{taskTypeStats.LONG_ANSWER}</div>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}
@@ -500,6 +506,7 @@ export default function TasksPage() {
                 value={selectedGrade || ''}
                 onChange={(e) => {
                   setSelectedGrade(e.target.value ? Number(e.target.value) : null);
+                  setSelectedSubject(''); // Reset subject when grade changes
                   setSelectedTopic(''); // Reset topic when grade changes
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -523,9 +530,10 @@ export default function TasksPage() {
                   setSelectedTopic(''); // Reset topic when subject changes
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={availableSubjects.length === 0}
               >
                 <option value="">Barcha fanlar</option>
-                {subjects.map(subject => (
+                {availableSubjects.map(subject => (
                   <option key={subject.id} value={subject.code}>{subject.nameUz}</option>
                 ))}
               </select>
@@ -567,6 +575,7 @@ export default function TasksPage() {
                 <option value="FILL_BLANKS">Boʻshliqni toʻldirish</option>
                 <option value="MATCHING">Moslashtirish</option>
                 <option value="ESSAY">Esse</option>
+                <option value="LONG_ANSWER">Batafsil javob</option>
               </select>
             </div>
 
@@ -666,7 +675,7 @@ export default function TasksPage() {
                                 className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
                                 onClick={() => {
                                   setViewTask(task);
-                                  setIsEditMode(false);
+                                  setIsEditMode(true);
                                 }}
                               >
                                 {displayText}
@@ -685,28 +694,6 @@ export default function TasksPage() {
                                   {task.difficulty === 'EASY' ? 'Oson' :
                                    task.difficulty === 'HARD' ? 'Qiyin' : 'Oʻrta'}
                                 </span>
-                                {task.metadata?.isAiGenerated ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-                                    <Icon icon="solar:magic-stick-3-bold-duotone" className="text-xs" />
-                                    AI
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
-                                    <Icon icon="solar:book-bold-duotone" className="text-xs" />
-                                    Darslik
-                                  </span>
-                                )}
-                                {task.metadata?.approved ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded">
-                                    <Icon icon="solar:check-circle-bold" className="text-xs" />
-                                    Tasdiqlangan
-                                  </span>
-                                ) : task.metadata?.isAiGenerated ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded">
-                                    <Icon icon="solar:clock-circle-bold" className="text-xs" />
-                                    Kutilmoqda
-                                  </span>
-                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -720,15 +707,6 @@ export default function TasksPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {task.metadata?.isAiGenerated && !task.metadata?.approved && (
-                              <button
-                                onClick={() => handleApprove(task.id)}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                title="Tasdiqlash"
-                              >
-                                <Icon icon="solar:check-circle-bold-duotone" className="text-xl" />
-                              </button>
-                            )}
                             <button
                               onClick={() => handleDelete(task.id)}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -812,6 +790,7 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
@@ -826,6 +805,7 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
@@ -840,6 +820,7 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
@@ -854,6 +835,7 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
@@ -868,6 +850,7 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
@@ -882,12 +865,13 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
             )}
 
-            {viewTask.content?.task_type === 'ESSAY' && (
+            {(viewTask.content?.task_type === 'ESSAY' || viewTask.content?.task_type === 'LONG_ANSWER') && (
               <EssayFormComponent
                 topicId={viewTask.topic.id}
                 topics={topics}
@@ -896,45 +880,10 @@ export default function TasksPage() {
                   setViewTask(null);
                   setIsEditMode(false);
                 }}
+                onDelete={() => handleDelete(viewTask.id)}
                 initialData={viewTask}
                 readOnly={!isEditMode}
               />
-            )}
-
-            {/* Edit Mode Toggle Button */}
-            {!isEditMode && (
-              <div className="mt-6 flex items-center justify-between pt-6 border-t border-gray-200">
-                <div className="flex items-center gap-2">
-                  {viewTask.metadata?.isAiGenerated && !viewTask.metadata?.approved && (
-                    <button
-                      onClick={() => {
-                        handleApprove(viewTask.id);
-                        setViewTask(null);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      <Icon icon="solar:check-circle-bold-duotone" className="text-lg" />
-                      Tasdiqlash
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setIsEditMode(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    <Icon icon="solar:pen-bold-duotone" className="text-lg" />
-                    Tahrirlash
-                  </button>
-                </div>
-                <button
-                  onClick={() => {
-                    setViewTask(null);
-                    setIsEditMode(false);
-                  }}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
-                >
-                  Yopish
-                </button>
-              </div>
             )}
           </div>
         </div>

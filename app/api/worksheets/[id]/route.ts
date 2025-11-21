@@ -47,7 +47,7 @@ export async function GET(
         ? ''
         : `AND "userId" = '${user.id}'`;
 
-      const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount"
+      const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount", ai_debug_info
                    FROM worksheets
                    WHERE id = '${worksheetId}' ${userCondition}
                    LIMIT 1;`;
@@ -76,6 +76,7 @@ export async function GET(
           }
 
           const parts = line.split('|');
+          const aiDebugInfoRaw = parts[11];
           resolve({
             id: parts[0],
             userId: parts[1],
@@ -88,6 +89,7 @@ export async function GET(
             status: parts[8],
             generatedAt: parts[9],
             viewCount: parseInt(parts[10] || '0'),
+            aiDebugInfo: aiDebugInfoRaw && aiDebugInfoRaw !== '' ? JSON.parse(aiDebugInfoRaw) : null,
           });
         }
       });

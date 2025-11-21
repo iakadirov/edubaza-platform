@@ -355,6 +355,7 @@ const MatchingTask: React.FC<{ content: TaskContent; interactive?: boolean }> = 
 const EssayTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ content, interactive }) => {
   const questionText = content.questionText || content.statement || '';
   const [answer, setAnswer] = React.useState('');
+  const solution = content.solution;
 
   return (
     <div>
@@ -387,6 +388,13 @@ const EssayTask: React.FC<{ content: TaskContent; interactive?: boolean }> = ({ 
           <div className="h-10 border-b-2 border-gray-400 mb-3" />
           <div className="h-10 border-b-2 border-gray-400 mb-3" />
           <div className="h-10 border-b-2 border-gray-400 mb-3" />
+        </div>
+      )}
+
+      {solution && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm font-semibold text-blue-800 mb-2">Yechim:</p>
+          <MathText text={solution} className="text-sm text-gray-700 whitespace-pre-wrap" />
         </div>
       )}
     </div>
@@ -427,9 +435,11 @@ export const TaskRenderer: React.FC<TaskRendererProps> = ({
       TaskComponent = MatchingTask;
       break;
     case 'ESSAY':
+    case 'LONG_ANSWER':
       TaskComponent = EssayTask;
       break;
     default:
+      console.error('Unknown task type:', taskType, 'Task ID:', task.id);
       return null;
   }
 

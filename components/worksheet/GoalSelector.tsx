@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 
 interface Topic {
@@ -7,6 +8,7 @@ interface Topic {
   titleUz: string;
   gradeNumber: number;
   quarter: number | null;
+  weekNumber?: number | null;
   keywords: string[];
 }
 
@@ -44,6 +46,77 @@ export default function GoalSelector({
   selectedWeeks,
   onWeeksChange,
 }: GoalSelectorProps) {
+  const [topicSearchQuery, setTopicSearchQuery] = useState('');
+  const [showTopicDropdown, setShowTopicDropdown] = useState(false);
+  const [isCustomTopic, setIsCustomTopic] = useState(false);
+  const topicInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter topics based on search query
+  const filteredTopics = topics.filter((topic) => {
+    const query = topicSearchQuery.toLowerCase();
+    return (
+      topic.titleUz.toLowerCase().includes(query) ||
+      (topic.quarter && topic.quarter.toString().includes(query)) ||
+      (topic.weekNumber && topic.weekNumber.toString().includes(query))
+    );
+  });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        topicInputRef.current &&
+        !topicInputRef.current.contains(event.target as Node)
+      ) {
+        setShowTopicDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Handle topic input change
+  const handleTopicInputChange = (value: string) => {
+    setTopicSearchQuery(value);
+    setShowTopicDropdown(true);
+    setIsCustomTopic(true);
+
+    // If user clears the input, reset selection
+    if (!value) {
+      onTopicChange(null);
+      setIsCustomTopic(false);
+    }
+  };
+
+  // Handle topic selection from dropdown
+  const handleTopicSelect = (topic: Topic) => {
+    setTopicSearchQuery(topic.titleUz);
+    onTopicChange(topic);
+    setShowTopicDropdown(false);
+    setIsCustomTopic(false);
+  };
+
+  // Handle custom topic (when user doesn't select from list)
+  const handleCustomTopicConfirm = () => {
+    if (topicSearchQuery.trim()) {
+      // Create a custom topic object
+      const customTopic: Topic = {
+        id: 'custom',
+        titleUz: topicSearchQuery.trim(),
+        gradeNumber: 0,
+        quarter: null,
+        keywords: [],
+      };
+      onTopicChange(customTopic);
+      setIsCustomTopic(true);
+      setShowTopicDropdown(false);
+    }
+  };
+
   const toggleWeek = (week: number) => {
     if (selectedWeeks.includes(week)) {
       onWeeksChange(selectedWeeks.filter((w) => w !== week));
@@ -156,24 +229,117 @@ export default function GoalSelector({
 
       {/* Если выбрана тема */}
       {goalType === 'TOPIC' && (
-        <div>
-          <label className="block text-sm text-gray-600 mb-2">Mavzuni tanlang:</label>
-          <select
-            value={selectedTopic?.id || ''}
-            onChange={(e) => {
-              const topic = topics.find((t) => t.id === e.target.value);
-              onTopicChange(topic || null);
-            }}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-          >
-            <option value="">Mavzuni tanlang...</option>
-            {topics.map((topic) => (
-              <option key={topic.id} value={topic.id}>
-                {topic.titleUz}
-                {topic.quarter && ` (${topic.quarter}-chorak)`}
-              </option>
-            ))}
-          </select>
+        <div className="relative">
+          <label className="block text-sm text-gray-600 mb-2">
+            Mavzuni tanlang yoki kiriting:
+          </label>
+
+          <div className="relative">
+            <input
+              ref={topicInputRef}
+              type="text"
+              value={topicSearchQuery}
+              onChange={(e) => handleTopicInputChange(e.target.value)}
+              onFocus={() => setShowTopicDropdown(true)}
+              placeholder="Mavzu nomi yoki raqamini kiriting..."
+              className="w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-all"
+            />
+            <Icon
+              icon="solar:magnifer-linear"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl"
+            />
+          </div>
+
+          {/* Dropdown with filtered topics */}
+          {showTopicDropdown && topicSearchQuery && (
+            <div
+              ref={dropdownRef}
+              className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto"
+            >
+              {filteredTopics.length > 0 ? (
+                <>
+                  <div className="sticky top-0 bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium">
+                      {filteredTopics.length} ta mavzu topildi
+                    </p>
+                  </div>
+                  {filteredTopics.map((topic) => (
+                    <button
+                      key={topic.id}
+                      type="button"
+                      onClick={() => handleTopicSelect(topic)}
+                      className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800 text-sm">
+                            {topic.titleUz}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {topic.quarter && (
+                              <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                <Icon icon="solar:calendar-bold-duotone" className="text-sm" />
+                                {topic.quarter}-chorak
+                              </span>
+                            )}
+                            {topic.weekNumber && (
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                                <Icon icon="solar:clock-circle-bold-duotone" className="text-sm" />
+                                {topic.weekNumber}-hafta
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Icon
+                          icon="solar:arrow-right-linear"
+                          className="text-gray-400 text-lg flex-shrink-0 mt-1"
+                        />
+                      </div>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <div className="px-4 py-8 text-center">
+                  <Icon
+                    icon="solar:file-search-bold-duotone"
+                    className="text-4xl text-gray-300 mx-auto mb-2"
+                  />
+                  <p className="text-sm text-gray-500 mb-3">
+                    Hech narsa topilmadi
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCustomTopicConfirm}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <Icon icon="solar:add-circle-bold-duotone" />
+                    Yangi mavzu sifatida ishlatish
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Custom topic indicator */}
+          {selectedTopic && isCustomTopic && selectedTopic.id === 'custom' && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+              <Icon icon="solar:danger-triangle-bold-duotone" className="text-base" />
+              <span>Maxsus mavzu (darslikda yo'q)</span>
+            </div>
+          )}
+
+          {/* Selected topic from list indicator */}
+          {selectedTopic && !isCustomTopic && selectedTopic.id !== 'custom' && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+              <Icon icon="solar:check-circle-bold-duotone" className="text-base" />
+              <span>Darslik mavzusi tanlandi</span>
+              {selectedTopic.quarter && selectedTopic.weekNumber && (
+                <span className="ml-auto">
+                  {selectedTopic.quarter}-chorak, {selectedTopic.weekNumber}-hafta
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 

@@ -58,6 +58,8 @@ export default function GenerateChatPage() {
   const [taskCount, setTaskCount] = useState<number | null>(10);
   const [selectedTaskTypes, setSelectedTaskTypes] = useState<string[]>([]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(['ORTA']);
+  const [aiPercentage, setAiPercentage] = useState<number>(100); // 0-100, where 100 = 100% AI, 0 = 100% DB
+  const [customInstructions, setCustomInstructions] = useState<string>('');
 
   // Для контрольных работ
   const [selectedQuarter, setSelectedQuarter] = useState<number>(1);
@@ -232,7 +234,7 @@ export default function GenerateChatPage() {
         topic: selectedTopic?.titleUz || `${selectedGoal} - ${selectedQuarter}-chorak`,
         topicId: selectedTopic?.id || null,
         taskCount,
-        aiPercentage: 100,
+        aiPercentage,
         difficulty: selectedDifficulties.length > 0 ? selectedDifficulties : [selectedDifficulty],
         taskTypes: selectedTaskTypes.length > 0 ? selectedTaskTypes : ['MULTIPLE_CHOICE', 'SHORT_ANSWER', 'LONG_ANSWER'],
         format: selectedFormat,
@@ -242,6 +244,7 @@ export default function GenerateChatPage() {
         goal: selectedGoal,
         quarter: selectedQuarter,
         weeks: selectedWeeks,
+        customInstructions: customInstructions || undefined,
       };
 
       // Generate debug prompt
@@ -283,9 +286,8 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
 
       if (data.success) {
         setProgress(100);
-        setTimeout(() => {
-          router.push(`/worksheet/${data.data.worksheetId}`);
-        }, 1500);
+        // Немедленный редирект на созданный worksheet
+        router.push(`/worksheet/${data.data.worksheetId}`);
       } else {
         setShowProgress(false);
         setError(data.message || 'Topshiriq yaratishda xatolik yuz berdi');
@@ -574,7 +576,29 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
                   >
                     {taskCount ? `${taskCount} ta` : 'sonini tanlang'}
                   </button>
-                  {' '}vazifadan iborat printerdan chiqarishga tayyor material tuzib bering!
+                  {' '}vazifadan iborat printerdan chiqarishga tayyor material tuzib bering. Savollar{' '}
+                  {/* Source Ratio Variable */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveVariable('source')}
+                    title="Manbani tanlang"
+                    className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg transition-all cursor-pointer font-medium text-lg text-[#1761FF]"
+                  >
+                    {aiPercentage === 100
+                      ? '100% AI'
+                      : aiPercentage === 0
+                      ? '100% darslik'
+                      : `${100 - aiPercentage}% darslik - ${aiPercentage}% AI`}
+                  </button>
+                  {' '}asosida tuzilsin!{' '}
+                  <input
+                    type="text"
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="Maxsus ko'rsatmalar kiriting..."
+                    className="inline-block border-none outline-none bg-transparent text-gray-400 placeholder-gray-300 italic font-normal text-lg min-w-[200px] focus:text-gray-600"
+                    style={{ width: customInstructions ? `${Math.max(customInstructions.length * 10, 200)}px` : '200px' }}
+                  />
                 </p>
               </div>
 
@@ -595,51 +619,21 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
 
                     {showSettingsMenu && (
                       <div className="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-200 py-2 min-w-[280px] z-50">
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                            <span>Topshiriqlar soni</span>
-                            <span className="text-blue-600">{taskCount} ta</span>
-                          </label>
-                          <input
-                            type="range"
-                            min="3"
-                            max="30"
-                            value={taskCount}
-                            onChange={(e) => setTaskCount(Number(e.target.value))}
-                            className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                          />
-                        </div>
-
                         <div className="px-4 py-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Qiyinlik
-                          </label>
-                          <div className="flex gap-2">
-                            {[
-                              { value: 'EASY', label: 'Oson' },
-                              { value: 'MEDIUM', label: "O'rta" },
-                              { value: 'HARD', label: 'Qiyin' },
-                            ].map((difficulty) => (
-                              <button
-                                key={difficulty.value}
-                                type="button"
-                                onClick={() => {
-                                  if (selectedDifficulties.includes(difficulty.value)) {
-                                    setSelectedDifficulties(selectedDifficulties.filter(d => d !== difficulty.value));
-                                  } else {
-                                    setSelectedDifficulties([...selectedDifficulties, difficulty.value]);
-                                  }
-                                }}
-                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                  selectedDifficulties.includes(difficulty.value)
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                              >
-                                {difficulty.label}
-                              </button>
-                            ))}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveVariable('taskTypes');
+                              setShowSettingsMenu(false);
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon icon="solar:list-check-bold-duotone" className="text-xl text-blue-600" />
+                              <span className="text-sm font-medium text-gray-700">Topshiriq turlari</span>
+                            </div>
+                            <Icon icon="solar:alt-arrow-right-linear" className="text-gray-400" />
+                          </button>
                         </div>
                       </div>
                     )}
@@ -846,7 +840,9 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
                   {activeVariable === 'weeks' && 'Haftalarni tanlang'}
                   {activeVariable === 'format' && 'Formatni tanlang'}
                   {activeVariable === 'difficulty' && 'Qiyinlik darajasini tanlang'}
+                  {activeVariable === 'source' && 'Manbani tanlang'}
                   {activeVariable === 'taskCount' && 'Topshiriqlar sonini belgilang'}
+                  {activeVariable === 'taskTypes' && 'Topshiriq turlarini tanlang'}
                 </h3>
                 <button
                   type="button"
@@ -1251,6 +1247,154 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
                       className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                     >
                       Tasdiqlash
+                    </button>
+                  </div>
+                )}
+
+                {/* Source Ratio Selection (AI vs Database) */}
+                {activeVariable === 'source' && (
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <div className="text-5xl font-bold text-blue-600 mb-2">
+                        {aiPercentage === 100
+                          ? '100% AI'
+                          : aiPercentage === 0
+                          ? '100% Darslik'
+                          : `${100 - aiPercentage}% / ${aiPercentage}%`}
+                      </div>
+                      <p className="text-gray-600">
+                        {aiPercentage === 100
+                          ? 'Faqat AI yaratadi'
+                          : aiPercentage === 0
+                          ? 'Faqat darslikdan'
+                          : `${100 - aiPercentage}% Darslik - ${aiPercentage}% AI`}
+                      </p>
+                    </div>
+                    <div className="px-4">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="10"
+                        value={aiPercentage}
+                        onChange={(e) => setAiPercentage(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500 mt-2">
+                        <span>0% (Faqat darslik)</span>
+                        <span>100% (Faqat AI)</span>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <Icon icon="solar:info-circle-bold-duotone" className="text-2xl text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-blue-900">
+                          <p className="font-medium mb-1">Manbani sozlang:</p>
+                          <ul className="space-y-1 text-blue-800">
+                            <li>• <strong>0%</strong> - Faqat mavjud darslikdan topshiriqlar</li>
+                            <li>• <strong>100%</strong> - Faqat AI yaratgan yangi topshiriqlar</li>
+                            <li>• <strong>50%</strong> - Yarmi darslik, yarmi AI</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveVariable(null)}
+                      className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Tasdiqlash
+                    </button>
+                  </div>
+                )}
+
+                {/* Task Types Selection */}
+                {activeVariable === 'taskTypes' && (
+                  <div className="space-y-4">
+                    {/* Mix Option (Select All) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allTypes = ['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_BLANKS', 'MATCHING', 'ESSAY', 'LONG_ANSWER'];
+                        if (selectedTaskTypes.length === allTypes.length) {
+                          setSelectedTaskTypes([]);
+                        } else {
+                          setSelectedTaskTypes(allTypes);
+                        }
+                      }}
+                      className={`w-full p-4 rounded-xl text-left transition-all border-2 ${
+                        selectedTaskTypes.length === 8
+                          ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-600 shadow-lg'
+                          : 'bg-white border-gray-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          selectedTaskTypes.length === 8 ? 'bg-blue-600 border-blue-600' : 'border-gray-300'
+                        }`}>
+                          {selectedTaskTypes.length === 8 && (
+                            <Icon icon="solar:check-circle-bold" className="text-sm text-white" />
+                          )}
+                        </div>
+                        <Icon icon="solar:layers-minimalistic-bold-duotone" className="text-2xl text-purple-600" />
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800">Aralash</div>
+                          <p className="text-xs text-gray-600">Barcha turlar (tavsiya etiladi)</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Individual Task Types */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'SINGLE_CHOICE', label: 'Bir javobli', icon: 'solar:check-circle-bold-duotone', color: 'blue' },
+                        { value: 'MULTIPLE_CHOICE', label: "Ko'p javobli", icon: 'solar:check-square-bold-duotone', color: 'purple' },
+                        { value: 'TRUE_FALSE', label: "To'g'ri/Noto'g'ri", icon: 'solar:close-circle-bold-duotone', color: 'green' },
+                        { value: 'SHORT_ANSWER', label: 'Qisqa javob', icon: 'solar:pen-bold-duotone', color: 'yellow' },
+                        { value: 'FILL_BLANKS', label: "Bo'sh joylar", icon: 'solar:text-bold-duotone', color: 'indigo' },
+                        { value: 'MATCHING', label: 'Moslashtirish', icon: 'solar:link-bold-duotone', color: 'pink' },
+                        { value: 'ESSAY', label: 'Insho', icon: 'solar:document-text-bold-duotone', color: 'cyan' },
+                        { value: 'LONG_ANSWER', label: 'Batafsil javob', icon: 'solar:document-add-bold-duotone', color: 'orange' },
+                      ].map((taskType) => (
+                        <button
+                          key={taskType.value}
+                          type="button"
+                          onClick={() => {
+                            if (selectedTaskTypes.includes(taskType.value)) {
+                              setSelectedTaskTypes(selectedTaskTypes.filter(t => t !== taskType.value));
+                            } else {
+                              setSelectedTaskTypes([...selectedTaskTypes, taskType.value]);
+                            }
+                          }}
+                          className={`p-3 rounded-xl text-left transition-all border-2 ${
+                            selectedTaskTypes.includes(taskType.value)
+                              ? `bg-${taskType.color}-50 border-${taskType.color}-500 shadow-md`
+                              : 'bg-white border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center mt-0.5 flex-shrink-0 ${
+                              selectedTaskTypes.includes(taskType.value) ? `bg-${taskType.color}-600 border-${taskType.color}-600` : 'border-gray-300'
+                            }`}>
+                              {selectedTaskTypes.includes(taskType.value) && (
+                                <Icon icon="solar:check-circle-bold" className="text-xs text-white" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <Icon icon={taskType.icon} className={`text-xl text-${taskType.color}-600 mb-1`} />
+                              <div className="font-medium text-sm text-gray-800 truncate">{taskType.label}</div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveVariable(null)}
+                      className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Tasdiqlash ({selectedTaskTypes.length === 0 ? 'Standart' : selectedTaskTypes.length === 8 ? 'Aralash' : `${selectedTaskTypes.length} ta tur`})
                     </button>
                   </div>
                 )}

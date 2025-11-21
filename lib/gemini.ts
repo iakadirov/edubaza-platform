@@ -26,13 +26,16 @@ ROLNING ASOSIY VAZIFALARI:
 - Har bir topshiriq oʻquv dasturi standartlariga mos kelishi kerak
 - Topshiriqlar oʻquvchilarning yosh xususiyatlariga moslashtrilgan boʻlishi kerak
 
+FIKRLASH ALGORITMI (Mental Chain):
+Har bir topshiriqni yaratishda quyidagi tartibni bajaring:
+1. Avval oʻquvchining yoshini va sinf darajasini hisobga oling
+2. Mavzuga mos real hayot kontekstini tanlang (Oʻzbekiston konteksti)
+3. Sonlar va matnlarni oʻsha yosh uchun tushunarli darajada tanlang (hisoblash qiyin boʻlmasin)
+4. Pedagogik jihatdan toʻgʻri va ilmiy jihatdan aniq boʻlishini tekshiring
+
 MUHIM QOIDALAR:
-- FAQAT Oʻzbek nomlar ishlatish: Anvar, Malika, Aziz, Nodira, Jahongir, Dildora
-- FAQAT Oʻzbekiston shaharlari: Toshkent, Samarqand, Buxoro, Xiva, Andijon, Fargʻona
-- Valyuta: Soʻm
 - Oʻlchov birliklari: metr, kilometr, kilogramm, litr
-- Oʻzbek tilida Oʻ va Gʻ harflari uchun ʻ (modifier letter U+02BB) ishlatish
-- HECH QANDAY tashqi rasm URL yoki havola qoʻshmaslik`;
+- Oʻzbek tilida Oʻ va Gʻ harflari uchun ʻ (modifier letter U+02BB) ishlatish`;
 
 // ============================================================================
 // PROMPT REGISTRY: Modular Prompt Assembly System
@@ -217,6 +220,19 @@ export interface GenerateTasksParams {
   difficulty: string;
   taskTypes: string[];
   format?: 'DTS' | 'PISA' | 'OLYMPIAD' | 'REAL_LIFE' | 'STANDARD'; // Формат задания
+  customInstructions?: string; // Дополнительные инструкции
+}
+
+export interface GenerateTasksResult {
+  tasks: Task[];
+  debugInfo?: {
+    params: GenerateTasksParams;
+    systemInstruction: string;
+    userPrompt: string;
+    rawResponse: string;
+    parseError?: string;
+    timestamp: string;
+  };
 }
 
 // All supported task types
@@ -278,7 +294,7 @@ const taskTypeLabels: Record<string, string> = {
  * Собирает финальный промпт из модулей
  */
 function buildPrompt(params: GenerateTasksParams): { systemInstruction: string; userPrompt: string } {
-  const { subject, grade, topic, taskCount, difficulty, format = 'STANDARD' } = params;
+  const { subject, grade, topic, taskCount, difficulty, format = 'STANDARD', customInstructions } = params;
 
   // 1. Base System Instruction (роль методиста)
   let systemInstruction = SYSTEM_INSTRUCTION_TEMPLATE;
@@ -298,85 +314,47 @@ function buildPrompt(params: GenerateTasksParams): { systemInstruction: string; 
   const difficultyName = difficultyLabels[difficulty] || difficulty;
   const taskTypesStr = params.taskTypes.map(t => taskTypeLabels[t] || t).join(', ');
 
-  const userPrompt = `${grade}-sinf oʻquvchilari uchun "${topic}" mavzusida ${taskCount} ta mashq yarating.
+  let userPrompt = `*** KONTEKST ***
+Sinf: ${grade}-sinf
+Fan: ${subjectName}
+Mavzu: "${topic}"
+Til: Oʻzbek tili (lotin yozuvi, ʻ modifier U+02BB Oʻ va Gʻ uchun)
+Format: ${format}
 
-TALABLAR:
-- Fan: ${subjectName}
-- Qiyinlik darajasi: ${difficultyName}
+Oʻzbekiston konteksti:
+- Nomlar: Anvar, Malika, Aziz, Nodira, Jahongir, Dildora, Sardor, Nilufar, Zebo
+- Shaharlar: Toshkent, Samarqand, Buxoro, Xiva, Andijon, Fargʻona, Namangan
+- Valyuta: Soʻm
+
+*** VAZIFA ***
+${taskCount} ta mashq yarating.
+
+*** MASHQ YARATISH QOIDALARI ***
 - Mashq turlari: ${taskTypesStr}
-- Format: ${format}
-- Barcha mashqlar oʻzbek tilida (lotin alifbosida) boʻlishi kerak
-- MUHIM: Oʻzbek tilida Oʻ va Gʻ harflari uchun ʻ (modifier letter U+02BB) ishlatish kerak
+- Qiyinlik darajasi: ${difficultyName}
+- Har bir mashq turi uchun faqat kerakli maydonlarni qoʻshing:
+  • SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE: options va correctAnswer
+  • SHORT_ANSWER: faqat correctAnswer
+  • FILL_BLANKS: question (matn ___ bilan) va correctAnswer
+  • MATCHING: pairs va correctAnswer
+  • LONG_ANSWER: question, solution va correctAnswer
+- "options" maydonida harflarni (A), B), C), D)) qoʻshMANG - ular avtomatik qoʻshiladi
+- Barcha mashq turlarida "correctAnswer" MAJBURIY
 
-JSON format har bir mashq turi uchun:
+*** KONTENT QOIDALARI ***
+- Har bir mashqni yaratishda avval oʻquvchining yoshini (${grade}-sinf) hisobga oling
+- Matn va sonlarni oʻsha yosh uchun tushunarli qiling
+- Pedagogik jihatdan toʻgʻri va ilmiy jihatdan aniq boʻlishi kerak`;
 
-MUHIM:
-- "solution" maydonini FAQAT PROBLEM_SOLVING turi uchun qoʻshing. Boshqa turlar uchun bu maydon kerak emas.
-- "options" maydonida harflarni (A), B), C), D)) qoʻshMANG - ular avtomatik qoʻshiladi. Faqat javob matnini yozing.
-
-1. SINGLE_CHOICE (bir javobli test):
-{
-  "type": "SINGLE_CHOICE",
-  "question": "Savol matni",
-  "options": ["Variant 1", "Variant 2", "Variant 3", "Variant 4"],
-  "correctAnswer": "Variant 1"
-}
-
-2. MULTIPLE_CHOICE (koʻp javobli test):
-{
-  "type": "MULTIPLE_CHOICE",
-  "question": "Savol matni (bir nechta toʻgʻri javob tanlang)",
-  "options": ["Variant 1", "Variant 2", "Variant 3", "Variant 4"],
-  "correctAnswer": ["Variant 1", "Variant 3"]
-}
-
-3. TRUE_FALSE (toʻgʻri/notoʻgʻri):
-{
-  "type": "TRUE_FALSE",
-  "question": "Tasdiq matni",
-  "correctAnswer": "Toʻgʻri"
-}
-
-4. SHORT_ANSWER (qisqa javob):
-{
-  "type": "SHORT_ANSWER",
-  "question": "Savol matni",
-  "correctAnswer": "Qisqa javob"
-}
-
-5. FILL_BLANK (boʻsh joyni toʻldirish):
-{
-  "type": "FILL_BLANK",
-  "question": "Matn ___ bilan boʻsh joy",
-  "correctAnswer": "Toʻgʻri soʻz"
-}
-
-6. MATCHING (moslashtirish):
-{
-  "type": "MATCHING",
-  "question": "Quyidagi juftliklarni moslashtiring",
-  "pairs": [
-    {"left": "Atama 1", "right": "Taʼrif 1"},
-    {"left": "Atama 2", "right": "Taʼrif 2"},
-    {"left": "Atama 3", "right": "Taʼrif 3"}
-  ],
-  "correctAnswer": "Juftliklar toʻgʻri moslashtirilgan"
-}
-
-7. PROBLEM_SOLVING (masala yechish) - FAQAT bu tur uchun "solution" kerak:
-{
-  "type": "PROBLEM_SOLVING",
-  "question": "Masala sharti",
-  "solution": "Batafsil yechim qadam-baqadam",
-  "correctAnswer": "Yakuniy javob"
-}
-
-Faqat JSON massivni qaytaring. Qoʻshimcha matn yoki tushuntirishlar kerak emas.`;
+  // Append custom instructions if provided
+  if (customInstructions && customInstructions.trim()) {
+    userPrompt += `\n\nQOʻSHIMCHA TALABLAR:\n${customInstructions}`;
+  }
 
   return { systemInstruction, userPrompt };
 }
 
-// JSON Schema for task validation
+// JSON Schema for task validation - STRICT SCHEMA ENFORCEMENT
 const TASK_JSON_SCHEMA = {
   type: 'array',
   items: {
@@ -384,20 +362,29 @@ const TASK_JSON_SCHEMA = {
     properties: {
       type: {
         type: 'string',
-        enum: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_BLANK', 'MATCHING', 'PROBLEM_SOLVING']
+        enum: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_BLANKS', 'MATCHING', 'LONG_ANSWER'],
+        description: 'Task type - determines which fields are required'
       },
-      question: { type: 'string' },
+      question: {
+        type: 'string',
+        description: 'The question or problem statement'
+      },
       options: {
         type: 'array',
-        items: { type: 'string' }
+        items: { type: 'string' },
+        description: 'Answer options for SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE. Not needed for other types.'
       },
       correctAnswer: {
         oneOf: [
           { type: 'string' },
           { type: 'array', items: { type: 'string' } }
-        ]
+        ],
+        description: 'The correct answer(s). REQUIRED for all task types.'
       },
-      solution: { type: 'string' },
+      solution: {
+        type: 'string',
+        description: 'Detailed step-by-step solution. ONLY for PROBLEM_SOLVING type.'
+      },
       pairs: {
         type: 'array',
         items: {
@@ -407,18 +394,19 @@ const TASK_JSON_SCHEMA = {
             right: { type: 'string' }
           },
           required: ['left', 'right']
-        }
+        },
+        description: 'Matching pairs. ONLY for MATCHING type.'
       }
     },
-    required: ['type', 'question']
+    required: ['type', 'question', 'correctAnswer']
   }
 };
 
-export async function generateTasks(params: GenerateTasksParams): Promise<Task[]> {
+export async function generateTasks(params: GenerateTasksParams): Promise<GenerateTasksResult> {
   // Check if API key is configured
   if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === '') {
     console.warn('GEMINI_API_KEY not set, using mock data');
-    return generateMockTasks(params);
+    return { tasks: generateMockTasks(params) };
   }
 
   const ai = getGeminiClient();
@@ -428,6 +416,9 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
   // MODULAR PROMPT ASSEMBLY: Build prompt using LEGO system
   // ============================================================================
   const { systemInstruction, userPrompt } = buildPrompt(params);
+
+  let rawResponse = '';
+  let parseError: string | undefined = undefined;
 
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -487,6 +478,7 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
     }
 
     const text = response.text;
+    rawResponse = text; // Save for debug info
     console.log('📦 Raw Response Length:', text.length, 'characters');
     console.log('📦 Raw Response Preview (first 500 chars):');
     console.log(text.substring(0, 500));
@@ -501,9 +493,10 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
       tasks = JSON.parse(text);
       console.log('✅ JSON parsed successfully');
       console.log('');
-    } catch (parseError) {
+    } catch (jsonParseError: any) {
+      parseError = jsonParseError.message; // Save for debug info
       console.error('❌ Initial JSON parse failed');
-      console.error('   Error:', parseError.message);
+      console.error('   Error:', jsonParseError.message);
       console.log('');
       console.log('🔧 Attempting to repair JSON...');
 
@@ -514,7 +507,7 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
       // This is a simple attempt - may not work for all cases
       try {
         // Log the problematic area
-        const errorMatch = parseError.message.match(/position (\d+)/);
+        const errorMatch = jsonParseError.message.match(/position (\d+)/);
         if (errorMatch) {
           const position = parseInt(errorMatch[1]);
           const start = Math.max(0, position - 100);
@@ -525,11 +518,11 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
         }
 
         // For now, throw the error - we can't reliably fix malformed JSON
-        throw parseError;
+        throw jsonParseError;
       } catch (repairError) {
         console.error('❌ JSON repair failed');
         console.log('');
-        throw parseError; // Re-throw original error
+        throw jsonParseError; // Re-throw original error
       }
     }
 
@@ -567,21 +560,42 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
         );
       }
 
+      // Prepare content based on task type
+      const content: any = {
+        task_type: task.type,
+        questionText: task.question,
+        question_text: task.question,
+        statement: task.question,
+        correctAnswer: cleanCorrectAnswer,
+        correct_answer: cleanCorrectAnswer,
+        answer: cleanCorrectAnswer,
+      };
+
+      // Add type-specific fields
+      if (task.options && task.options.length > 0) {
+        content.options = cleanOptions;
+      }
+
+      if (task.solution) {
+        content.solution = task.solution;
+      }
+
+      if (task.pairs) {
+        content.pairs = task.pairs;
+      }
+
+      // FILL_BLANKS: Convert ___ to [___] format for display
+      if (task.type === 'FILL_BLANKS') {
+        content.textWithBlanks = task.question.replace(/___/g, '[___]');
+        content.text_with_blanks = content.textWithBlanks;
+      }
+
       return {
         id: `ai-${Date.now()}-${index}`,
         title: task.question?.substring(0, 50) || `AI Task ${index + 1}`,
         type: task.type,
         difficulty: params.difficulty[0]?.toUpperCase() || 'MEDIUM',
-        content: {
-          task_type: task.type,
-          questionText: task.question,
-          statement: task.question,
-          options: cleanOptions,
-          correctAnswer: cleanCorrectAnswer,
-          answer: cleanCorrectAnswer,
-          solution: task.solution,
-          pairs: task.pairs,
-        },
+        content,
         topic: params.topic,
         subject: subjectLabels[params.subject] || params.subject,
         metadata: {
@@ -598,7 +612,17 @@ export async function generateTasks(params: GenerateTasksParams): Promise<Task[]
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
 
-    return tasksWithMetadata;
+    return {
+      tasks: tasksWithMetadata,
+      debugInfo: {
+        params,
+        systemInstruction,
+        userPrompt,
+        rawResponse,
+        parseError,
+        timestamp: new Date().toISOString(),
+      }
+    };
   } catch (error) {
     console.log('');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
     const lines = stdout.trim().split('\n').filter(line => line.trim());
     const topics = lines.map(line => {
       const parts = line.split('|');
+      const weekNumber = parts[6] ? parseInt(parts[6]) : null;
       return {
         id: parts[0],
         subjectId: parts[1],
@@ -66,8 +67,8 @@ export async function GET(request: NextRequest) {
         titleUz: parts[3],
         descriptionUz: parts[4] || null,
         quarter: parts[5] ? parseInt(parts[5]) : null,
-        weekNumber: parts[6] ? parseInt(parts[6]) : null,
-        keywords: parts[7] ? parts[7].replace(/[{}]/g, '').split(',') : [],
+        weekNumber: weekNumber,
+        keywords: parts[7] ? parts[7].replace(/[{}]/g, '').split(',').filter(k => k.trim()) : [],
         sortOrder: parseInt(parts[8] || '0'),
         subject: {
           code: parts[9],

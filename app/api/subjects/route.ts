@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const grade = searchParams.get('grade'); // Опциональный фильтр по классу
+    const categoryId = searchParams.get('categoryId'); // Опциональный фильтр по категории
 
     let sql: string;
 
@@ -16,22 +17,26 @@ export async function GET(request: NextRequest) {
       // Получаем предметы для конкретного класса
       sql = `
         SELECT DISTINCT s.id, s.code, s.name_uz, s.description_uz,
-               s.icon, s.color, s.sort_order
+               s.icon, s.logo, s.banner, s.color, s.sort_order
         FROM subjects s
         JOIN subject_grades sg ON s.id = sg.subject_id
+        ${categoryId ? `JOIN subject_category_relations scr ON s.id = scr.subject_id` : ''}
         WHERE sg.grade_number = ${parseInt(grade)}
           AND sg.is_active = TRUE
           AND s.is_active = TRUE
+          ${categoryId ? `AND scr.category_id = '${categoryId}'` : ''}
         ORDER BY s.sort_order;
       `;
     } else {
       // Получаем все предметы
       sql = `
-        SELECT id, code, name_uz, description_uz,
-               icon, color, sort_order
-        FROM subjects
-        WHERE is_active = TRUE
-        ORDER BY sort_order;
+        SELECT s.id, s.code, s.name_uz, s.description_uz,
+               s.icon, s.logo, s.banner, s.color, s.sort_order
+        FROM subjects s
+        ${categoryId ? `JOIN subject_category_relations scr ON s.id = scr.subject_id` : ''}
+        WHERE s.is_active = TRUE
+          ${categoryId ? `AND scr.category_id = '${categoryId}'` : ''}
+        ORDER BY s.sort_order;
       `;
     }
 
@@ -56,36 +61,70 @@ export async function GET(request: NextRequest) {
         nameUz: parts[2],
         descriptionUz: parts[3] || null,
         icon: parts[4] || null,
-        color: parts[5] || null,
-        sortOrder: parseInt(parts[6] || '0'),
+        logo: parts[5] || null,
+        banner: parts[6] || null,
+        color: parts[7] || null,
+        sortOrder: parseInt(parts[8] || '0'),
       };
     });
 
-    // Загружаем классы для каждого предмета
-    for (const subject of subjects) {
-      const gradesSql = `
-        SELECT grade_number
-        FROM subject_grades
-        WHERE subject_id = '${subject.id}' AND is_active = TRUE
-        ORDER BY grade_number;
-      `;
+    // Получаем все классы одним запросом
+    const allSubjectIds = subjects.map(s => s.id).join("','");
+    const gradesSql = `
+      SELECT subject_id, grade_number
+      FROM subject_grades
+      WHERE subject_id IN ('${allSubjectIds}') AND is_active = TRUE
+      ORDER BY subject_id, grade_number;
+    `;
 
-      try {
-        const { stdout: gradesStdout } = await execAsync(
-          `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${gradesSql.replace(/\n/g, ' ')}"`
-        );
+    const { stdout: gradesStdout } = await execAsync(
+      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${gradesSql.replace(/\n/g, ' ')}"`
+    );
 
-        if (gradesStdout && gradesStdout.trim()) {
-          const gradeLines = gradesStdout.trim().split('\n').filter(line => line.trim());
-          (subject as any).grades = gradeLines.map(line => parseInt(line));
-        } else {
-          (subject as any).grades = [];
+    // Группируем классы по subject_id
+    const gradesMap = new Map<string, number[]>();
+    if (gradesStdout && gradesStdout.trim()) {
+      const gradeLines = gradesStdout.trim().split('\n').filter(line => line.trim());
+      gradeLines.forEach(line => {
+        const [subjectId, gradeNumber] = line.split('|');
+        if (!gradesMap.has(subjectId)) {
+          gradesMap.set(subjectId, []);
         }
-      } catch (err) {
-        console.error(`Error loading grades for subject ${subject.id}:`, err);
-        (subject as any).grades = [];
-      }
+        gradesMap.get(subjectId)!.push(parseInt(gradeNumber));
+      });
     }
+
+    // Получаем все категории одним запросом
+    const categoriesSql = `
+      SELECT scr.subject_id, sc.id, sc.code, sc.name_uz
+      FROM subject_categories sc
+      JOIN subject_category_relations scr ON sc.id = scr.category_id
+      WHERE scr.subject_id IN ('${allSubjectIds}') AND sc.is_active = TRUE
+      ORDER BY scr.subject_id, sc.sort_order;
+    `;
+
+    const { stdout: categoriesStdout } = await execAsync(
+      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${categoriesSql.replace(/\n/g, ' ')}"`
+    );
+
+    // Группируем категории по subject_id
+    const categoriesMap = new Map<string, Array<{ id: string; code: string; nameUz: string }>>();
+    if (categoriesStdout && categoriesStdout.trim()) {
+      const categoryLines = categoriesStdout.trim().split('\n').filter(line => line.trim());
+      categoryLines.forEach(line => {
+        const [subjectId, id, code, nameUz] = line.split('|');
+        if (!categoriesMap.has(subjectId)) {
+          categoriesMap.set(subjectId, []);
+        }
+        categoriesMap.get(subjectId)!.push({ id, code, nameUz });
+      });
+    }
+
+    // Присваиваем классы и категории каждому предмету
+    subjects.forEach(subject => {
+      (subject as any).grades = gradesMap.get(subject.id) || [];
+      (subject as any).categories = categoriesMap.get(subject.id) || [];
+    });
 
     return NextResponse.json({
       success: true,
@@ -127,7 +166,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { code, nameUz, descriptionUz, icon, color, sortOrder, grades } = body;
+    const { code, nameUz, descriptionUz, icon, logo, banner, color, sortOrder, grades, categoryIds } = body;
 
     // Валидация
     if (!code || !nameUz) {
@@ -149,12 +188,14 @@ export async function POST(request: NextRequest) {
     const nameUzEsc = nameUz.replace(/'/g, "''");
     const descUzEsc = descriptionUz ? descriptionUz.replace(/'/g, "''") : '';
     const iconEsc = icon ? icon.replace(/'/g, "''") : '📚';
+    const logoEsc = logo ? logo.replace(/'/g, "''") : '';
+    const bannerEsc = banner ? banner.replace(/'/g, "''") : '';
     const colorEsc = color ? color.replace(/'/g, "''") : '#3B82F6';
     const sort = sortOrder || 0;
 
     const sql = `
-      INSERT INTO subjects (code, name_uz, description_uz, icon, color, sort_order, is_active)
-      VALUES ('${codeEsc}', '${nameUzEsc}', '${descUzEsc}', '${iconEsc}', '${colorEsc}', ${sort}, TRUE)
+      INSERT INTO subjects (code, name_uz, description_uz, icon, logo, banner, color, sort_order, is_active)
+      VALUES ('${codeEsc}', '${nameUzEsc}', '${descUzEsc}', '${iconEsc}', ${logoEsc ? `'${logoEsc}'` : 'NULL'}, ${bannerEsc ? `'${bannerEsc}'` : 'NULL'}, '${colorEsc}', ${sort}, TRUE)
       RETURNING id;
     `;
 
@@ -172,6 +213,17 @@ export async function POST(request: NextRequest) {
 
       await execAsync(
         `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${gradesSql}"`
+      );
+    }
+
+    // Если указаны категории, добавляем связи
+    if (categoryIds && Array.isArray(categoryIds) && categoryIds.length > 0) {
+      const categoriesSql = categoryIds.map(catId =>
+        `INSERT INTO subject_category_relations (subject_id, category_id) VALUES ('${subjectId}', '${catId}');`
+      ).join(' ');
+
+      await execAsync(
+        `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${categoriesSql}"`
       );
     }
 
@@ -215,7 +267,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, code, nameUz, descriptionUz, icon, color, sortOrder, grades } = body;
+    const { id, code, nameUz, descriptionUz, icon, logo, banner, color, sortOrder, grades, categoryIds } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -229,6 +281,8 @@ export async function PUT(request: NextRequest) {
     const nameUzEsc = nameUz.replace(/'/g, "''");
     const descUzEsc = descriptionUz ? descriptionUz.replace(/'/g, "''") : '';
     const iconEsc = icon ? icon.replace(/'/g, "''") : '📚';
+    const logoEsc = logo ? logo.replace(/'/g, "''") : '';
+    const bannerEsc = banner ? banner.replace(/'/g, "''") : '';
     const colorEsc = color ? color.replace(/'/g, "''") : '#3B82F6';
 
     const sql = `
@@ -237,6 +291,8 @@ export async function PUT(request: NextRequest) {
           name_uz = '${nameUzEsc}',
           description_uz = '${descUzEsc}',
           icon = '${iconEsc}',
+          logo = ${logoEsc ? `'${logoEsc}'` : 'NULL'},
+          banner = ${bannerEsc ? `'${bannerEsc}'` : 'NULL'},
           color = '${colorEsc}',
           sort_order = ${sortOrder || 0},
           updated_at = NOW()
@@ -263,6 +319,26 @@ export async function PUT(request: NextRequest) {
 
         await execAsync(
           `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${gradesSql}"`
+        );
+      }
+    }
+
+    // Обновляем связи с категориями
+    if (categoryIds && Array.isArray(categoryIds)) {
+      // Удаляем старые связи
+      const deleteCatSql = `DELETE FROM subject_category_relations WHERE subject_id = '${id}';`;
+      await execAsync(
+        `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${deleteCatSql}"`
+      );
+
+      // Добавляем новые связи
+      if (categoryIds.length > 0) {
+        const categoriesSql = categoryIds.map(catId =>
+          `INSERT INTO subject_category_relations (subject_id, category_id) VALUES ('${id}', '${catId}');`
+        ).join(' ');
+
+        await execAsync(
+          `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${categoriesSql}"`
         );
       }
     }
