@@ -459,3 +459,4 @@ git commit -m "style: Update UI colors and spacing"
 
 
 # Testing auto-deploy
+# Deploy script updated
