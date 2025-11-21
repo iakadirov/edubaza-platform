@@ -1,0 +1,99 @@
+# 🚀 Настройка автоматического деплоя через GitHub Actions
+
+## ✅ Что уже настроено:
+
+1. SSH ключ создан на сервере
+2. Деплой скрипт создан: `/root/edubaza-platform/deploy.sh`
+3. GitHub Actions workflow создан: `.github/workflows/deploy.yml`
+
+---
+
+## 📝 Что нужно сделать (3 минуты):
+
+### Шаг 1: Добавить секреты в GitHub
+
+1. Откройте ваш репозиторий на GitHub
+2. Перейдите в **Settings** → **Secrets and variables** → **Actions**
+3. Нажмите **New repository secret** и добавьте **3 секрета**:
+
+#### Секрет 1: `SERVER_HOST`
+```
+157.180.73.190
+```
+
+#### Секрет 2: `SERVER_USER`
+```
+root
+```
+
+#### Секрет 3: `SSH_PRIVATE_KEY`
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACB35P2/R4eHsAiG+VPHSt5EKwEwQu6KOJBrBOln3j0+sgAAAJi5u+4rubvu
+KwAAAAtzc2gtZWQyNTUxOQAAACB35P2/R4eHsAiG+VPHSt5EKwEwQu6KOJBrBOln3j0+sg
+AAAEAfywaLFqNMRVYbO/6QDY/5s7tsIcDHh5DYvw3OnoYnzHfk/b9Hh4ewCIb5U8dK3kQr
+ATBC7oo4kGsE6WfePT6yAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
+-----END OPENSSH PRIVATE KEY-----
+```
+
+**ВАЖНО:** Скопируйте приватный ключ ПОЛНОСТЬЮ, включая строки `-----BEGIN` и `-----END`
+
+---
+
+### Шаг 2: Закоммитить и запушить workflow файл
+
+```bash
+cd C:\Claude\Edubaza\edubaza-platform
+git add .github/workflows/deploy.yml
+git commit -m "Add GitHub Actions auto-deploy workflow"
+git push origin main
+```
+
+---
+
+## ✅ Готово!
+
+Теперь **каждый раз** когда вы делаете `git push origin main`:
+
+1. GitHub Actions автоматически подключится к серверу
+2. Выполнит `git pull`
+3. Установит зависимости `npm install`
+4. Соберет проект `npm run build`
+5. Перезапустит PM2 `pm2 restart edubaza`
+
+---
+
+## 📊 Как проверить деплой:
+
+1. Откройте GitHub → ваш репозиторий → вкладка **Actions**
+2. Увидите запущенные деплои
+3. Можете посмотреть логи в реальном времени
+
+---
+
+## 🔧 Ручной деплой (если нужен):
+
+Если нужно вручную задеплоить на сервере:
+
+```bash
+ssh root@157.180.73.190
+cd /root/edubaza-platform
+./deploy.sh
+```
+
+---
+
+## ⚠️ Troubleshooting
+
+### Ошибка: "Permission denied (publickey)"
+- Проверьте, что SSH_PRIVATE_KEY скопирован полностью
+- Убедитесь, что нет лишних пробелов в начале/конце ключа
+
+### Ошибка: "npm run build failed"
+- Проверьте логи в GitHub Actions
+- Возможно есть ошибки в коде
+
+### Деплой не запускается
+- Убедитесь, что вы пушите в ветку `main`
+- Проверьте, что workflow файл находится в `.github/workflows/deploy.yml`
