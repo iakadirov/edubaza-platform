@@ -97,3 +97,4 @@ cd /root/edubaza-platform
 ### Деплой не запускается
 - Убедитесь, что вы пушите в ветку `main`
 - Проверьте, что workflow файл находится в `.github/workflows/deploy.yml`
+# Auto-deploy is configured and working! 🚀
