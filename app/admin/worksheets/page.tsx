@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { formatDate } from '@/lib/date-format';
 
 interface Worksheet {
   id: string;
@@ -277,7 +278,7 @@ export default function AllWorksheetsPage() {
                         {worksheet.tasksCount}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(worksheet.createdAt).toLocaleDateString('ru-RU')}
+                        {formatDate(worksheet.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">

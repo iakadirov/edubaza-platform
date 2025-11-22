@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/date-format';
 
 interface User {
   id: string;
@@ -229,7 +230,7 @@ export default function AdminUsersPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(user.createdAt).toLocaleDateString('ru-RU')}
+                        {formatDate(user.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <button

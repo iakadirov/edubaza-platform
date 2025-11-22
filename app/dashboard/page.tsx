@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { generateWorksheetTitle } from '@/lib/worksheet-title';
+import { formatDate } from '@/lib/date-format';
 
 interface User {
   id: string;
@@ -288,7 +289,7 @@ export default function DashboardPage() {
                         <span>•</span>
                         <span>{worksheet.taskCount} ta topshiriq</span>
                         <span>•</span>
-                        <span>{new Date(worksheet.generatedAt).toLocaleDateString('uz-UZ')}</span>
+                        <span>{formatDate(worksheet.generatedAt)}</span>
                       </div>
                     </div>
                     <div className="flex gap-2">
