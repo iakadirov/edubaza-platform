@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { executeSql } from '@/lib/db-helper';
 
-const execAsync = promisify(exec);
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 interface JWTPayload {
@@ -13,10 +11,7 @@ interface JWTPayload {
 async function findUserByPhone(phone: string) {
   const sql = `SELECT id, phone, name, role, \\"createdAt\\" FROM users WHERE phone = '${phone}' LIMIT 1`;
 
-  const { stdout } = await execAsync(
-    `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-    { maxBuffer: 50 * 1024 * 1024 }
-  );
+  const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
   const lines = stdout.trim().split('\n').filter(Boolean);
   if (lines.length === 0) return null;
@@ -61,10 +56,7 @@ export async function GET(request: NextRequest) {
       ORDER BY \\"createdAt\\" DESC
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     const lines = stdout.trim().split('\n').filter(Boolean);
     const users = lines.map(line => {
