@@ -35,66 +35,49 @@ export async function GET(request: NextRequest) {
     }
 
     // Получаем информацию о тарифном плане из базы данных
-    const { spawn } = require('child_process');
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
 
     // Получаем информацию о плане
-    const planSql = `SELECT plan_code, name_uz, name_ru, price_uzs, features, limits, show_watermark
-                     FROM subscription_plans
-                     WHERE plan_code = '${user.subscriptionPlan}' AND is_active = TRUE
-                     LIMIT 1`;
+    const planSql = `SELECT plan_code, name_uz, name_ru, price_uzs, features, limits, show_watermark FROM subscription_plans WHERE plan_code = '${user.subscriptionPlan}' AND is_active = TRUE LIMIT 1;`;
 
-    const planInfo = await new Promise<any>((resolve, reject) => {
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
+    let planInfo = null;
+    try {
+      const { stdout: planStdout } = await execAsync(
+        `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${planSql}"`
+      );
 
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (data: any) => { stdout += data.toString(); });
-      proc.stderr.on('data', (data: any) => { stderr += data.toString(); });
-
-      proc.on('close', (code: number) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          const line = stdout.trim();
-          if (!line) {
-            resolve(null);
-            return;
-          }
-
-          const parts = line.split('|');
-          resolve({
-            planCode: parts[0],
-            nameUz: parts[1],
-            nameRu: parts[2],
-            priceUzs: parseInt(parts[3]),
-            features: JSON.parse(parts[4] || '{}'),
-            limits: JSON.parse(parts[5] || '{}'),
-            showWatermark: parts[6] === 't',
-          });
-        }
-      });
-
-      proc.on('error', (err: Error) => reject(err));
-      proc.stdin.write(planSql);
-      proc.stdin.end();
-    });
+      const line = planStdout.trim();
+      if (line) {
+        const parts = line.split('|');
+        planInfo = {
+          planCode: parts[0],
+          nameUz: parts[1],
+          nameRu: parts[2],
+          priceUzs: parseInt(parts[3]),
+          features: JSON.parse(parts[4] || '{}'),
+          limits: JSON.parse(parts[5] || '{}'),
+          showWatermark: parts[6] === 't',
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching plan info:', error);
+      // Продолжаем без информации о плане
+    }
 
     // Подсчитываем использованные ресурсы
-    const worksheetsThisMonth = await new Promise<number>((resolve, reject) => {
-      const countSql = `SELECT COUNT(*) FROM worksheets
-                        WHERE "userId" = '${user.id}'
-                        AND "generatedAt" >= DATE_TRUNC('month', CURRENT_DATE)`;
-
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
-
-      let stdout = '';
-      proc.stdout.on('data', (data: any) => { stdout += data.toString(); });
-      proc.on('close', () => resolve(parseInt(stdout.trim()) || 0));
-      proc.on('error', reject);
-      proc.stdin.write(countSql);
-      proc.stdin.end();
-    });
+    let worksheetsThisMonth = 0;
+    try {
+      const countSql = `SELECT COUNT(*) FROM worksheets WHERE \\"userId\\" = '${user.id}' AND \\"generatedAt\\" >= DATE_TRUNC('month', CURRENT_DATE);`;
+      const { stdout: countStdout } = await execAsync(
+        `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -c "${countSql}"`
+      );
+      worksheetsThisMonth = parseInt(countStdout.trim()) || 0;
+    } catch (error) {
+      console.error('Error counting worksheets:', error);
+      // Продолжаем с 0
+    }
 
     return NextResponse.json({
       success: true,
