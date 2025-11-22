@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findUserByPhone } from '@/lib/db-users-extended';
-import { sendOTP } from '@/lib/sms';
+import { generateOTP, sendOTP } from '@/lib/sms';
+import { saveOTP, checkRateLimit, incrementRateLimit } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,19 +40,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Отправка OTP кода
-    const result = await sendOTP(phone);
-
-    if (!result.success) {
+    // 4. Проверяем rate limit
+    const canSend = await checkRateLimit(phone);
+    if (!canSend) {
       return NextResponse.json(
         {
-          error: result.error || 'Ошибка отправки SMS',
+          error: 'Превышен лимит отправки SMS. Попробуйте через 15 минут.',
+        },
+        { status: 429 }
+      );
+    }
+
+    // 5. Генерируем OTP код
+    const otp = generateOTP();
+
+    // 6. Сохраняем OTP в Redis (действителен 5 минут)
+    await saveOTP(phone, otp);
+
+    // 7. Отправляем SMS для восстановления пароля
+    const smsSent = await sendOTP(phone, otp, 'reset');
+
+    if (!smsSent) {
+      return NextResponse.json(
+        {
+          error: 'Ошибка отправки SMS. Попробуйте позже.',
         },
         { status: 500 }
       );
     }
 
-    // 5. Успешный ответ
+    // 8. Увеличиваем счётчик rate limit
+    await incrementRateLimit(phone);
+
+    // 9. Успешный ответ
     return NextResponse.json({
       message: 'Код подтверждения отправлен на ваш номер',
       expiresIn: 300, // 5 минут

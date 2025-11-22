@@ -75,7 +75,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanPhone }),
+        body: JSON.stringify({ phone: cleanPhone, type: 'register' }),
       });
 
       const data = await response.json();
@@ -103,30 +103,19 @@ export default function RegisterPage() {
     try {
       const cleanPhone = phone.replace(/\s/g, '');
 
-      // Просто проверяем OTP, не создаем пользователя
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanPhone, otp, skipUserCreation: true }),
-      });
-
-      const data = await response.json();
-
-      if (data.success || response.ok) {
-        // Если пользователь уже существует - редирект на логин
-        if (data.userExists) {
-          setError(`Bu raqam allaqachon roʻyxatdan oʻtgan. Kirish sahifasiga oʻting.`);
-          setTimeout(() => router.push('/login'), 2000);
-          return;
-        }
-
-        setStep('profile');
-      } else {
-        setError(data.error || data.message || 'Notoʻgʻri kod');
+      // Проверка OTP без создания пользователя (используем /api/auth/register для финальной регистрации)
+      // Здесь просто проверяем формат кода
+      if (!otp || otp.length !== 6) {
+        setError('Notoʻgʻri kod');
+        setLoading(false);
+        return;
       }
+
+      // Переходим на следующий шаг (реальная проверка OTP будет в handleRegister)
+      setStep('profile');
+      setLoading(false);
     } catch (err) {
       setError('Kodni tekshirishda xatolik');
-    } finally {
       setLoading(false);
     }
   };

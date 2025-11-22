@@ -51,14 +51,15 @@ export async function findUserByPhone(phone: string): Promise<User | null> {
     }
 
     const parts = stdout.trim().split('|');
-    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role
-    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role] = parts;
+    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role|password_hash
+    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role, passwordHash] = parts;
 
     return {
       id,
       phone: phoneNum,
       name: name || null,
       email: email || null,
+      passwordHash: passwordHash || null,
       specialty: (specialty || null) as TeacherSpecialty | null,
       school: school || null,
       subscriptionPlan: subscriptionPlan as 'FREE' | 'PRO' | 'SCHOOL',
@@ -86,14 +87,15 @@ export async function createUser(phone: string): Promise<User | null> {
     }
 
     const parts = stdout.trim().split('|');
-    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role
-    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role] = parts;
+    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role|password_hash
+    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role, passwordHash] = parts;
 
     return {
       id,
       phone: phoneNum,
       name: name || null,
       email: email || null,
+      passwordHash: passwordHash || null,
       specialty: (specialty || null) as TeacherSpecialty | null,
       school: school || null,
       subscriptionPlan: subscriptionPlan as 'FREE' | 'PRO' | 'SCHOOL',
@@ -143,14 +145,15 @@ export async function updateUserProfile(
     }
 
     const parts = stdout.trim().split('|');
-    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role
-    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role] = parts;
+    // Порядок: id|phone|name|email|subscriptionPlan|subscriptionExpiresAt|subscriptionStartedAt|limits|usage|createdAt|updatedAt|lastLoginAt|isActive|specialty|school|role|password_hash
+    const [id, phoneNum, name, email, subscriptionPlan, , , , , createdAt, updatedAt, , , specialty, school, role, passwordHash] = parts;
 
     return {
       id,
       phone: phoneNum,
       name: name || null,
       email: email || null,
+      passwordHash: passwordHash || null,
       specialty: (specialty || null) as TeacherSpecialty | null,
       school: school || null,
       subscriptionPlan: subscriptionPlan as 'FREE' | 'PRO' | 'SCHOOL',

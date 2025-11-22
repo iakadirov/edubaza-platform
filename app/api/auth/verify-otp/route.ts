@@ -1,17 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOTP, deleteOTP } from '@/lib/redis';
 import { generateToken } from '@/lib/jwt';
-import { findOrCreateUser } from '@/lib/db-users';
+import { createUserWithPassword, findUserByPhone } from '@/lib/db-users';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone, otp, skipUserCreation } = body;
+    const { phone, otp, password, type = 'register' } = body; // type: 'register' | 'reset'
 
     // Валидация
     if (!phone || !otp) {
       return NextResponse.json(
         { success: false, message: 'Номер телефона и OTP код обязательны' },
+        { status: 400 }
+      );
+    }
+
+    // Для регистрации пароль обязателен
+    if (type === 'register' && !password) {
+      return NextResponse.json(
+        { success: false, message: 'Пароль обязателен' },
+        { status: 400 }
+      );
+    }
+
+    // Валидация пароля (минимум 6 символов)
+    if (type === 'register' && password && password.length < 6) {
+      return NextResponse.json(
+        { success: false, message: 'Пароль должен содержать минимум 6 символов' },
         { status: 400 }
       );
     }
@@ -55,55 +71,70 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Если это только проверка OTP для регистрации - НЕ удаляем код и НЕ создаем пользователя
-    if (skipUserCreation) {
-      // Проверяем, существует ли пользователь
-      const { findUserByPhone } = await import('@/lib/db-users-extended');
+    // OTP верный, удаляем его из Redis
+    await deleteOTP(formattedPhone);
+
+    if (type === 'register') {
+      // Проверяем, не существует ли уже пользователь
       const existingUser = await findUserByPhone(formattedPhone);
+      if (existingUser) {
+        return NextResponse.json(
+          { success: false, message: 'Пользователь с таким номером уже зарегистрирован' },
+          { status: 400 }
+        );
+      }
+
+      // Создаём пользователя с паролем
+      const user = await createUserWithPassword(formattedPhone, password);
+
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: 'Ошибка создания пользователя' },
+          { status: 500 }
+        );
+      }
+
+      // Генерируем JWT токен
+      const token = generateToken({
+        userId: user.id,
+        phone: user.phone,
+        subscriptionPlan: user.subscriptionPlan,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Регистрация успешна',
+        data: {
+          token,
+          user: {
+            id: user.id,
+            phone: user.phone,
+            name: user.name,
+            specialty: user.specialty,
+            school: user.school,
+            subscriptionPlan: user.subscriptionPlan,
+          },
+        },
+      });
+    } else {
+      // Для сброса пароля - просто подтверждаем OTP
+      // Проверяем, что пользователь существует
+      const user = await findUserByPhone(formattedPhone);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: 'Пользователь не найден' },
+          { status: 404 }
+        );
+      }
 
       return NextResponse.json({
         success: true,
         message: 'OTP код верный',
-        userExists: !!existingUser,
+        data: {
+          phone: formattedPhone,
+        },
       });
     }
-
-    // OTP верный, удаляем его из Redis (только для полной авторизации)
-    await deleteOTP(formattedPhone);
-
-    // Находим или создаём пользователя
-    const user = await findOrCreateUser(formattedPhone);
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Ошибка создания пользователя' },
-        { status: 500 }
-      );
-    }
-
-    // Генерируем JWT токен
-    const token = generateToken({
-      userId: user.id,
-      phone: user.phone,
-      subscriptionPlan: user.subscriptionPlan,
-    });
-
-    // Возвращаем токен и данные пользователя
-    return NextResponse.json({
-      success: true,
-      message: 'Авторизация успешна',
-      data: {
-        token,
-        user: {
-          id: user.id,
-          phone: user.phone,
-          name: user.name,
-          specialty: user.specialty,
-          school: user.school,
-          subscriptionPlan: user.subscriptionPlan,
-        },
-      },
-    });
   } catch (error) {
     console.error('Verify OTP error:', error);
     return NextResponse.json(

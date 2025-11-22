@@ -2,29 +2,20 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type LoginMethod = 'password' | 'otp';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
 
-  // Login method
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>('password');
-
-  // Common
+  // Form fields
   const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  // Password login
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
-  // OTP login
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [otp, setOTP] = useState('');
-  const [countdown, setCountdown] = useState(0);
+  // UI State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Format phone number: автоматически +998, только цифры, макс 9 цифр
   const formatPhoneNumber = (value: string) => {
@@ -55,8 +46,8 @@ export default function LoginPage() {
     setPhone(formatted);
   };
 
-  // Password login
-  const handlePasswordLogin = async (e: React.FormEvent) => {
+  // Login with password
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -90,93 +81,6 @@ export default function LoginPage() {
     }
   };
 
-  // OTP login: Send OTP
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const cleanPhone = phone.replace(/\s/g, '');
-
-      const response = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanPhone }),
-      });
-
-      const data = await response.json();
-
-      if (data.success || response.ok) {
-        setStep('otp');
-        setCountdown(300); // 5 минут
-        startCountdown();
-      } else {
-        setError(data.error || data.message || 'SMS yuborishda xatolik');
-      }
-    } catch (err) {
-      setError('SMS yuborishda xatolik');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // OTP login: Verify OTP
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const cleanPhone = phone.replace(/\s/g, '');
-
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanPhone, otp }),
-      });
-
-      const data = await response.json();
-
-      if (data.success || (response.ok && data.data)) {
-        const token = data.data?.token || data.token;
-        const user = data.data?.user || data.user;
-
-        if (token) {
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-          router.push('/dashboard');
-        } else {
-          setError('Token olishda xatolik');
-        }
-      } else {
-        setError(data.error || data.message || 'Notoʻgʻri kod');
-      }
-    } catch (err) {
-      setError('Kodni tekshirishda xatolik');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startCountdown = () => {
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
@@ -186,41 +90,9 @@ export default function LoginPage() {
             EduBaza.uz ga kirish
           </h1>
           <p className="text-gray-600">
-            {loginMethod === 'password' && 'Parol yordamida kirish'}
-            {loginMethod === 'otp' && step === 'phone' && 'SMS kod yordamida kirish'}
-            {loginMethod === 'otp' && step === 'otp' && 'SMS dan kodni kiriting'}
+            Parol yordamida kirish
           </p>
         </div>
-
-        {/* Toggle Login Method */}
-        {loginMethod === 'password' && (
-          <div className="mb-6 flex gap-2">
-            <button
-              onClick={() => setLoginMethod('password')}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                loginMethod === 'password'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Parol
-            </button>
-            <button
-              onClick={() => {
-                setLoginMethod('otp');
-                setStep('phone');
-                setError('');
-              }}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                loginMethod === 'otp'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              SMS kod
-            </button>
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (
@@ -229,9 +101,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Password Login Form */}
-        {loginMethod === 'password' && (
-          <form onSubmit={handlePasswordLogin} className="space-y-6">
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Telefon raqami
@@ -301,142 +172,19 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || phone.length < 17}
+              disabled={loading || phone.length < 17 || !password}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Kirilmoqda...' : 'Kirish'}
             </button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMethod('otp');
-                  setError('');
-                }}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                SMS kod orqali kirish
-              </button>
-            </div>
-
             <div className="text-center text-sm text-gray-600">
               Akkauntingiz yoʻqmi?{' '}
-              <a href="/register" className="text-blue-600 hover:underline font-medium">
+              <Link href="/register" className="text-blue-600 hover:underline font-medium">
                 Roʻyxatdan oʻtish
-              </a>
+              </Link>
             </div>
           </form>
-        )}
-
-        {/* OTP Login Form - Phone */}
-        {loginMethod === 'otp' && step === 'phone' && (
-          <form onSubmit={handleSendOTP} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telefon raqami
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={handlePhoneChange}
-                placeholder="+998 __ ___ __ __"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || phone.length < 17}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'Yuborilmoqda...' : 'Kod olish'}
-            </button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMethod('password');
-                  setError('');
-                }}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Parol bilan kirish
-              </button>
-            </div>
-
-            <div className="text-center text-sm text-gray-600">
-              Akkauntingiz yoʻqmi?{' '}
-              <a href="/register" className="text-blue-600 hover:underline font-medium">
-                Roʻyxatdan oʻtish
-              </a>
-            </div>
-          </form>
-        )}
-
-        {/* OTP Login Form - OTP */}
-        {loginMethod === 'otp' && step === 'otp' && (
-          <form onSubmit={handleVerifyOTP} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMS dan kod
-              </label>
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOTP(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="______"
-                maxLength={6}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                autoFocus
-              />
-              <p className="mt-2 text-sm text-gray-600">
-                {phone} raqamiga yuborildi
-              </p>
-            </div>
-
-            {countdown > 0 && (
-              <div className="text-center text-sm text-gray-600">
-                Qayta yuborish: {formatTime(countdown)}
-              </div>
-            )}
-
-            {countdown === 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setStep('phone');
-                  setOTP('');
-                }}
-                className="w-full text-blue-600 hover:underline text-sm font-medium"
-              >
-                Kodni qayta yuborish
-              </button>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'Tekshirilmoqda...' : 'Kirish'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setStep('phone');
-                setError('');
-              }}
-              className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium"
-            >
-              ← Raqamni oʻzgartirish
-            </button>
-          </form>
-        )}
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOTP, sendOTP } from '@/lib/sms';
 import { saveOTP, checkRateLimit, incrementRateLimit } from '@/lib/redis';
+import { findUserByPhone } from '@/lib/db-users';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone } = body;
+    const { phone, type = 'register' } = body; // type: 'register' | 'reset'
 
     // Валидация номера телефона
     if (!phone || typeof phone !== 'string') {
@@ -38,6 +39,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Проверяем существование пользователя
+    const existingUser = await findUserByPhone(formattedPhone);
+
+    // Для регистрации - пользователь НЕ должен существовать
+    if (type === 'register' && existingUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Пользователь с таким номером уже зарегистрирован'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Для восстановления - пользователь ДОЛЖЕН существовать
+    if (type === 'reset' && !existingUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Пользователь с таким номером не найден'
+        },
+        { status: 404 }
+      );
+    }
+
     // Проверяем rate limit
     const canSend = await checkRateLimit(formattedPhone);
     if (!canSend) {
@@ -56,8 +82,8 @@ export async function POST(request: NextRequest) {
     // Сохраняем OTP в Redis (действителен 5 минут)
     await saveOTP(formattedPhone, otp);
 
-    // Отправляем SMS
-    const smsSent = await sendOTP(formattedPhone, otp);
+    // Отправляем SMS с правильным типом сообщения
+    const smsSent = await sendOTP(formattedPhone, otp, type);
 
     if (!smsSent) {
       return NextResponse.json(

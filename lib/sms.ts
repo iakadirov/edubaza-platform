@@ -94,9 +94,16 @@ export async function sendSMS(phone: string, message: string): Promise<boolean> 
   }
 }
 
-export async function sendOTP(phone: string, otp: string): Promise<boolean> {
-  // Используем утверждённый шаблон Eskiz.uz (пока от Mediazona.uz)
-  const message = `Mediazona.uz saytiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${otp}`;
+export async function sendOTP(phone: string, otp: string, type: 'register' | 'reset' = 'register'): Promise<boolean> {
+  // Разные сообщения для регистрации и восстановления пароля
+  let message: string;
+
+  if (type === 'register') {
+    message = `Edubaza.uz saytida ro'yxatdan o'tish uchun tasdiqlash kodi: ${otp}`;
+  } else {
+    message = `Edubaza.uz saytida parolni tiklash uchun kod: ${otp}`;
+  }
+
   return sendSMS(phone, message);
 }
 
