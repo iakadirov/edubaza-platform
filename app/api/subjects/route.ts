@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { verifyToken } from '@/lib/jwt';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,9 +37,7 @@ export async function GET(request: NextRequest) {
       `;
     }
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return NextResponse.json({
@@ -77,9 +72,7 @@ export async function GET(request: NextRequest) {
       ORDER BY subject_id, grade_number;
     `;
 
-    const { stdout: gradesStdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${gradesSql.replace(/\n/g, ' ')}"`
-    );
+    const gradesStdout = await executeSql(gradesSql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     // Группируем классы по subject_id
     const gradesMap = new Map<string, number[]>();
@@ -103,9 +96,7 @@ export async function GET(request: NextRequest) {
       ORDER BY scr.subject_id, sc.sort_order;
     `;
 
-    const { stdout: categoriesStdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${categoriesSql.replace(/\n/g, ' ')}"`
-    );
+    const categoriesStdout = await executeSql(categoriesSql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     // Группируем категории по subject_id
     const categoriesMap = new Map<string, Array<{ id: string; code: string; nameUz: string }>>();
@@ -199,9 +190,7 @@ export async function POST(request: NextRequest) {
       RETURNING id;
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '));
 
     const subjectId = stdout.trim().split('\n')[0];
 
@@ -211,9 +200,7 @@ export async function POST(request: NextRequest) {
         `INSERT INTO subject_grades (subject_id, grade_number, is_active) VALUES ('${subjectId}', ${g}, TRUE);`
       ).join(' ');
 
-      await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${gradesSql}"`
-      );
+      await executeSql(gradesSql);
     }
 
     // Если указаны категории, добавляем связи
@@ -222,9 +209,7 @@ export async function POST(request: NextRequest) {
         `INSERT INTO subject_category_relations (subject_id, category_id) VALUES ('${subjectId}', '${catId}');`
       ).join(' ');
 
-      await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${categoriesSql}"`
-      );
+      await executeSql(categoriesSql);
     }
 
     return NextResponse.json({
@@ -299,17 +284,13 @@ export async function PUT(request: NextRequest) {
       WHERE id = '${id}';
     `;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    await executeSql(sql.replace(/\n/g, ' '));
 
     // Обновляем связи с классами
     if (grades && Array.isArray(grades)) {
       // Удаляем старые связи
       const deleteSql = `DELETE FROM subject_grades WHERE subject_id = '${id}';`;
-      await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${deleteSql}"`
-      );
+      await executeSql(deleteSql);
 
       // Добавляем новые связи
       if (grades.length > 0) {
@@ -317,9 +298,7 @@ export async function PUT(request: NextRequest) {
           `INSERT INTO subject_grades (subject_id, grade_number, is_active) VALUES ('${id}', ${g}, TRUE);`
         ).join(' ');
 
-        await execAsync(
-          `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${gradesSql}"`
-        );
+        await executeSql(gradesSql);
       }
     }
 
@@ -327,9 +306,7 @@ export async function PUT(request: NextRequest) {
     if (categoryIds && Array.isArray(categoryIds)) {
       // Удаляем старые связи
       const deleteCatSql = `DELETE FROM subject_category_relations WHERE subject_id = '${id}';`;
-      await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${deleteCatSql}"`
-      );
+      await executeSql(deleteCatSql);
 
       // Добавляем новые связи
       if (categoryIds.length > 0) {
@@ -337,9 +314,7 @@ export async function PUT(request: NextRequest) {
           `INSERT INTO subject_category_relations (subject_id, category_id) VALUES ('${id}', '${catId}');`
         ).join(' ');
 
-        await execAsync(
-          `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${categoriesSql}"`
-        );
+        await executeSql(categoriesSql);
       }
     }
 
@@ -394,9 +369,7 @@ export async function DELETE(request: NextRequest) {
     // Soft delete
     const sql = `UPDATE subjects SET is_active = FALSE WHERE id = '${id}';`;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql}"`
-    );
+    await executeSql(sql);
 
     return NextResponse.json({
       success: true,

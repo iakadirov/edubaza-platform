@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { verifyToken } from '@/lib/jwt';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,9 +40,7 @@ export async function GET(request: NextRequest) {
       ORDER BY t.quarter, t.sort_order, t.title_uz;
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return NextResponse.json({
@@ -138,9 +133,7 @@ export async function POST(request: NextRequest) {
       RETURNING id;
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '));
 
     const topicId = stdout.trim().split('\n')[0];
 
@@ -212,9 +205,7 @@ export async function PUT(request: NextRequest) {
       WHERE id = '${id}';
     `;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    await executeSql(sql.replace(/\n/g, ' '));
 
     return NextResponse.json({
       success: true,
@@ -267,9 +258,7 @@ export async function DELETE(request: NextRequest) {
     // Soft delete
     const sql = `UPDATE topics SET is_active = FALSE WHERE id = '${id}';`;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql}"`
-    );
+    await executeSql(sql);
 
     return NextResponse.json({
       success: true,

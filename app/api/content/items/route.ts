@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { verifyToken } from '@/lib/jwt';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 // GET - Получение всех материалов с фильтрами или одного материала по id
 export async function GET(request: NextRequest) {
@@ -44,10 +41,7 @@ export async function GET(request: NextRequest) {
         WHERE ci.id = '${id}' AND ci.is_active = TRUE;
       `;
 
-      const { stdout } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-        { maxBuffer: 50 * 1024 * 1024 }
-      );
+      const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
       if (!stdout || stdout.trim() === '') {
         return NextResponse.json({
@@ -142,10 +136,7 @@ export async function GET(request: NextRequest) {
     sql += ` WHERE ${whereConditions.join(' AND ')}`;
     sql += ` ORDER BY ci.created_at DESC;`;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-      { maxBuffer: 50 * 1024 * 1024 } // 50MB buffer
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return NextResponse.json({
@@ -247,9 +238,7 @@ export async function POST(request: NextRequest) {
 
     // Получаем ID типа контента по коду
     const typeIdSql = `SELECT id FROM content_types WHERE code = '${typeCode}';`;
-    const { stdout: typeIdStdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${typeIdSql}"`
-    );
+    const typeIdStdout = await executeSql(typeIdSql);
 
     if (!typeIdStdout || !typeIdStdout.trim()) {
       return NextResponse.json(
@@ -485,9 +474,7 @@ export async function DELETE(request: NextRequest) {
     // Soft delete
     const sql = `UPDATE content_items SET is_active = FALSE WHERE id = '${id}';`;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql}"`
-    );
+    await executeSql(sql);
 
     return NextResponse.json({
       success: true,
