@@ -76,7 +76,7 @@ export async function findUserByPhone(phone: string): Promise<User | null> {
   try {
     const sql = `SELECT * FROM users WHERE phone = '${phone}' LIMIT 1;`;
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -95,7 +95,7 @@ export async function findUserByTelegramId(telegramId: string): Promise<User | n
   try {
     const sql = `SELECT * FROM users WHERE telegram_id = ${telegramId} LIMIT 1;`;
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -114,7 +114,7 @@ export async function findUserById(id: string): Promise<User | null> {
   try {
     const sql = `SELECT * FROM users WHERE id = '${id}' LIMIT 1;`;
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -202,7 +202,7 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
     const sql = `INSERT INTO users (${fields.join(', ')}) VALUES (${values.join(', ')}) RETURNING *;`;
 
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -272,7 +272,7 @@ export async function updateUserProfileExtended(
     const sql = `UPDATE users SET ${setParts.join(', ')}, \\"updatedAt\\" = NOW() WHERE id = '${userId}' RETURNING *;`;
 
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -292,7 +292,7 @@ export async function setUserPassword(userId: string, password: string): Promise
     const passwordHash = await hashPassword(password);
     const sql = `UPDATE users SET password_hash = '${passwordHash}', \\"updatedAt\\" = NOW() WHERE id = '${userId}';`;
 
-    await execAsync(`docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql}"`);
+    await execAsync(`PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -c "${sql}"`);
     return true;
   } catch (error) {
     console.error('Set user password error:', error);
@@ -305,7 +305,7 @@ export async function checkUserPassword(phone: string, password: string): Promis
   try {
     const sql = `SELECT * FROM users WHERE phone = '${phone}' LIMIT 1;`;
     const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -318,7 +318,7 @@ export async function checkUserPassword(phone: string, password: string): Promis
     // Получить password_hash отдельно
     const hashSql = `SELECT password_hash FROM users WHERE id = '${user.id}';`;
     const { stdout: hashStdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${hashSql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -c "${hashSql}"`
     );
 
     const passwordHash = hashStdout.trim();
@@ -339,7 +339,7 @@ export async function checkUserPassword(phone: string, password: string): Promis
 export async function updateLastLogin(userId: string): Promise<boolean> {
   try {
     const sql = `UPDATE users SET \\"lastLoginAt\\" = NOW() WHERE id = '${userId}';`;
-    await execAsync(`docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql}"`);
+    await execAsync(`PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -c "${sql}"`);
     return true;
   } catch (error) {
     console.error('Update last login error:', error);
