@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 // GET - Fetch all categories
 export async function GET(request: NextRequest) {
@@ -22,9 +19,7 @@ export async function GET(request: NextRequest) {
       ORDER BY sort_order ASC, name_uz ASC;
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ').replace(/"/g, '\\"')}"`
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     const lines = stdout.trim().split('\n').filter(line => line.trim());
     const categories = lines.map(line => {

@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { verifyToken } from '@/lib/jwt';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 export async function GET() {
   try {
     // Получаем все классы из базы данных
     const sql = `SELECT number, name_uz, is_active FROM grades ORDER BY number;`;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return NextResponse.json({
@@ -91,9 +86,7 @@ export async function PUT(request: NextRequest) {
       WHERE number = ${number};
     `;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${sql.replace(/\n/g, ' ')}"`
-    );
+    await executeSql(sql.replace(/\n/g, ' '));
 
     return NextResponse.json({
       success: true,
