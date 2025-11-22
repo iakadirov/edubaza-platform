@@ -30,15 +30,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Проверка что у пользователя есть пароль
-    if (!user.hasPassword) {
-      return NextResponse.json(
-        {
-          error: 'У вас нет установленного пароля. Войдите через Telegram или установите пароль в профиле',
-        },
-        { status: 400 }
-      );
-    }
+    // Примечание: Разрешаем восстановление пароля для всех пользователей,
+    // даже если у них ещё нет пароля (установят новый)
 
     // 4. Проверяем rate limit
     const canSend = await checkRateLimit(phone);
