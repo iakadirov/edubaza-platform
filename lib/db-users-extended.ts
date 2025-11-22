@@ -171,7 +171,9 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
 
     if (passwordHash) {
       fields.push('password_hash');
-      values.push(`'${passwordHash}'`);
+      // Экранируем $ символы для shell
+      const escapedHash = passwordHash.replace(/\$/g, '\\$');
+      values.push(`'${escapedHash}'`);
     }
 
     if (telegramId) {
@@ -201,9 +203,16 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
 
     const sql = `INSERT INTO users (${fields.join(', ')}) VALUES (${values.join(', ')}) RETURNING *;`;
 
+    // Используем временный файл для безопасного выполнения SQL с паролем
+    const tmpFile = `/tmp/create_user_${Date.now()}.sql`;
+    await execAsync(`cat > ${tmpFile} << 'EOFCREATE'\n${sql}\nEOFCREATE`);
+
     const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -f ${tmpFile}`
     );
+
+    // Удаляем временный файл
+    await execAsync(`rm -f ${tmpFile}`);
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -290,9 +299,21 @@ export async function updateUserProfileExtended(
 export async function setUserPassword(userId: string, password: string): Promise<boolean> {
   try {
     const passwordHash = await hashPassword(password);
-    const sql = `UPDATE users SET password_hash = '${passwordHash}', \\"updatedAt\\" = NOW() WHERE id = '${userId}';`;
 
-    await execAsync(`PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -c "${sql}"`);
+    // Используем временный файл для избежания проблем с экранированием $ в shell
+    const tmpFile = `/tmp/set_password_${Date.now()}.sql`;
+    const escapedHash = passwordHash.replace(/\$/g, '\\$');
+    const sql = `UPDATE users SET password_hash = '${escapedHash}', "updatedAt" = NOW() WHERE id = '${userId}';`;
+
+    // Создаем временный SQL файл
+    await execAsync(`cat > ${tmpFile} << 'EOFPASSWORD'\n${sql}\nEOFPASSWORD`);
+
+    // Выполняем SQL из файла
+    await execAsync(`PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -f ${tmpFile}`);
+
+    // Удаляем временный файл
+    await execAsync(`rm -f ${tmpFile}`);
+
     return true;
   } catch (error) {
     console.error('Set user password error:', error);
