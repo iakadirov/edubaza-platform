@@ -50,7 +50,7 @@ export async function POST(
 
     // Update worksheet status to PUBLISHED
     const escapedId = params.id.replace(/'/g, "''");
-    const updateSql = `UPDATE worksheets SET status = 'PUBLISHED', \\"updatedAt\\" = NOW() WHERE id = '${escapedId}'`;
+    const updateSql = `UPDATE worksheets SET status = 'PUBLISHED', "updatedAt" = NOW() WHERE id = '${escapedId}'`;
 
     await executeSql(updateSql);
 

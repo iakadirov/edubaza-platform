@@ -48,16 +48,16 @@ export async function GET(request: NextRequest) {
     const sql = `
       SELECT
         w.id,
-        w.\\"topicUz\\" as title,
+        w."topicUz" as title,
         w.grade,
         w.subject,
-        w.\\"generatedAt\\" as created_at,
+        w."generatedAt" as created_at,
         (SELECT COUNT(*) FROM jsonb_array_elements(w.tasks) WHERE value->>'type' IS NOT NULL) as tasks_count,
         u.name as user_name,
         u.phone as user_phone
       FROM worksheets w
-      LEFT JOIN users u ON w.\\"userId\\" = u.id
-      ORDER BY w.\\"generatedAt\\" DESC
+      LEFT JOIN users u ON w."userId" = u.id
+      ORDER BY w."generatedAt" DESC
       LIMIT 1000
     `;
 

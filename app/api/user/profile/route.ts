@@ -69,10 +69,8 @@ export async function GET(request: NextRequest) {
     // Подсчитываем использованные ресурсы
     let worksheetsThisMonth = 0;
     try {
-      const countSql = `SELECT COUNT(*) FROM worksheets WHERE \\"userId\\" = '${user.id}' AND \\"generatedAt\\" >= DATE_TRUNC('month', CURRENT_DATE);`;
-      const { stdout: countStdout } = await execAsync(
-        `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -c "${countSql}"`
-      );
+      const countSql = `SELECT COUNT(*) FROM worksheets WHERE "userId" = '${user.id}' AND "generatedAt" >= DATE_TRUNC('month', CURRENT_DATE);`;
+      const countStdout = await executeSql(countSql);
       worksheetsThisMonth = parseInt(countStdout.trim()) || 0;
     } catch (error) {
       console.error('Error counting worksheets:', error);

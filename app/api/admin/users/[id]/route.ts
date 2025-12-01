@@ -58,13 +58,13 @@ export async function GET(
         role,
         specialty,
         school,
-        \\"subscriptionPlan\\",
-        \\"subscriptionExpiresAt\\",
-        \\"subscriptionStartedAt\\",
-        \\"isActive\\",
-        \\"createdAt\\",
-        \\"lastLoginAt\\",
-        (SELECT COUNT(*) FROM worksheets WHERE \\"userId\\" = users.id) as worksheets_count
+        "subscriptionPlan",
+        "subscriptionExpiresAt",
+        "subscriptionStartedAt",
+        "isActive",
+        "createdAt",
+        "lastLoginAt",
+        (SELECT COUNT(*) FROM worksheets WHERE "userId" = users.id) as worksheets_count
       FROM users
       WHERE id = '${params.id}'
       LIMIT 1
@@ -169,14 +169,14 @@ export async function PUT(
     if (role !== undefined) updates.push(`role = '${role}'`);
     if (specialty !== undefined) updates.push(`specialty = ${specialty ? `'${specialty.replace(/'/g, "''")}'` : 'NULL'}`);
     if (school !== undefined) updates.push(`school = ${school ? `'${school.replace(/'/g, "''")}'` : 'NULL'}`);
-    if (subscriptionPlan !== undefined) updates.push(`\\"subscriptionPlan\\" = '${subscriptionPlan}'`);
-    if (isActive !== undefined) updates.push(`\\"isActive\\" = ${isActive ? 'TRUE' : 'FALSE'}`);
+    if (subscriptionPlan !== undefined) updates.push(`"subscriptionPlan" = '${subscriptionPlan}'`);
+    if (isActive !== undefined) updates.push(`"isActive" = ${isActive ? 'TRUE' : 'FALSE'}`);
 
     if (updates.length === 0) {
       return NextResponse.json({ error: 'Нет данных для обновления' }, { status: 400 });
     }
 
-    updates.push(`\\"updatedAt\\" = NOW()`);
+    updates.push(`"updatedAt" = NOW()`);
 
     const updateSql = `UPDATE users SET ${updates.join(', ')} WHERE id = '${params.id}'`;
 

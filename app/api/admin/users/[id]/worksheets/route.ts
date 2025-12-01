@@ -52,14 +52,14 @@ export async function GET(
     const sql = `
       SELECT
         id,
-        \\"topicUz\\" as title,
+        "topicUz" as title,
         grade,
         subject,
-        \\"generatedAt\\" as created_at,
+        "generatedAt" as created_at,
         (SELECT COUNT(*) FROM jsonb_array_elements(tasks) WHERE value->>'type' IS NOT NULL) as tasks_count
       FROM worksheets
-      WHERE \\"userId\\" = '${escapedId}'
-      ORDER BY \\"generatedAt\\" DESC
+      WHERE "userId" = '${escapedId}'
+      ORDER BY "generatedAt" DESC
     `;
 
     const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
