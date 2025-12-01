@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 interface RouteParams {
   params: {
@@ -37,9 +34,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // First, get the current content
     const selectQuery = `SELECT content FROM content_items WHERE id = '${taskId}'`;
-    const dockerSelectCmd = `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${selectQuery}"`;
 
-    const { stdout } = await execAsync(dockerSelectCmd);
+    const stdout = await executeSql(selectQuery);
     const contentJson = stdout.trim();
 
     let content;
@@ -59,9 +55,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Update the task in database
     const updatedContentJson = JSON.stringify(content).replace(/'/g, "''");
     const updateQuery = `UPDATE content_items SET content = '${updatedContentJson}' WHERE id = '${taskId}'`;
-    const dockerUpdateCmd = `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${updateQuery}"`;
 
-    await execAsync(dockerUpdateCmd);
+    await executeSql(updateQuery);
 
     return NextResponse.json({
       success: true,

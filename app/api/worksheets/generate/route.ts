@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { executeSql } from '@/lib/db-helper';
 import { generateTasks, GenerateTasksParams, Task } from '@/lib/gemini';
-
-const execAsync = promisify(exec);
 
 // Функция для получения задач из базы данных с прогрессивным упрощением фильтров
 async function fetchTasksFromDatabase(params: {
@@ -47,10 +44,7 @@ async function fetchTasksFromDatabase(params: {
     console.log('   SQL:', sql.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim());
 
     try {
-      const { stdout } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-        { maxBuffer: 50 * 1024 * 1024 } // 50MB buffer
-      );
+      const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
       if (!stdout || stdout.trim() === '') {
         console.log(`   ❌ No results found`);
@@ -532,9 +526,6 @@ export async function POST(request: NextRequest) {
       aiPercentage: aiPercent,
     };
 
-    // Используем spawn для передачи SQL через stdin
-    const { spawn } = require('child_process');
-
     const configJson = JSON.stringify(config).replace(/'/g, "''");
     const tasksJson = JSON.stringify(tasks).replace(/'/g, "''");
     const debugInfoJson = aiDebugInfo ? JSON.stringify(aiDebugInfo).replace(/'/g, "''") : null;
@@ -544,40 +535,8 @@ export async function POST(request: NextRequest) {
 
     const sql = `INSERT INTO worksheets (id, "userId", subject, grade, "topicUz", "topicRu", topic_id, config, tasks, ai_debug_info, status, "generatedAt", "updatedAt") VALUES (gen_random_uuid()::text, '${user.id}', '${subject}', ${Number(grade)}, '${topicEscaped}', '${topicEscaped}', ${topicIdValue}, '${configJson}', '${tasksJson}', ${debugInfoValue}, 'COMPLETED', NOW(), NOW()) RETURNING id;`;
 
-    // Используем spawn с stdin для безопасной передачи SQL
-    const worksheetId = await new Promise<string>((resolve, reject) => {
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          // Парсим первую строку (UUID), игнорируя "INSERT 0 1"
-          const lines = stdout.trim().split('\n');
-          const worksheetId = lines[0].trim();
-          resolve(worksheetId);
-        }
-      });
-
-      proc.on('error', (err) => {
-        reject(err);
-      });
-
-      // Передаем SQL через stdin
-      proc.stdin.write(sql);
-      proc.stdin.end();
-    });
+    const stdout = await executeSql(sql);
+    const worksheetId = stdout.trim().split('\n')[0].trim();
     console.log('Worksheet saved with ID:', worksheetId);
 
     // TODO: Обновить usage пользователя (для будущих спринтов)

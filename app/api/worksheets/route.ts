@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
+import { executeSql } from '@/lib/db-helper';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,60 +34,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Получаем worksheets пользователя через docker exec
-    const { spawn } = require('child_process');
+    // Получаем worksheets пользователя
+    const sql = `SELECT id, subject, grade, "topicUz", config, status, "generatedAt", "viewCount",
+                 jsonb_array_length(tasks) as task_count
+                 FROM worksheets
+                 WHERE "userId" = '${user.id}'
+                 ORDER BY "generatedAt" DESC
+                 LIMIT 50;`;
 
-    const worksheets = await new Promise<any[]>((resolve, reject) => {
-      const sql = `SELECT id, subject, grade, "topicUz", config, status, "generatedAt", "viewCount",
-                   jsonb_array_length(tasks) as task_count
-                   FROM worksheets
-                   WHERE "userId" = '${user.id}'
-                   ORDER BY "generatedAt" DESC
-                   LIMIT 50;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          // Парсим результаты
-          const lines = stdout.trim().split('\n').filter(line => line.trim());
-          const results = lines.map(line => {
-            const parts = line.split('|');
-            return {
-              id: parts[0],
-              subject: parts[1],
-              grade: parseInt(parts[2]),
-              topicUz: parts[3],
-              config: parts[4] ? JSON.parse(parts[4]) : null,
-              status: parts[5],
-              generatedAt: parts[6],
-              viewCount: parseInt(parts[7] || '0'),
-              taskCount: parseInt(parts[8] || '0'),
-            };
-          });
-          resolve(results);
-        }
-      });
-
-      proc.on('error', (err) => {
-        reject(err);
-      });
-
-      proc.stdin.write(sql);
-      proc.stdin.end();
+    // Парсим результаты
+    const lines = stdout.trim().split('\n').filter(line => line.trim());
+    const worksheets = lines.map(line => {
+      const parts = line.split('|');
+      return {
+        id: parts[0],
+        subject: parts[1],
+        grade: parseInt(parts[2]),
+        topicUz: parts[3],
+        config: parts[4] ? JSON.parse(parts[4]) : null,
+        status: parts[5],
+        generatedAt: parts[6],
+        viewCount: parseInt(parts[7] || '0'),
+        taskCount: parseInt(parts[8] || '0'),
+      };
     });
 
     return NextResponse.json({

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { generateTasks } from '@/lib/gemini';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 interface RouteParams {
   params: {
@@ -44,9 +41,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       INNER JOIN subjects s ON t.subject_id = s.id
       WHERE ci.id = '${taskId}'
     `;
-    const dockerSelectCmd = `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${selectQuery}"`;
 
-    const { stdout } = await execAsync(dockerSelectCmd);
+    const stdout = await executeSql(selectQuery.trim(), { fieldSeparator: '|' });
     const line = stdout.trim();
 
     if (!line) {
@@ -106,9 +102,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         updated_at = NOW()
       WHERE id = '${taskId}'
     `;
-    const dockerUpdateCmd = `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${updateQuery}"`;
 
-    await execAsync(dockerUpdateCmd);
+    await executeSql(updateQuery);
 
     // Return the updated task
     return NextResponse.json({

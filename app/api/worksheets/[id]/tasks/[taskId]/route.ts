@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 interface RouteParams {
   params: {
@@ -38,9 +35,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Delete from worksheet_tasks junction table
     const query = `DELETE FROM worksheet_tasks WHERE worksheet_id = '${worksheetId}' AND task_id = '${taskId}'`;
-    const dockerCmd = `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${query}"`;
 
-    await execAsync(dockerCmd);
+    await executeSql(query);
 
     return NextResponse.json({
       success: true,
