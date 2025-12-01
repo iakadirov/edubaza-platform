@@ -10,14 +10,17 @@ interface JWTPayload {
 
 async function findUserByPhone(phone: string) {
   const escapedPhone = phone.replace(/'/g, "''");
-  const sql = `SELECT id, phone, name, role, \\"createdAt\\" FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
+  // IMPORTANT: PostgreSQL returns columns in table order unless explicitly specified
+  // Using * and splitting by position is fragile - explicitly select only what we need
+  const sql = `SELECT id, phone, name, email, \\"subscriptionPlan\\", specialty, school, role, \\"createdAt\\" FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
 
   const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
   const lines = stdout.trim().split('\n').filter(Boolean);
   if (lines.length === 0) return null;
 
-  const [id, userPhone, name, role, createdAt] = lines[0].split('|');
+  // Parse in the order specified in SELECT
+  const [id, userPhone, name, email, subscriptionPlan, specialty, school, role, createdAt] = lines[0].split('|');
   return { id, phone: userPhone, name: name || null, role, createdAt };
 }
 
