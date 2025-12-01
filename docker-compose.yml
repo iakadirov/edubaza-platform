@@ -4,12 +4,12 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: edubaza-postgres
+    container_name: edubaza_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: edubaza
-      POSTGRES_PASSWORD: edubaza_dev_password
-      POSTGRES_DB: edubaza_db
+      POSTGRES_PASSWORD: edubaza_secure_password_2024_change_this
+      POSTGRES_DB: edubaza
     ports:
       - '5432:5432'
     volumes:
@@ -24,7 +24,7 @@ services:
   # Redis Cache & Queue
   redis:
     image: redis:7-alpine
-    container_name: edubaza-redis
+    container_name: edubaza_redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass edubaza_redis_password
     ports:
@@ -40,7 +40,7 @@ services:
   # Redis Commander (GUI для разработки)
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: edubaza-redis-commander
+    container_name: edubaza_redis_commander
     restart: unless-stopped
     environment:
       - REDIS_HOSTS=local:redis:6379:0:edubaza_redis_password
