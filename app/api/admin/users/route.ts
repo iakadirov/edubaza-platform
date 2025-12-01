@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
         first_name,
         last_name,
         role,
-        \\"subscriptionPlan\\",
-        \\"createdAt\\"
+        "subscriptionPlan",
+        "createdAt"
       FROM users
-      ORDER BY \\"createdAt\\" DESC
+      ORDER BY "createdAt" DESC
     `;
 
     const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
