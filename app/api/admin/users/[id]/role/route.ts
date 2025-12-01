@@ -8,7 +8,8 @@ interface JWTPayload {
 }
 
 async function findUserByPhone(phone: string) {
-  const sql = `SELECT id, phone, "fullName", role FROM users WHERE phone = '${phone}' LIMIT 1`;
+  const escapedPhone = phone.replace(/'/g, "''");
+  const sql = `SELECT id, phone, "fullName", role FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
 
   const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
@@ -49,8 +50,9 @@ export async function PUT(
     }
 
     // Update user role
-    const userId = params.id;
-    const updateSql = `UPDATE users SET role = '${role}' WHERE id = '${userId}'`;
+    const escapedUserId = params.id.replace(/'/g, "''");
+    const escapedRole = role.replace(/'/g, "''");
+    const updateSql = `UPDATE users SET role = '${escapedRole}' WHERE id = '${escapedUserId}'`;
 
     await executeSql(updateSql);
 
