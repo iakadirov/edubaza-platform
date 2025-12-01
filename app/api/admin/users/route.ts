@@ -14,14 +14,25 @@ async function findUserByPhone(phone: string) {
   // Using * and splitting by position is fragile - explicitly select only what we need
   const sql = `SELECT id, phone, name, email, \\"subscriptionPlan\\", specialty, school, role, \\"createdAt\\" FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
 
+  console.log('SQL query:', sql);
   const stdout = await executeSql(sql, { fieldSeparator: '|' });
+  console.log('executeSql stdout:', JSON.stringify(stdout));
+  console.log('stdout length:', stdout.length);
 
   const lines = stdout.trim().split('\n').filter(Boolean);
-  if (lines.length === 0) return null;
+  console.log('lines count:', lines.length);
+  if (lines.length === 0) {
+    console.log('No lines found in stdout');
+    return null;
+  }
 
+  console.log('First line:', JSON.stringify(lines[0]));
   // Parse in the order specified in SELECT
   const [id, userPhone, name, email, subscriptionPlan, specialty, school, role, createdAt] = lines[0].split('|');
-  return { id, phone: userPhone, name: name || null, role, createdAt };
+  console.log('Parsed role:', role);
+  const result = { id, phone: userPhone, name: name || null, role, createdAt };
+  console.log('Returning user:', JSON.stringify(result));
+  return result;
 }
 
 export async function GET(request: NextRequest) {
