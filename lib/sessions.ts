@@ -298,11 +298,21 @@ function parsePostgresRowDelimited(line: string): any {
   const values = line.split('|');
 
   // Предполагаем порядок колонок: id, user_id, token_hash, device_info, ip_address, location, created_at, last_active, expires_at, is_active
+  let deviceInfo = null;
+  try {
+    if (values[3] && values[3] !== '' && values[3] !== 'null') {
+      deviceInfo = JSON.parse(values[3]);
+    }
+  } catch (e) {
+    console.error('Error parsing device_info JSON:', e, 'Value:', values[3]);
+    deviceInfo = null;
+  }
+
   return {
     id: values[0],
     user_id: values[1],
     token_hash: values[2],
-    device_info: JSON.parse(values[3]),
+    device_info: deviceInfo,
     ip_address: values[4] === '' ? null : values[4],
     location: values[5] === '' ? null : values[5],
     created_at: values[6],
