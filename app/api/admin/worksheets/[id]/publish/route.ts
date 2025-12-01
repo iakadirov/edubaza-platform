@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 interface JWTPayload {
@@ -13,10 +10,7 @@ interface JWTPayload {
 async function findUserByPhone(phone: string) {
   const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${phone}' LIMIT 1`;
 
-  const { stdout } = await execAsync(
-    `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`,
-    { maxBuffer: 50 * 1024 * 1024 }
-  );
+  const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
   const lines = stdout.trim().split('\n').filter(Boolean);
   if (lines.length === 0) return null;
@@ -56,10 +50,7 @@ export async function POST(
     // Update worksheet status to PUBLISHED
     const updateSql = `UPDATE worksheets SET status = 'PUBLISHED', \\"updatedAt\\" = NOW() WHERE id = '${params.id}'`;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${updateSql}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
-    );
+    await executeSql(updateSql);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

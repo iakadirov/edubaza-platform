@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { verifyToken } from '@/lib/jwt';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 
 // POST - Bulk import topics
 export async function POST(request: NextRequest) {
@@ -60,9 +57,7 @@ export async function POST(request: NextRequest) {
       RETURNING id;
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${sql.replace(/\n/g, ' ').replace(/"/g, '\\"')}"`
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '));
 
     const insertedIds = stdout.trim().split('\n').filter(line => line.trim());
 

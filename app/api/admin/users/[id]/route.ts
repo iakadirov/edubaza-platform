@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 interface JWTPayload {
@@ -13,10 +10,7 @@ interface JWTPayload {
 async function findUserByPhone(phone: string) {
   const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${phone}' LIMIT 1`;
 
-  const { stdout } = await execAsync(
-    `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`,
-    { maxBuffer: 50 * 1024 * 1024 }
-  );
+  const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
   const lines = stdout.trim().split('\n').filter(Boolean);
   if (lines.length === 0) return null;
@@ -76,10 +70,7 @@ export async function GET(
       LIMIT 1
     `;
 
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql.replace(/\n/g, ' ')}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
-    );
+    const stdout = await executeSql(sql.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     const lines = stdout.trim().split('\n').filter(Boolean);
     if (lines.length === 0) {
@@ -162,10 +153,7 @@ export async function PUT(
     // Validate subscription plan against database
     if (subscriptionPlan) {
       const planCheckSql = `SELECT plan_code FROM subscription_plans WHERE plan_code = '${subscriptionPlan}' AND is_active = TRUE LIMIT 1`;
-      const { stdout: planCheck } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "${planCheckSql}"`,
-        { maxBuffer: 50 * 1024 * 1024 }
-      );
+      const planCheck = await executeSql(planCheckSql);
 
       if (!planCheck.trim()) {
         return NextResponse.json({ error: 'Неверный план подписки' }, { status: 400 });
@@ -194,10 +182,7 @@ export async function PUT(
 
     console.log('Update SQL:', updateSql);
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${updateSql}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
-    );
+    await executeSql(updateSql);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -232,10 +217,7 @@ export async function DELETE(
 
     const deleteSql = `DELETE FROM users WHERE id = '${params.id}'`;
 
-    await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -c "${deleteSql}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
-    );
+    await executeSql(deleteSql);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
-
-const execAsync = promisify(exec);
+import { executeSql } from '@/lib/db-helper';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
 interface JWTPayload {
@@ -16,10 +13,7 @@ async function findUserByPhone(phone: string) {
   const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${phone}' LIMIT 1`;
 
   try {
-    const { stdout } = await execAsync(
-      `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`,
-      { maxBuffer: 50 * 1024 * 1024 }
-    );
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     const lines = stdout.trim().split('\n').filter(line => line.trim());
     if (lines.length === 0) return null;
@@ -71,9 +65,8 @@ export async function GET(request: NextRequest) {
 
     // Count subjects (COALESCE handles NULL as TRUE)
     try {
-      const { stdout: subjectsOut } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "SELECT COUNT(*) FROM subjects WHERE COALESCE(is_visible, TRUE) = TRUE"`,
-        { maxBuffer: 50 * 1024 * 1024 }
+      const subjectsOut = await executeSql(
+        "SELECT COUNT(*) FROM subjects WHERE COALESCE(is_visible, TRUE) = TRUE"
       );
       console.log('Subjects stdout:', subjectsOut);
       stats.subjects = parseInt(subjectsOut.trim()) || 0;
@@ -84,9 +77,8 @@ export async function GET(request: NextRequest) {
 
     // Count topics (COALESCE handles NULL as TRUE)
     try {
-      const { stdout: topicsOut } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "SELECT COUNT(*) FROM topics WHERE COALESCE(is_visible, TRUE) = TRUE"`,
-        { maxBuffer: 50 * 1024 * 1024 }
+      const topicsOut = await executeSql(
+        "SELECT COUNT(*) FROM topics WHERE COALESCE(is_visible, TRUE) = TRUE"
       );
       console.log('Topics stdout:', topicsOut);
       stats.topics = parseInt(topicsOut.trim()) || 0;
@@ -97,10 +89,7 @@ export async function GET(request: NextRequest) {
 
     // Count materials (predefined tasks)
     try {
-      const { stdout: materialsOut } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "SELECT COUNT(*) FROM predefined_tasks"`,
-        { maxBuffer: 50 * 1024 * 1024 }
-      );
+      const materialsOut = await executeSql("SELECT COUNT(*) FROM predefined_tasks");
       stats.materials = parseInt(materialsOut.trim()) || 0;
     } catch (error) {
       console.error('Error counting materials:', error);
@@ -108,10 +97,7 @@ export async function GET(request: NextRequest) {
 
     // Count users
     try {
-      const { stdout: usersOut } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "SELECT COUNT(*) FROM users"`,
-        { maxBuffer: 50 * 1024 * 1024 }
-      );
+      const usersOut = await executeSql("SELECT COUNT(*) FROM users");
       stats.users = parseInt(usersOut.trim()) || 0;
     } catch (error) {
       console.error('Error counting users:', error);
@@ -119,10 +105,7 @@ export async function GET(request: NextRequest) {
 
     // Count teachers (users with specialty field set)
     try {
-      const { stdout: teachersOut } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "SELECT COUNT(*) FROM users WHERE specialty IS NOT NULL"`,
-        { maxBuffer: 50 * 1024 * 1024 }
-      );
+      const teachersOut = await executeSql("SELECT COUNT(*) FROM users WHERE specialty IS NOT NULL");
       stats.teachers = parseInt(teachersOut.trim()) || 0;
     } catch (error) {
       console.error('Error counting teachers:', error);
@@ -130,10 +113,7 @@ export async function GET(request: NextRequest) {
 
     // Count students (regular users without specialty and without admin role)
     try {
-      const { stdout: studentsOut } = await execAsync(
-        `docker exec edubaza_postgres psql -U edubaza -d edubaza -t -A -c "SELECT COUNT(*) FROM users WHERE specialty IS NULL AND role = 'USER'"`,
-        { maxBuffer: 50 * 1024 * 1024 }
-      );
+      const studentsOut = await executeSql("SELECT COUNT(*) FROM users WHERE specialty IS NULL AND role = 'USER'");
       stats.students = parseInt(studentsOut.trim()) || 0;
     } catch (error) {
       console.error('Error counting students:', error);
