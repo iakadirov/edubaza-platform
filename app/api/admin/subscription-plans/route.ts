@@ -83,10 +83,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { planCode, nameUz, nameRu, priceUzs, features, limits, displayOrder, isActive, showWatermark } = body;
 
+    const escapedPlanCode = planCode.replace(/'/g, "''");
+    const escapedNameUz = nameUz.replace(/'/g, "''");
+    const escapedNameRu = (nameRu || '').replace(/'/g, "''");
+    const escapedFeatures = JSON.stringify(features).replace(/'/g, "''");
+    const escapedLimits = JSON.stringify(limits).replace(/'/g, "''");
+
     const sql = `INSERT INTO subscription_plans
                  (plan_code, name_uz, name_ru, price_uzs, features, limits, display_order, is_active, show_watermark)
-                 VALUES ('${planCode}', '${nameUz}', '${nameRu || ''}', ${priceUzs},
-                         '${JSON.stringify(features)}'::jsonb, '${JSON.stringify(limits)}'::jsonb,
+                 VALUES ('${escapedPlanCode}', '${escapedNameUz}', '${escapedNameRu}', ${priceUzs},
+                         '${escapedFeatures}'::jsonb, '${escapedLimits}'::jsonb,
                          ${displayOrder || 0}, ${isActive !== false}, ${showWatermark !== false})
                  RETURNING id;`;
 
@@ -121,17 +127,23 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { id, nameUz, nameRu, priceUzs, features, limits, displayOrder, isActive, showWatermark } = body;
 
+    const escapedId = id.replace(/'/g, "''");
+    const escapedNameUz = nameUz.replace(/'/g, "''");
+    const escapedNameRu = (nameRu || '').replace(/'/g, "''");
+    const escapedFeatures = JSON.stringify(features).replace(/'/g, "''");
+    const escapedLimits = JSON.stringify(limits).replace(/'/g, "''");
+
     const sql = `UPDATE subscription_plans
-                 SET name_uz = '${nameUz}',
-                     name_ru = '${nameRu || ''}',
+                 SET name_uz = '${escapedNameUz}',
+                     name_ru = '${escapedNameRu}',
                      price_uzs = ${priceUzs},
-                     features = '${JSON.stringify(features)}'::jsonb,
-                     limits = '${JSON.stringify(limits)}'::jsonb,
+                     features = '${escapedFeatures}'::jsonb,
+                     limits = '${escapedLimits}'::jsonb,
                      display_order = ${displayOrder},
                      is_active = ${isActive},
                      show_watermark = ${showWatermark},
                      updated_at = CURRENT_TIMESTAMP
-                 WHERE id = '${id}';`;
+                 WHERE id = '${escapedId}';`;
 
     await executeQuery(sql);
 

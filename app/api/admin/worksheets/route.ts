@@ -8,7 +8,8 @@ interface JWTPayload {
 }
 
 async function findUserByPhone(phone: string) {
-  const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${phone}' LIMIT 1`;
+  const escapedPhone = phone.replace(/'/g, "''");
+  const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
 
   const stdout = await executeSql(sql, { fieldSeparator: '|' });
 

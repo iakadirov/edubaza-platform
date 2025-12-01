@@ -8,7 +8,8 @@ interface JWTPayload {
 }
 
 async function findUserByPhone(phone: string) {
-  const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${phone}' LIMIT 1`;
+  const escapedPhone = phone.replace(/'/g, "''");
+  const sql = `SELECT id, phone, name, role FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
 
   const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
@@ -47,6 +48,7 @@ export async function GET(
       return NextResponse.json({ error: 'Доступ запрещен' }, { status: 403 });
     }
 
+    const escapedId = params.id.replace(/'/g, "''");
     const sql = `
       SELECT
         id,
@@ -56,7 +58,7 @@ export async function GET(
         \\"generatedAt\\" as created_at,
         (SELECT COUNT(*) FROM jsonb_array_elements(tasks) WHERE value->>'type' IS NOT NULL) as tasks_count
       FROM worksheets
-      WHERE \\"userId\\" = '${params.id}'
+      WHERE \\"userId\\" = '${escapedId}'
       ORDER BY \\"generatedAt\\" DESC
     `;
 
