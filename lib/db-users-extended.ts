@@ -1,11 +1,8 @@
 // Extended DB helper for users with password support and new fields
-// Uses direct SQL via docker exec for Windows compatibility
+// Uses executeSql from db-helper for consistent database access
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import bcrypt from 'bcryptjs';
-
-const execAsync = promisify(exec);
+import { executeSql } from './db-helper';
 
 export type TeacherSpecialty =
   | 'PRIMARY_SCHOOL'
@@ -74,10 +71,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 // Найти пользователя по телефону
 export async function findUserByPhone(phone: string): Promise<User | null> {
   try {
-    const sql = `SELECT * FROM users WHERE phone = '${phone}' LIMIT 1;`;
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const escapedPhone = phone.replace(/'/g, "''");
+    const sql = `SELECT * FROM users WHERE phone = '${escapedPhone}' LIMIT 1;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -93,10 +89,9 @@ export async function findUserByPhone(phone: string): Promise<User | null> {
 // Найти пользователя по Telegram ID
 export async function findUserByTelegramId(telegramId: string): Promise<User | null> {
   try {
-    const sql = `SELECT * FROM users WHERE telegram_id = ${telegramId} LIMIT 1;`;
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const escapedTelegramId = telegramId.replace(/'/g, "''");
+    const sql = `SELECT * FROM users WHERE telegram_id = '${escapedTelegramId}' LIMIT 1;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -112,10 +107,9 @@ export async function findUserByTelegramId(telegramId: string): Promise<User | n
 // Найти пользователя по ID
 export async function findUserById(id: string): Promise<User | null> {
   try {
-    const sql = `SELECT * FROM users WHERE id = '${id}' LIMIT 1;`;
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const escapedId = id.replace(/'/g, "''");
+    const sql = `SELECT * FROM users WHERE id = '${escapedId}' LIMIT 1;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -149,10 +143,11 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
     // Определяем тариф: для учителей BEMINNAT, для остальных FREE
     const subscriptionPlan = role === 'TEACHER' ? 'BEMINNAT' : 'FREE';
 
+    const escapedPhone = phone.replace(/'/g, "''");
     const fields = ['id', 'phone', 'role', '\\"subscriptionPlan\\"', '\\"createdAt\\"', '\\"updatedAt\\"'];
     const values = [
       'gen_random_uuid()::text',
-      `'${phone}'`,
+      `'${escapedPhone}'`,
       `'${role}'::user_role`,
       `'${subscriptionPlan}'::\\"SubscriptionPlan\\"`,
       'NOW()',
@@ -171,24 +166,26 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
 
     if (passwordHash) {
       fields.push('password_hash');
-      // Экранируем $ символы для shell
-      const escapedHash = passwordHash.replace(/\$/g, '\\$');
-      values.push(`'${escapedHash}'`);
+      // No need to escape $ when using executeSql with stdin
+      values.push(`'${passwordHash}'`);
     }
 
     if (telegramId) {
       fields.push('telegram_id');
-      values.push(`${telegramId}`);
+      const escapedTelegramId = telegramId.replace(/'/g, "''");
+      values.push(`'${escapedTelegramId}'`);
     }
 
     if (telegramUsername) {
       fields.push('telegram_username');
-      values.push(`'${telegramUsername}'`);
+      const escapedTelegramUsername = telegramUsername.replace(/'/g, "''");
+      values.push(`'${escapedTelegramUsername}'`);
     }
 
     if (telegramPhotoUrl) {
       fields.push('telegram_photo_url');
-      values.push(`'${telegramPhotoUrl}'`);
+      const escapedTelegramPhotoUrl = telegramPhotoUrl.replace(/'/g, "''");
+      values.push(`'${escapedTelegramPhotoUrl}'`);
     }
 
     if (specialty) {
@@ -203,16 +200,7 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
 
     const sql = `INSERT INTO users (${fields.join(', ')}) VALUES (${values.join(', ')}) RETURNING *;`;
 
-    // Используем временный файл для безопасного выполнения SQL с паролем
-    const tmpFile = `/tmp/create_user_${Date.now()}.sql`;
-    await execAsync(`cat > ${tmpFile} << 'EOFCREATE'\n${sql}\nEOFCREATE`);
-
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -f ${tmpFile}`
-    );
-
-    // Удаляем временный файл
-    await execAsync(`rm -f ${tmpFile}`);
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -263,26 +251,28 @@ export async function updateUserProfileExtended(
     }
 
     if (updates.telegramId !== undefined) {
-      setParts.push(`telegram_id = ${updates.telegramId}`);
+      const escapedTelegramId = updates.telegramId.replace(/'/g, "''");
+      setParts.push(`telegram_id = '${escapedTelegramId}'`);
     }
 
     if (updates.telegramUsername !== undefined) {
-      setParts.push(`telegram_username = '${updates.telegramUsername}'`);
+      const escapedTelegramUsername = updates.telegramUsername.replace(/'/g, "''");
+      setParts.push(`telegram_username = '${escapedTelegramUsername}'`);
     }
 
     if (updates.telegramPhotoUrl !== undefined) {
-      setParts.push(`telegram_photo_url = '${updates.telegramPhotoUrl}'`);
+      const escapedTelegramPhotoUrl = updates.telegramPhotoUrl.replace(/'/g, "''");
+      setParts.push(`telegram_photo_url = '${escapedTelegramPhotoUrl}'`);
     }
 
     if (setParts.length === 0) {
       return findUserById(userId);
     }
 
-    const sql = `UPDATE users SET ${setParts.join(', ')}, \\"updatedAt\\" = NOW() WHERE id = '${userId}' RETURNING *;`;
+    const escapedUserId = userId.replace(/'/g, "''");
+    const sql = `UPDATE users SET ${setParts.join(', ')}, \\"updatedAt\\" = NOW() WHERE id = '${escapedUserId}' RETURNING *;`;
 
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -299,20 +289,12 @@ export async function updateUserProfileExtended(
 export async function setUserPassword(userId: string, password: string): Promise<boolean> {
   try {
     const passwordHash = await hashPassword(password);
+    const escapedUserId = userId.replace(/'/g, "''");
 
-    // Используем временный файл для избежания проблем с экранированием $ в shell
-    const tmpFile = `/tmp/set_password_${Date.now()}.sql`;
-    const escapedHash = passwordHash.replace(/\$/g, '\\$');
-    const sql = `UPDATE users SET password_hash = '${escapedHash}', "updatedAt" = NOW() WHERE id = '${userId}';`;
+    // No need to escape $ when using executeSql with stdin
+    const sql = `UPDATE users SET password_hash = '${passwordHash}', "updatedAt" = NOW() WHERE id = '${escapedUserId}';`;
 
-    // Создаем временный SQL файл
-    await execAsync(`cat > ${tmpFile} << 'EOFPASSWORD'\n${sql}\nEOFPASSWORD`);
-
-    // Выполняем SQL из файла
-    await execAsync(`PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -f ${tmpFile}`);
-
-    // Удаляем временный файл
-    await execAsync(`rm -f ${tmpFile}`);
+    await executeSql(sql);
 
     return true;
   } catch (error) {
@@ -324,10 +306,9 @@ export async function setUserPassword(userId: string, password: string): Promise
 // Проверить пароль пользователя
 export async function checkUserPassword(phone: string, password: string): Promise<User | null> {
   try {
-    const sql = `SELECT * FROM users WHERE phone = '${phone}' LIMIT 1;`;
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const escapedPhone = phone.replace(/'/g, "''");
+    const sql = `SELECT * FROM users WHERE phone = '${escapedPhone}' LIMIT 1;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
@@ -337,10 +318,9 @@ export async function checkUserPassword(phone: string, password: string): Promis
     if (!user) return null;
 
     // Получить password_hash отдельно
-    const hashSql = `SELECT password_hash FROM users WHERE id = '${user.id}';`;
-    const { stdout: hashStdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -c "${hashSql}"`
-    );
+    const escapedUserId = user.id.replace(/'/g, "''");
+    const hashSql = `SELECT password_hash FROM users WHERE id = '${escapedUserId}';`;
+    const hashStdout = await executeSql(hashSql);
 
     const passwordHash = hashStdout.trim();
 
@@ -359,8 +339,9 @@ export async function checkUserPassword(phone: string, password: string): Promis
 // Обновить время последнего входа
 export async function updateLastLogin(userId: string): Promise<boolean> {
   try {
-    const sql = `UPDATE users SET \\"lastLoginAt\\" = NOW() WHERE id = '${userId}';`;
-    await execAsync(`PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -c "${sql}"`);
+    const escapedUserId = userId.replace(/'/g, "''");
+    const sql = `UPDATE users SET \\"lastLoginAt\\" = NOW() WHERE id = '${escapedUserId}';`;
+    await executeSql(sql);
     return true;
   } catch (error) {
     console.error('Update last login error:', error);
