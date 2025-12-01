@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
+import { executeSql } from '@/lib/db-helper';
 
 export async function GET(
   request: NextRequest,
@@ -38,69 +39,39 @@ export async function GET(
 
     const worksheetId = params.id;
 
-    // Получаем worksheet через docker exec
-    const { spawn } = require('child_process');
+    // Получаем worksheet
+    // Админы могут просматривать все worksheets, обычные пользователи - только свои
+    const userCondition = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+      ? ''
+      : `AND "userId" = '${user.id}'`;
 
-    const worksheet = await new Promise<any>((resolve, reject) => {
-      // Админы могут просматривать все worksheets, обычные пользователи - только свои
-      const userCondition = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
-        ? ''
-        : `AND "userId" = '${user.id}'`;
+    const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount", ai_debug_info
+                 FROM worksheets
+                 WHERE id = '${worksheetId}' ${userCondition}
+                 LIMIT 1;`;
 
-      const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount", ai_debug_info
-                   FROM worksheets
-                   WHERE id = '${worksheetId}' ${userCondition}
-                   LIMIT 1;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
+    const line = stdout.trim();
 
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          const line = stdout.trim();
-          if (!line) {
-            resolve(null);
-            return;
-          }
-
-          const parts = line.split('|');
-          const aiDebugInfoRaw = parts[11];
-          resolve({
-            id: parts[0],
-            userId: parts[1],
-            subject: parts[2],
-            grade: parseInt(parts[3]),
-            topicUz: parts[4],
-            topicRu: parts[5],
-            config: JSON.parse(parts[6]),
-            tasks: JSON.parse(parts[7]),
-            status: parts[8],
-            generatedAt: parts[9],
-            viewCount: parseInt(parts[10] || '0'),
-            aiDebugInfo: aiDebugInfoRaw && aiDebugInfoRaw !== '' ? JSON.parse(aiDebugInfoRaw) : null,
-          });
-        }
-      });
-
-      proc.on('error', (err) => {
-        reject(err);
-      });
-
-      proc.stdin.write(sql);
-      proc.stdin.end();
-    });
+    let worksheet = null;
+    if (line) {
+      const parts = line.split('|');
+      const aiDebugInfoRaw = parts[11];
+      worksheet = {
+        id: parts[0],
+        userId: parts[1],
+        subject: parts[2],
+        grade: parseInt(parts[3]),
+        topicUz: parts[4],
+        topicRu: parts[5],
+        config: JSON.parse(parts[6]),
+        tasks: JSON.parse(parts[7]),
+        status: parts[8],
+        generatedAt: parts[9],
+        viewCount: parseInt(parts[10] || '0'),
+        aiDebugInfo: aiDebugInfoRaw && aiDebugInfoRaw !== '' ? JSON.parse(aiDebugInfoRaw) : null,
+      };
+    }
 
     if (!worksheet) {
       return NextResponse.json(
