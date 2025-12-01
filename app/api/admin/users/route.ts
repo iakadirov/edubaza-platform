@@ -12,7 +12,9 @@ async function findUserByPhone(phone: string) {
   const escapedPhone = phone.replace(/'/g, "''");
   // IMPORTANT: PostgreSQL returns columns in table order unless explicitly specified
   // Using * and splitting by position is fragile - explicitly select only what we need
-  const sql = `SELECT id, phone, name, email, \\"subscriptionPlan\\", specialty, school, role, \\"createdAt\\" FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
+  // IMPORTANT: When passing SQL via stdin to psql, backslashes are interpreted as escape chars
+  // So we use double quotes directly without escaping
+  const sql = `SELECT id, phone, name, email, "subscriptionPlan", specialty, school, role, "createdAt" FROM users WHERE phone = '${escapedPhone}' LIMIT 1`;
 
   console.log('SQL query:', sql);
   const stdout = await executeSql(sql, { fieldSeparator: '|' });
