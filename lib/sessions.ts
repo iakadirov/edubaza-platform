@@ -254,31 +254,20 @@ export async function cleanExpiredSessions(): Promise<number> {
 
 // Helper функция для выполнения SQL запроса (возвращает одну строку)
 async function executeQuery(query: string): Promise<any> {
-  const { execSync } = require('child_process');
+  const { executeSql } = require('./db-helper');
 
   try {
-    const escapedQuery = query.replace(/"/g, '\\"').replace(/\n/g, ' ');
-    const command = `docker exec -i edubaza_postgres psql -U edubaza -d edubaza -t -c "${escapedQuery}"`;
-
-    const result = execSync(command, { encoding: 'utf-8' });
+    const result = await executeSql(query.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     if (!result || result.trim() === '') {
       return null;
     }
 
     // Парсинг результата
-    const lines = result.trim().split('\n');
+    const lines = result.trim().split('\n').filter(Boolean);
     if (lines.length === 0) return null;
 
-    const dataLine = lines[0].trim();
-    if (dataLine.startsWith('(') && dataLine.endsWith(')')) {
-      // Parse tuple format: (id,user_id,token_hash,...)
-      const values = dataLine.slice(1, -1).split(',');
-      // Этот формат сложно парсить, лучше использовать JSON output
-      return parsePostgresRow(dataLine);
-    }
-
-    return null;
+    return parsePostgresRowDelimited(lines[0]);
   } catch (error) {
     console.error('Error executing query:', error);
     return null;
@@ -287,19 +276,16 @@ async function executeQuery(query: string): Promise<any> {
 
 // Helper функция для выполнения SQL запроса (возвращает массив строк)
 async function executeQueryArray(query: string): Promise<any[]> {
-  const { execSync } = require('child_process');
+  const { executeSql } = require('./db-helper');
 
   try {
-    const escapedQuery = query.replace(/"/g, '\\"').replace(/\n/g, ' ');
-    const command = `docker exec -i edubaza_postgres psql -U edubaza -d edubaza -t -A -F"|" -c "${escapedQuery}"`;
-
-    const result = execSync(command, { encoding: 'utf-8' });
+    const result = await executeSql(query.replace(/\n/g, ' '), { fieldSeparator: '|' });
 
     if (!result || result.trim() === '') {
       return [];
     }
 
-    const lines = result.trim().split('\n');
+    const lines = result.trim().split('\n').filter(Boolean);
     return lines.map(line => parsePostgresRowDelimited(line));
   } catch (error) {
     console.error('Error executing query array:', error);
@@ -324,10 +310,4 @@ function parsePostgresRowDelimited(line: string): any {
     expires_at: values[8],
     is_active: values[9] === 't',
   };
-}
-
-// Простой парсер для формата (value1,value2,...)
-function parsePostgresRow(line: string): any {
-  // Это упрощенная версия, для production нужен более надежный парсер
-  return null;
 }
