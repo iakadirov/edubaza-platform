@@ -284,40 +284,10 @@ export async function POST(request: NextRequest) {
       RETURNING id;
     `;
 
-    // Используем spawn с stdin для передачи SQL (избегает ограничения длины команды)
-    const { spawn } = require('child_process');
-    const itemId = await new Promise<string>((resolve, reject) => {
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          const lines = stdout.trim().split('\n');
-          const id = lines[0].trim();
-          resolve(id);
-        }
-      });
-
-      proc.on('error', (err) => {
-        reject(err);
-      });
-
-      // Передаем SQL через stdin
-      proc.stdin.write(sql);
-      proc.stdin.end();
-    });
+    // Используем executeSql для выполнения SQL (передача через stdin)
+    const stdout = await executeSql(insertSQL);
+    const lines = stdout.trim().split('\n');
+    const itemId = lines[0].trim();
 
     return NextResponse.json({
       success: true,
@@ -395,33 +365,8 @@ export async function PUT(request: NextRequest) {
       WHERE id = '${id}';
     `;
 
-    // Используем spawn с stdin для передачи SQL (избегает ограничения длины команды)
-    const { spawn } = require('child_process');
-    await new Promise<void>((resolve, reject) => {
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza']);
-
-      let stderr = '';
-
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          resolve();
-        }
-      });
-
-      proc.on('error', (err) => {
-        reject(err);
-      });
-
-      // Передаем SQL через stdin
-      proc.stdin.write(sql);
-      proc.stdin.end();
-    });
+    // Используем executeSql для выполнения SQL (передача через stdin)
+    await executeSql(sql);
 
     return NextResponse.json({
       success: true,

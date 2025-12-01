@@ -7,6 +7,7 @@ import { findUserByPhone } from '@/lib/db-users';
 import { parseTextWithMath } from '@/lib/math-to-png';
 import { generateWorksheetTitle, generatePdfFileName } from '@/lib/worksheet-title';
 import { generatePDFWithPuppeteer } from '@/lib/pdf-html';
+import { executeSql } from '@/lib/db-helper';
 import path from 'path';
 
 // Subjects that require high-quality math rendering (use Puppeteer)
@@ -79,70 +80,37 @@ export async function GET(
 
     const worksheetId = params.id;
 
-    // Получаем worksheet через docker exec
-    const { spawn } = require('child_process');
+    // Получаем worksheet
+    // Админы могут скачивать PDF всех worksheets, обычные пользователи - только свои
+    const userCondition = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+      ? ''
+      : `AND "userId" = '${user.id}'`;
 
-    const worksheet = await new Promise<any>((resolve, reject) => {
-      // Админы могут скачивать PDF всех worksheets, обычные пользователи - только свои
-      const userCondition = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
-        ? ''
-        : `AND "userId" = '${user.id}'`;
+    const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount"
+                 FROM worksheets
+                 WHERE id = '${worksheetId}' ${userCondition}
+                 LIMIT 1;`;
 
-      const sql = `SELECT id, "userId", subject, grade, "topicUz", "topicRu", config, tasks, status, "generatedAt", "viewCount"
-                   FROM worksheets
-                   WHERE id = '${worksheetId}' ${userCondition}
-                   LIMIT 1;`;
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
+    const line = stdout.trim();
 
-      const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|'], {
-        encoding: 'utf8',
-        env: { ...process.env, PGCLIENTENCODING: 'UTF8' }
-      });
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString('utf8');
-      });
-
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString('utf8');
-      });
-
-      proc.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`SQL execution failed: ${stderr}`));
-        } else {
-          const line = stdout.trim();
-          if (!line) {
-            resolve(null);
-            return;
-          }
-
-          const parts = line.split('|');
-          resolve({
-            id: parts[0],
-            userId: parts[1],
-            subject: parts[2],
-            grade: parseInt(parts[3]),
-            topicUz: parts[4],
-            topicRu: parts[5],
-            config: JSON.parse(parts[6]),
-            tasks: JSON.parse(parts[7]),
-            status: parts[8],
-            generatedAt: parts[9],
-            viewCount: parseInt(parts[10] || '0'),
-          });
-        }
-      });
-
-      proc.on('error', (err) => {
-        reject(err);
-      });
-
-      proc.stdin.write(sql);
-      proc.stdin.end();
-    });
+    let worksheet = null;
+    if (line) {
+      const parts = line.split('|');
+      worksheet = {
+        id: parts[0],
+        userId: parts[1],
+        subject: parts[2],
+        grade: parseInt(parts[3]),
+        topicUz: parts[4],
+        topicRu: parts[5],
+        config: JSON.parse(parts[6]),
+        tasks: JSON.parse(parts[7]),
+        status: parts[8],
+        generatedAt: parts[9],
+        viewCount: parseInt(parts[10] || '0'),
+      };
+    }
 
     if (!worksheet) {
       return NextResponse.json(
@@ -244,22 +212,10 @@ export async function GET(
 
     if (!isAdmin && user.subscriptionPlan) {
       const planSql = `SELECT show_watermark FROM subscription_plans WHERE plan_code = '${user.subscriptionPlan}' AND is_active = TRUE LIMIT 1`;
-      const planProc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A'], {
-        encoding: 'utf8',
-        env: { ...process.env, PGCLIENTENCODING: 'UTF8' }
-      });
+      const planResult = await executeSql(planSql);
 
-      const planResult = await new Promise<string>((resolve, reject) => {
-        let stdout = '';
-        planProc.stdout.on('data', (data) => { stdout += data.toString('utf8'); });
-        planProc.on('close', () => resolve(stdout.trim()));
-        planProc.on('error', reject);
-        planProc.stdin.write(planSql);
-        planProc.stdin.end();
-      });
-
-      if (planResult && planResult !== '') {
-        showWatermark = planResult === 't'; // PostgreSQL boolean true = 't'
+      if (planResult && planResult.trim() !== '') {
+        showWatermark = planResult.trim() === 't'; // PostgreSQL boolean true = 't'
       }
     }
 

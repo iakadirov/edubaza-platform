@@ -1,39 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone } from '@/lib/db-users';
-import { spawn } from 'child_process';
+import { executeSql } from '@/lib/db-helper';
 
 // Helper function to execute SQL queries
 async function executeQuery(sql: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A', '-F', '|']);
-
-    let stdout = '';
-    let stderr = '';
-
-    proc.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    proc.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    proc.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`SQL execution failed: ${stderr}`));
-      } else {
-        resolve(stdout.trim());
-      }
-    });
-
-    proc.on('error', (err) => {
-      reject(err);
-    });
-
-    proc.stdin.write(sql);
-    proc.stdin.end();
-  });
+  const stdout = await executeSql(sql, { fieldSeparator: '|' });
+  return stdout.trim();
 }
 
 // GET - Fetch all subscription plans
