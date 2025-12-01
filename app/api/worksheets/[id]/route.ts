@@ -81,9 +81,7 @@ export async function GET(
     }
 
     // Увеличиваем счетчик просмотров
-    const updateProc = spawn('docker', ['exec', '-i', 'edubaza_postgres', 'psql', '-U', 'edubaza', '-d', 'edubaza', '-t', '-A']);
-    updateProc.stdin.write(`UPDATE worksheets SET "viewCount" = "viewCount" + 1 WHERE id = '${worksheetId}';`);
-    updateProc.stdin.end();
+    await executeSql(`UPDATE worksheets SET "viewCount" = "viewCount" + 1 WHERE id = '${worksheetId}';`);
 
     return NextResponse.json({
       success: true,
