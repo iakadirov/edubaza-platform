@@ -36,6 +36,13 @@ export async function GET(request: NextRequest) {
       success: true,
       isAdmin: isAdmin(user),
       role: user.role,
+      user: {
+        id: user.id,
+        phone: user.phone,
+        fullName: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error('Check admin error:', error);

@@ -4,6 +4,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import bcrypt from 'bcryptjs';
+import { executeSql } from './db-helper';
 
 const execAsync = promisify(exec);
 
@@ -42,9 +43,7 @@ export interface User {
 export async function findUserByPhone(phone: string): Promise<User | null> {
   try {
     const sql = `SELECT * FROM users WHERE phone = '${phone}' LIMIT 1;`;
-    const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
-    );
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
     if (!stdout || stdout.trim() === '') {
       return null;
