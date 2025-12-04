@@ -33,11 +33,15 @@ yarn-error.log*
 .env.test
 
 # Security: Prevent accidental commits of sensitive files
+**/production-deployment.md
 **/production-deployment.md.backup
+**/*deploy*.md
+**/*deployment*.md
 **/*secret*
 **/*password*
 **/*apikey*
 **/*token*
+**/SSH_PRIVATE_KEY*
 
 # vercel
 .vercel
