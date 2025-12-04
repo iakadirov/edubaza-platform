@@ -1,16 +1,16 @@
 # 🚀 Production Deployment Guide
 
-**Server:** Hetzner VPS (157.180.73.190)
+**Server:** Hetzner VPS
 **Domain:** https://baza.eduplay.uz
 **Status:** ✅ Deployed
-**Last Updated:** 2025-11-22
+**Last Updated:** 2025-12-05
 
 ---
 
 ## 📋 Server Specifications
 
 - **Provider:** Hetzner Cloud
-- **IP:** 157.180.73.190
+- **IP:** [Contact admin for server IP]
 - **RAM:** 2 GB
 - **Disk:** 40 GB SSD
 - **OS:** Ubuntu 22.04 LTS
@@ -44,12 +44,12 @@ Host: localhost
 Port: 5432
 Database: edubaza
 User: edubaza
-Password: edubaza_secure_2025
+Password: [See .env file on server]
 ```
 
 **Connection String:**
 ```
-postgresql://edubaza:edubaza_secure_2025@localhost:5432/edubaza?schema=public
+postgresql://edubaza:YOUR_PASSWORD@localhost:5432/edubaza?schema=public
 ```
 
 **Tables:**
@@ -97,8 +97,9 @@ PORT=3000
 
 1. **SSH Access:**
    ```bash
-   ssh root@157.180.73.190
-   # Password: EduBaz@2025!
+   ssh root@YOUR_SERVER_IP
+   # Use SSH key authentication (recommended)
+   # Or contact admin for credentials
    ```
 
 2. **Clone Repository:**
@@ -115,10 +116,9 @@ PORT=3000
 
 4. **Setup Database:**
    ```bash
-   # Database already created:
-   # - Database: edubaza
-   # - User: edubaza
-   # - Password: edubaza_secure_2025
+   # Create PostgreSQL database and user
+   # Set strong password in .env file
+   # Run migrations: docker exec -i postgres psql -U edubaza < prisma/init.sql
    ```
 
 5. **Configure Environment:**
