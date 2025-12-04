@@ -69,19 +69,19 @@ postgresql://edubaza:edubaza_secure_2025@localhost:5432/edubaza?schema=public
 
 ```bash
 # Database
-DATABASE_URL="postgresql://edubaza:edubaza_secure_2025@localhost:5432/edubaza?schema=public"
+DATABASE_URL="postgresql://edubaza:your-secure-password@localhost:5432/edubaza?schema=public"
 
 # JWT Authentication
-JWT_SECRET="edubaza_jwt_secret_key_2024_very_secure_change_in_production_32chars"
+JWT_SECRET="your-jwt-secret-key-min-32-characters-long"
 JWT_EXPIRES_IN=30d
 
 # SMS OTP (Eskiz.uz)
-ESKIZ_EMAIL=iakadirov@gmail.com
-ESKIZ_PASSWORD=4eobRTT41AS53Ysor1NkdA6LsgeXRIGg7QIaRCbN
+ESKIZ_EMAIL=your-email@example.com
+ESKIZ_PASSWORD=your-eskiz-password
 ESKIZ_API_URL=https://notify.eskiz.uz/api
 
 # AI Generation (Google Gemini)
-GEMINI_API_KEY=AIzaSyBsbQt6pS1lJNNd8Wkh3j0RvDAeVPR25Ns
+GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.0-flash-exp
 
 # Next.js

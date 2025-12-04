@@ -25,10 +25,19 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# local env files - NEVER COMMIT THESE!
 .env
 .env*.local
 .env.production
+.env.development
+.env.test
+
+# Security: Prevent accidental commits of sensitive files
+**/production-deployment.md.backup
+**/*secret*
+**/*password*
+**/*apikey*
+**/*token*
 
 # vercel
 .vercel
