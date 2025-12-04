@@ -18,7 +18,7 @@
 
 #### Секрет 1: `SERVER_HOST`
 ```
-157.180.73.190
+YOUR_SERVER_IP_ADDRESS
 ```
 
 #### Секрет 2: `SERVER_USER`
@@ -28,13 +28,8 @@ root
 
 #### Секрет 3: `SSH_PRIVATE_KEY`
 ```
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACB35P2/R4eHsAiG+VPHSt5EKwEwQu6KOJBrBOln3j0+sgAAAJi5u+4rubvu
-KwAAAAtzc2gtZWQyNTUxOQAAACB35P2/R4eHsAiG+VPHSt5EKwEwQu6KOJBrBOln3j0+sg
-AAAEAfywaLFqNMRVYbO/6QDY/5s7tsIcDHh5DYvw3OnoYnzHfk/b9Hh4ewCIb5U8dK3kQr
-ATBC7oo4kGsE6WfePT6yAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
------END OPENSSH PRIVATE KEY-----
+YOUR_PRIVATE_SSH_KEY_HERE
+(Get from server: cat ~/.ssh/id_ed25519)
 ```
 
 **ВАЖНО:** Скопируйте приватный ключ ПОЛНОСТЬЮ, включая строки `-----BEGIN` и `-----END`
@@ -77,7 +72,7 @@ git push origin main
 Если нужно вручную задеплоить на сервере:
 
 ```bash
-ssh root@157.180.73.190
+ssh root@YOUR_SERVER_IP
 cd /root/edubaza-platform
 ./deploy.sh
 ```
