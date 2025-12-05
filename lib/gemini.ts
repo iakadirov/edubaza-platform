@@ -241,7 +241,7 @@ export type TaskType =
   | 'MULTIPLE_CHOICE'
   | 'TRUE_FALSE'
   | 'SHORT_ANSWER'
-  | 'FILL_BLANK'
+  | 'FILL_BLANKS'
   | 'MATCHING'
   | 'PROBLEM_SOLVING';
 
@@ -284,7 +284,7 @@ const taskTypeLabels: Record<string, string> = {
   MULTIPLE_CHOICE: 'koʻp javobli test',
   TRUE_FALSE: 'toʻgʻri/notoʻgʻri',
   SHORT_ANSWER: 'qisqa javob',
-  FILL_BLANK: 'boʻsh joyni toʻldirish',
+  FILL_BLANKS: 'boʻsh joyni toʻldirish',
   MATCHING: 'moslashtirish',
   PROBLEM_SOLVING: 'masala yechish',
 };
@@ -693,9 +693,9 @@ function generateMockTasks(params: GenerateTasksParams): Task[] {
         });
         break;
 
-      case 'FILL_BLANK':
+      case 'FILL_BLANKS':
         tasks.push({
-          type: 'FILL_BLANK',
+          type: 'FILL_BLANKS',
           question: `Boʻsh joyni toʻldiring ${i + 1}: "${params.topic}" mavzusida muhim tushuncha ___ hisoblanadi.`,
           correctAnswer: 'asosiy soʻz',
         });

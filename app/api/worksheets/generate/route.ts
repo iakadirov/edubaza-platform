@@ -423,7 +423,27 @@ export async function POST(request: NextRequest) {
       } catch (aiError) {
         console.log('');
         console.error('❌ AI GENERATION FAILED');
-        console.error('   Error:', aiError);
+        console.error('   Error Type:', aiError?.constructor?.name);
+        console.error('   Error Message:', aiError?.message);
+        console.error('   Error Stack:', aiError?.stack);
+
+        // If 100% AI was requested and AI fails, we have no fallback
+        if (dbTaskCount === 0) {
+          console.error('   ⚠️ CRITICAL: 100% AI was requested but AI generation failed');
+          console.error('   Cannot compensate from database (0 DB tasks requested)');
+          console.log('');
+
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'AI yordamida topshiriqlar yaratishda xatolik yuz berdi. Iltimos, keyinroq qayta urinib koʻring yoki AI foizini kamaytirib, bazadan topshiriqlar qoʻshishni tanlang.',
+              error: 'AI generation failed with 100% AI percentage',
+              details: aiError?.message,
+            },
+            { status: 500 }
+          );
+        }
+
         console.error('   Will compensate by fetching more tasks from database');
         console.log('');
         // If AI fails, we'll fetch more from DB to compensate
@@ -509,6 +529,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (tasks.length === 0) {
+      console.error('');
+      console.error('❌ FINAL RESULT: 0 tasks generated');
+      console.error(`   AI Percentage: ${aiPercent}%`);
+      console.error(`   AI Tasks: ${aiTaskCount}`);
+      console.error(`   DB Tasks: ${dbTaskCount}`);
+      console.error('');
+
+      // Specific error message for 100% AI case
+      if (aiPercent === 100) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'AI 100% rejimda topshiriqlar yaratib boʻlmadi. Iltimos, AI foizini kamaytirib, bazadan ham topshiriqlar qoʻshishni tanlang (masalan, 50% AI va 50% Baza).',
+            error: 'AI generation returned 0 tasks with 100% AI percentage',
+          },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json(
         {
           success: false,
@@ -530,7 +569,8 @@ export async function POST(request: NextRequest) {
     const tasksJson = JSON.stringify(tasks).replace(/'/g, "''");
     const debugInfoJson = aiDebugInfo ? JSON.stringify(aiDebugInfo).replace(/'/g, "''") : null;
     const topicEscaped = topic ? topic.replace(/'/g, "''") : (quarter ? `${quarter}-chorak${week ? ` ${week}-hafta` : ''}` : '');
-    const topicIdValue = topicId ? `'${topicId}'` : 'NULL';
+    // Handle topic_id: set to NULL if custom or not a valid UUID
+    const topicIdValue = (topicId && topicId !== 'custom') ? `'${topicId}'` : 'NULL';
     const debugInfoValue = debugInfoJson ? `'${debugInfoJson}'` : 'NULL';
 
     const sql = `INSERT INTO worksheets (id, "userId", subject, grade, "topicUz", "topicRu", topic_id, config, tasks, ai_debug_info, status, "generatedAt", "updatedAt") VALUES (gen_random_uuid()::text, '${user.id}', '${subject}', ${Number(grade)}, '${topicEscaped}', '${topicEscaped}', ${topicIdValue}, '${configJson}', '${tasksJson}', ${debugInfoValue}, 'COMPLETED', NOW(), NOW()) RETURNING id;`;
