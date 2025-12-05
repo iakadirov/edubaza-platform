@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOTP, sendOTP } from '@/lib/sms';
-import { saveOTP, checkRateLimit, incrementRateLimit } from '@/lib/redis';
+import { saveOTP, checkAndIncrementRateLimit } from '@/lib/redis';
 import { findUserByPhone } from '@/lib/db-users';
+import { formatUzbekPhone } from '@/lib/phone-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,28 +17,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Форматируем номер: добавляем +998 если его нет
-    let formattedPhone = phone.trim();
+    // ОПТИМИЗИРОВАНО: Используем централизованную функцию форматирования
+    const phoneValidation = formatUzbekPhone(phone);
 
-    // Убираем все нечисловые символы кроме +
-    formattedPhone = formattedPhone.replace(/[^\d+]/g, '');
-
-    // Добавляем +998 если номер начинается без кода страны
-    if (formattedPhone.match(/^9\d{8}$/)) {
-      formattedPhone = `+998${formattedPhone}`;
-    } else if (formattedPhone.match(/^998\d{9}$/)) {
-      formattedPhone = `+${formattedPhone}`;
-    } else if (!formattedPhone.startsWith('+998')) {
-      formattedPhone = `+998${formattedPhone}`;
-    }
-
-    // Проверяем финальный формат
-    if (!formattedPhone.match(/^\+998\d{9}$/)) {
+    if (!phoneValidation.isValid) {
       return NextResponse.json(
-        { success: false, message: 'Неверный формат номера телефона. Введите 9 цифр (например: 946392125)' },
+        { success: false, message: phoneValidation.error || 'Неверный формат номера телефона' },
         { status: 400 }
       );
     }
+
+    const formattedPhone = phoneValidation.formatted;
 
     // Проверяем существование пользователя
     const existingUser = await findUserByPhone(formattedPhone);
@@ -64,13 +54,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверяем rate limit
-    const canSend = await checkRateLimit(formattedPhone);
-    if (!canSend) {
+    // ОПТИМИЗИРОВАНО: Проверяем и инкрементируем rate limit за одну операцию
+    const rateLimitResult = await checkAndIncrementRateLimit(formattedPhone, 3, 900);
+
+    if (!rateLimitResult.allowed) {
+      const minutesLeft = Math.ceil((rateLimitResult.resetAt - Date.now()) / 60000);
       return NextResponse.json(
         {
           success: false,
-          message: 'Превышен лимит отправки SMS. Попробуйте через 15 минут.'
+          message: `Превышен лимит отправки SMS. Попробуйте через ${minutesLeft} минут.`,
+          data: {
+            attemptsLeft: 0,
+            resetAt: rateLimitResult.resetAt,
+          },
         },
         { status: 429 }
       );
@@ -92,15 +88,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Увеличиваем счётчик rate limit
-    await incrementRateLimit(formattedPhone);
-
     return NextResponse.json({
       success: true,
       message: 'OTP код отправлен на ваш номер',
       data: {
         phone: formattedPhone,
         expiresIn: 300, // 5 минут в секундах
+        attemptsLeft: rateLimitResult.attemptsLeft,
+        resetAt: rateLimitResult.resetAt,
       },
     });
   } catch (error) {

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 import { verifyToken } from '@/lib/jwt';
+import { uploadFile, generateFileKey, deleteFile } from '@/lib/storage';
 
+/**
+ * Universal File Upload API
+ * Supports both local storage and Yandex Cloud (configured via STORAGE_TYPE env var)
+ */
 export async function POST(request: NextRequest) {
   try {
     // Проверка авторизации
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const type = formData.get('type') as string; // 'logo' or 'banner'
+    const type = (formData.get('type') as string) || 'general'; // 'logo', 'banner', 'worksheet', etc.
 
     if (!file) {
       return NextResponse.json(
@@ -34,50 +37,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверка типа файла
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    // Проверка типа файла (расширенный список)
+    const allowedTypes = [
+      // Images
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+      // Documents
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      // Video
+      'video/mp4',
+      'video/webm',
+      // Audio
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+    ];
+
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, message: 'Разрешены только PNG, JPG и SVG файлы' },
+        { success: false, message: `Тип файла не поддерживается: ${file.type}` },
         { status: 400 }
       );
     }
 
-    // Проверка размера файла (5MB макс)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Проверка размера файла (50MB макс для всех, 5MB для изображений)
+    const isImage = file.type.startsWith('image/');
+    const maxSize = isImage ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+
     if (file.size > maxSize) {
+      const maxMB = maxSize / (1024 * 1024);
       return NextResponse.json(
-        { success: false, message: 'Файл слишком большой. Максимум 5MB' },
+        { success: false, message: `Файл слишком большой. Максимум ${maxMB}MB` },
         { status: 400 }
       );
     }
-
-    // Генерация уникального имени файла
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    const extension = file.name.split('.').pop();
-    const fileName = `${type}-${timestamp}-${randomStr}.${extension}`;
 
     // Конвертация файла в Buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Путь для сохранения
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'subjects');
-    const filePath = join(uploadDir, fileName);
+    // Генерация уникального ключа
+    const folder = type === 'logo' || type === 'banner' ? 'subjects' : type;
+    const fileKey = generateFileKey(file.name, folder);
 
-    // Сохранение файла
-    await writeFile(filePath, buffer);
-
-    // URL для доступа к файлу
-    const fileUrl = `/uploads/subjects/${fileName}`;
+    // Загрузка файла (local или cloud - автоматически)
+    const fileUrl = await uploadFile(buffer, fileKey, file.type);
 
     return NextResponse.json({
       success: true,
       message: 'Файл успешно загружен',
       data: {
         url: fileUrl,
-        fileName: fileName,
+        key: fileKey,
+        fileName: file.name,
         size: file.size,
         type: file.type,
       },
@@ -95,7 +113,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - удаление файла
+// DELETE - удаление файла (universal: local + cloud)
 export async function DELETE(request: NextRequest) {
   try {
     // Проверка авторизации
@@ -117,25 +135,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const fileUrl = searchParams.get('url');
+    const fileKey = searchParams.get('key'); // e.g., 'worksheets/123_abc_file.pdf'
 
-    if (!fileUrl || !fileUrl.startsWith('/uploads/subjects/')) {
+    if (!fileKey) {
       return NextResponse.json(
-        { success: false, message: 'Некорректный URL файла' },
+        { success: false, message: 'Не указан ключ файла' },
         { status: 400 }
       );
     }
 
-    // Удаление файла
-    const fs = require('fs').promises;
-    const filePath = join(process.cwd(), 'public', fileUrl);
-
-    try {
-      await fs.unlink(filePath);
-    } catch (err) {
-      // Файл может не существовать - это нормально
-      console.log('File not found or already deleted:', filePath);
-    }
+    // Удаление файла (автоматически выбирается local или cloud)
+    await deleteFile(fileKey);
 
     return NextResponse.json({
       success: true,

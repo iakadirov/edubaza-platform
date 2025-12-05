@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkUserPassword, updateLastLogin } from '@/lib/db-users-extended';
+import { checkUserPasswordOptimized, updateLastLogin } from '@/lib/db-users-extended';
 import { generateToken } from '@/lib/jwt';
-import { createSession, checkSessionLimit, deleteOldestSession } from '@/lib/sessions';
+import { createSessionOptimized } from '@/lib/sessions';
+import { formatUzbekPhone } from '@/lib/phone-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,8 +19,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Проверка пароля и получение пользователя
-    const user = await checkUserPassword(phone, password);
+    // 2. Форматирование и валидация номера телефона
+    const phoneValidation = formatUzbekPhone(phone);
+    if (!phoneValidation.isValid) {
+      return NextResponse.json(
+        {
+          error: phoneValidation.error || 'Неверный формат номера телефона',
+        },
+        { status: 400 }
+      );
+    }
+
+    // 3. ОПТИМИЗИРОВАНО: Проверка пароля и получение пользователя (1 запрос вместо 2)
+    const user = await checkUserPasswordOptimized(phoneValidation.formatted, password);
 
     if (!user) {
       return NextResponse.json(
@@ -30,10 +42,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Проверка что аккаунт активен
+    // 4. Проверка что аккаунт активен
     // (можно добавить проверку isActive если нужно)
 
-    // 4. Генерация JWT токена
+    // 5. Генерация JWT токена
     const expiresIn = rememberMe ? '30d' : '24h';
     const token = generateToken(
       {
@@ -45,15 +57,7 @@ export async function POST(request: NextRequest) {
       expiresIn
     );
 
-    // 5. Проверка лимита сессий
-    const sessionCheck = await checkSessionLimit(user.id, user.subscriptionPlan);
-
-    if (sessionCheck.exceeded) {
-      // Автоматически удалить самую старую сессию
-      await deleteOldestSession(user.id);
-    }
-
-    // 6. Создание новой сессии
+    // 6. ОПТИМИЗИРОВАНО: Создание сессии с автоматическим управлением лимитами (1 запрос вместо 3)
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] ||
                      request.headers.get('x-real-ip') ||
@@ -61,13 +65,16 @@ export async function POST(request: NextRequest) {
 
     const expiresInSeconds = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
 
-    await createSession({
-      userId: user.id,
-      token,
-      userAgent,
-      ipAddress,
-      expiresIn: expiresInSeconds,
-    });
+    await createSessionOptimized(
+      {
+        userId: user.id,
+        token,
+        userAgent,
+        ipAddress,
+        expiresIn: expiresInSeconds,
+      },
+      user.subscriptionPlan
+    );
 
     // 7. Обновить время последнего входа
     await updateLastLogin(user.id);

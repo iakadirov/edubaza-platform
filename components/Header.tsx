@@ -3,14 +3,69 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import AuthModal from '@/components/auth/AuthModal';
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password'>('login');
 
   // Мега-меню данные
   const megaMenus: Record<string, { title: string; items: { name: string; href: string; description: string }[] }[]> = {
+    vositalar: [
+      {
+        title: 'Dars rejalashtirish',
+        items: [
+          { name: 'Dars rejasi generatori', href: '/tools/lesson-planner', description: 'AI bilan dars rejasi yaratish' },
+          { name: 'Kalendar-tematik reja', href: '/tools/calendar-plan', description: 'Yillik reja tuzish' },
+          { name: 'Dars ishlanmalari', href: '/tools/lesson-templates', description: 'Tayyor shablonlar' },
+        ],
+      },
+      {
+        title: 'Baholash va nazorat',
+        items: [
+          { name: 'Test generatori', href: '/tools/test-generator', description: 'Testlar yaratish AI yordamida' },
+          { name: 'Topshiriq yaratuvchi', href: '/tools/assignment-creator', description: 'Uy vazifalar va mashqlar' },
+          { name: 'Baholar jurnali', href: '/tools/gradebook', description: 'Raqamli jurnal' },
+        ],
+      },
+      {
+        title: 'Vizual vositalar',
+        items: [
+          { name: 'Infografika yaratish', href: '/tools/infographic', description: 'Vizual materiallar dizayni' },
+          { name: 'Slayd generator', href: '/tools/slide-generator', description: 'Taqdimotlar yaratish' },
+          { name: 'Didaktik materiallar', href: '/tools/didactic', description: 'Kartochka va plakatlar' },
+        ],
+      },
+    ],
+    yechimlar: [
+      {
+        title: 'Boshlang\'ich ta\'lim',
+        items: [
+          { name: 'O\'qishni o\'rgatish', href: '/solutions/primary/literacy', description: 'Savodxonlik metodlari' },
+          { name: 'Matematik tayyorgarlik', href: '/solutions/primary/math', description: 'Hisoblashni o\'rgatish' },
+          { name: 'Ijodiy rivojlantirish', href: '/solutions/primary/creative', description: 'San\'at va ijod' },
+        ],
+      },
+      {
+        title: 'O\'rta ta\'lim',
+        items: [
+          { name: 'Fan darslari', href: '/solutions/secondary/science', description: 'Fizika, kimyo, biologiya' },
+          { name: 'Til va adabiyot', href: '/solutions/secondary/language', description: 'Ona tili va chet tillari' },
+          { name: 'Raqamli savodxonlik', href: '/solutions/secondary/digital', description: 'IT va dasturlash' },
+        ],
+      },
+      {
+        title: 'Maxsus ehtiyojlar',
+        items: [
+          { name: 'Inklyuziv ta\'lim', href: '/solutions/special/inclusive', description: 'Har bir bola uchun' },
+          { name: 'Iqtidorlilarni rivojlantirish', href: '/solutions/special/gifted', description: 'Olimpiadaga tayyorgarlik' },
+          { name: 'Qo\'shimcha yordam', href: '/solutions/special/support', description: 'Qiyinchilikdagi o\'quvchilar' },
+        ],
+      },
+    ],
     textbooks: [
       {
         title: 'Boshlang\'ich sinf',
@@ -155,16 +210,30 @@ export default function Header() {
           {/* Divider */}
           <div className="h-6 w-px bg-gray-200"></div>
 
+          {/* Register Button - Text Only */}
+          <button
+            onClick={() => {
+              setAuthMode('register');
+              setIsAuthModalOpen(true);
+            }}
+            className="text-base font-medium text-gray-700 hover:text-[#1761FF] transition-colors duration-200 whitespace-nowrap"
+          >
+            Roʻyxatdan oʻtish
+          </button>
+
           {/* Login Button with Icon */}
-          <Link
-            href="/auth/login"
+          <button
+            onClick={() => {
+              setAuthMode('login');
+              setIsAuthModalOpen(true);
+            }}
             className="group flex items-center justify-center gap-2 px-5 py-2.5 min-w-[100px] h-[43px] bg-gradient-to-r from-[#1761FF] to-[#1451dd] hover:from-[#1451dd] hover:to-[#0d3fb8] rounded-xl text-base font-semibold text-white transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
             <span>Kirish</span>
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -173,27 +242,28 @@ export default function Header() {
         <div className="flex justify-between items-center px-20 lg:px-40 xl:px-80 h-[56px]">
           {/* Categories */}
           <nav className="flex items-center gap-8">
-            {/* Darsliklar with Dropdown Indicator */}
+            {/* Vositalar with Dropdown Indicator */}
             <div
               className="relative h-full flex items-center"
-              onMouseEnter={() => setActiveMenu('textbooks')}
+              onMouseEnter={() => setActiveMenu('vositalar')}
               onMouseLeave={() => setActiveMenu(null)}
             >
               <Link
-                href="/textbooks"
+                href="/tools"
                 className={`flex items-center gap-1.5 py-4 px-1 text-[15px] font-medium transition-all duration-200 ${
-                  activeMenu === 'textbooks'
+                  activeMenu === 'vositalar'
                     ? 'text-[#1761FF]'
                     : 'text-gray-700 hover:text-[#1761FF]'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>Darsliklar</span>
+                <span>Vositalar</span>
                 <svg
                   className={`w-4 h-4 transition-transform duration-200 ${
-                    activeMenu === 'textbooks' ? 'rotate-180' : ''
+                    activeMenu === 'vositalar' ? 'rotate-180' : ''
                   }`}
                   fill="none"
                   stroke="currentColor"
@@ -205,7 +275,44 @@ export default function Header() {
               {/* Active Indicator */}
               <div
                 className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#1761FF] to-[#1451dd] transition-opacity duration-200 ${
-                  activeMenu === 'textbooks' ? 'opacity-100' : 'opacity-0'
+                  activeMenu === 'vositalar' ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </div>
+
+            {/* Yechimlar with Dropdown Indicator */}
+            <div
+              className="relative h-full flex items-center"
+              onMouseEnter={() => setActiveMenu('yechimlar')}
+              onMouseLeave={() => setActiveMenu(null)}
+            >
+              <Link
+                href="/solutions"
+                className={`flex items-center gap-1.5 py-4 px-1 text-[15px] font-medium transition-all duration-200 ${
+                  activeMenu === 'yechimlar'
+                    ? 'text-[#1761FF]'
+                    : 'text-gray-700 hover:text-[#1761FF]'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Yechimlar</span>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    activeMenu === 'yechimlar' ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </Link>
+              {/* Active Indicator */}
+              <div
+                className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#1761FF] to-[#1451dd] transition-opacity duration-200 ${
+                  activeMenu === 'yechimlar' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
             </div>
@@ -246,40 +353,6 @@ export default function Header() {
                 }`}
               />
             </div>
-
-            {/* Tarqatma materiallar */}
-            <Link
-              href="/materials"
-              className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200 whitespace-nowrap"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Tarqatma materiallar</span>
-            </Link>
-
-            {/* Taqdimotlar */}
-            <Link
-              href="/presentations"
-              className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-              </svg>
-              <span>Taqdimotlar</span>
-            </Link>
-
-            {/* Kurslar */}
-            <Link
-              href="/courses"
-              className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Kurslar</span>
-            </Link>
           </nav>
 
           {/* Right Side - Help/Support */}
@@ -383,6 +456,13 @@ export default function Header() {
           </div>
         )}
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </header>
   );
 }

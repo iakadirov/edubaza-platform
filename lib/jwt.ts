@@ -6,12 +6,19 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
 export interface JWTPayload {
   userId: string;
   phone: string;
-  subscriptionPlan: 'FREE' | 'PRO' | 'SCHOOL';
+  role?: string;
+  subscriptionPlan: 'FREE' | 'PRO' | 'SCHOOL' | 'BEMINNAT';
 }
 
-export function generateToken(payload: JWTPayload): string {
+/**
+ * Генерирует JWT токен
+ * @param payload - данные для токена
+ * @param expiresIn - срок действия токена (например: '24h', '30d')
+ * @returns JWT токен
+ */
+export function generateToken(payload: JWTPayload, expiresIn?: string): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: expiresIn || JWT_EXPIRES_IN,
   });
 }
 

@@ -336,6 +336,66 @@ export async function checkUserPassword(phone: string, password: string): Promis
   }
 }
 
+/**
+ * ОПТИМИЗИРОВАННАЯ ВЕРСИЯ: Проверить пароль пользователя
+ * Выполняет проверку в ОДНОМ SQL-запросе вместо двух
+ *
+ * @param phone - номер телефона
+ * @param password - пароль для проверки
+ * @returns пользователь если пароль верный, иначе null
+ */
+export async function checkUserPasswordOptimized(phone: string, password: string): Promise<User | null> {
+  try {
+    const escapedPhone = phone.replace(/'/g, "''");
+
+    // Один запрос для получения пользователя И password_hash
+    const sql = `
+      SELECT
+        id, phone, name, email, "subscriptionPlan", "subscriptionExpiresAt", "subscriptionStartedAt",
+        limits, usage, "createdAt", "updatedAt", "lastLoginAt", "isActive", specialty, school,
+        role, first_name, last_name, telegram_id, telegram_username, telegram_photo_url,
+        password_hash
+      FROM users
+      WHERE phone = '${escapedPhone}'
+      LIMIT 1;
+    `;
+
+    const stdout = await executeSql(sql, { fieldSeparator: '|' });
+
+    if (!stdout || stdout.trim() === '') {
+      return null;
+    }
+
+    // Разбираем результат
+    const parts = stdout.trim().split('|');
+
+    if (parts.length < 22) {
+      console.error('Unexpected number of columns in checkUserPasswordOptimized');
+      return null;
+    }
+
+    const passwordHash = parts[21]; // password_hash - последняя колонка
+
+    if (!passwordHash || passwordHash === '') {
+      return null; // Пароль не установлен
+    }
+
+    // Проверяем пароль
+    const isValid = await verifyPassword(password, passwordHash);
+
+    if (!isValid) {
+      return null;
+    }
+
+    // Парсим пользователя (используем первые 21 колонку, без password_hash)
+    const userRow = parts.slice(0, 21).join('|');
+    return parseUser(userRow);
+  } catch (error) {
+    console.error('Check user password optimized error:', error);
+    return null;
+  }
+}
+
 // Обновить время последнего входа
 export async function updateLastLogin(userId: string): Promise<boolean> {
   try {

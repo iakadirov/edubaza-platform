@@ -14,8 +14,8 @@ interface PasswordInputProps {
 export default function PasswordInput({
   value,
   onChange,
-  label = 'Пароль',
-  placeholder = 'Введите пароль',
+  label = 'Parol',
+  placeholder = 'Parolni kiriting',
   showStrength = true,
   required = false,
 }: PasswordInputProps) {
@@ -47,11 +47,11 @@ export default function PasswordInput({
     const percentage = (score / maxScore) * 100;
 
     if (percentage < 33) {
-      return { score: percentage, label: 'Слабый', color: 'bg-red-500' };
+      return { score: percentage, label: 'Zaif', color: 'bg-red-500' };
     } else if (percentage < 66) {
-      return { score: percentage, label: 'Средний', color: 'bg-yellow-500' };
+      return { score: percentage, label: 'Oʻrtacha', color: 'bg-yellow-500' };
     } else {
-      return { score: percentage, label: 'Надёжный', color: 'bg-green-500' };
+      return { score: percentage, label: 'Ishonchli', color: 'bg-green-500' };
     }
   };
 
@@ -118,10 +118,10 @@ export default function PasswordInput({
       {showStrength && value.length > 0 && (
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Сила пароля:</span>
+            <span className="text-gray-600">Parol kuchi:</span>
             <span className={`font-medium ${
-              strength.label === 'Слабый' ? 'text-red-600' :
-              strength.label === 'Средний' ? 'text-yellow-600' :
+              strength.label === 'Zaif' ? 'text-red-600' :
+              strength.label === 'Oʻrtacha' ? 'text-yellow-600' :
               'text-green-600'
             }`}>
               {strength.label}
@@ -135,7 +135,7 @@ export default function PasswordInput({
           </div>
           {value.length < 6 && (
             <p className="text-xs text-red-600">
-              Минимум 6 символов
+              Kamida 6 ta belgi
             </p>
           )}
         </div>

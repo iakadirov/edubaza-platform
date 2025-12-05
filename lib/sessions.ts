@@ -100,6 +100,85 @@ export async function createSession(params: CreateSessionParams): Promise<Sessio
   }
 }
 
+/**
+ * ОПТИМИЗИРОВАННАЯ ВЕРСИЯ: Создать сессию с автоматическим управлением лимитами
+ * Выполняет ВСЕ операции в ОДНОМ SQL-запросе:
+ * 1. Проверяет количество активных сессий
+ * 2. Удаляет самую старую если превышен лимит
+ * 3. Создаёт новую сессию
+ *
+ * @param params - параметры создания сессии
+ * @param subscriptionPlan - план подписки для определения лимита
+ * @returns созданная сессия или null
+ */
+export async function createSessionOptimized(
+  params: CreateSessionParams,
+  subscriptionPlan: string
+): Promise<Session | null> {
+  const { userId, token, userAgent, ipAddress, expiresIn } = params;
+
+  const tokenHash = hashToken(token);
+  const deviceInfo = parseUserAgent(userAgent);
+  const expiresAt = new Date(Date.now() + expiresIn * 1000);
+  const sessionLimit = getSessionLimit(subscriptionPlan);
+
+  try {
+    // Один SQL запрос вместо трёх:
+    // 1. CTE для подсчёта активных сессий
+    // 2. CTE для удаления старой сессии если нужно
+    // 3. INSERT новой сессии
+    const query = `
+      WITH active_sessions AS (
+        SELECT COUNT(*) as session_count
+        FROM user_sessions
+        WHERE user_id = '${userId}' AND is_active = true AND expires_at > NOW()
+      ),
+      delete_old AS (
+        UPDATE user_sessions
+        SET is_active = false
+        WHERE id = (
+          SELECT id FROM user_sessions
+          WHERE user_id = '${userId}' AND is_active = true
+          ORDER BY last_active ASC
+          LIMIT 1
+        )
+        AND (SELECT session_count FROM active_sessions) >= ${sessionLimit}
+        RETURNING id
+      )
+      INSERT INTO user_sessions (
+        user_id, token_hash, device_info, ip_address, expires_at
+      ) VALUES (
+        '${userId}',
+        '${tokenHash}',
+        '${JSON.stringify(deviceInfo).replace(/'/g, "''")}',
+        ${ipAddress ? `'${ipAddress}'` : 'NULL'},
+        '${expiresAt.toISOString()}'
+      )
+      RETURNING *
+    `;
+
+    const result = await executeQuery(query);
+
+    if (!result) return null;
+
+    return {
+      id: result.id,
+      userId: result.user_id,
+      tokenHash: result.token_hash,
+      deviceInfo: result.device_info,
+      ipAddress: result.ip_address,
+      location: result.location,
+      createdAt: new Date(result.created_at),
+      lastActive: new Date(result.last_active),
+      expiresAt: new Date(result.expires_at),
+      isActive: result.is_active,
+    };
+  } catch (error) {
+    console.error('Error creating session optimized:', error);
+    return null;
+  }
+}
+
 // Получить все активные сессии пользователя
 export async function getUserSessions(userId: string): Promise<Session[]> {
   try {
