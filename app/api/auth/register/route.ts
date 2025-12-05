@@ -83,6 +83,16 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Создание пользователя
+    console.log('Creating user with params:', {
+      phone,
+      firstName,
+      lastName,
+      role,
+      specialty: role === 'TEACHER' ? specialty : undefined,
+      school: role === 'TEACHER' ? school : undefined,
+      hasPassword: !!password,
+    });
+
     const user = await createUserExtended({
       phone,
       firstName,
@@ -94,13 +104,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
+      console.error('createUserExtended returned null for phone:', phone);
       return NextResponse.json(
         {
-          error: 'Ошибка создания пользователя',
+          error: 'Ошибка создания пользователя. Проверьте корректность данных.',
         },
         { status: 500 }
       );
     }
+
+    console.log('User created successfully:', { id: user.id, phone: user.phone, role: user.role });
 
     // 8. Генерация JWT токена
     const expiresIn = rememberMe ? '30d' : '24h';
