@@ -84,24 +84,37 @@ export async function POST(request: NextRequest) {
 
     // 5. Если пользователь не найден - создаём нового
     if (!user) {
-      const newUser = await createUserExtended({
-        phone: `+998${telegramData.id}`, // Временный номер (можно обновить позже)
-        firstName: telegramData.first_name,
-        lastName: telegramData.last_name,
-        role: 'STUDENT', // По умолчанию студент
-        telegramId: telegramData.id,
-        telegramUsername: telegramData.username,
-        telegramPhotoUrl: telegramData.photo_url,
-      });
+      // Создаём уникальный "телефон" для Telegram-only пользователей
+      // Формат: +tg{telegram_id} - гарантированно уникален и не конфликтует с реальными номерами
+      const virtualPhone = `+tg${telegramData.id}`;
 
-      if (!newUser) {
+      try {
+        const newUser = await createUserExtended({
+          phone: virtualPhone,
+          firstName: telegramData.first_name,
+          lastName: telegramData.last_name,
+          role: 'STUDENT', // По умолчанию студент
+          telegramId: telegramData.id,
+          telegramUsername: telegramData.username,
+          telegramPhotoUrl: telegramData.photo_url,
+        });
+
+        if (!newUser) {
+          console.error('createUserExtended returned null');
+          return NextResponse.json(
+            { error: 'Foydalanuvchi yaratishda xatolik' },
+            { status: 500 }
+          );
+        }
+
+        user = newUser;
+      } catch (createError) {
+        console.error('Error creating Telegram user:', createError);
         return NextResponse.json(
-          { error: 'Foydalanuvchi yaratishda xatolik' },
+          { error: 'Foydalanuvchi yaratishda xatolik', details: createError instanceof Error ? createError.message : 'Unknown error' },
           { status: 500 }
         );
       }
-
-      user = newUser;
     } else {
       // 6. Обновляем Telegram данные если они изменились
       await updateUserProfileExtended(user.id, {
