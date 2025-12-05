@@ -6,7 +6,7 @@ import PhoneInput from './PhoneInput';
 import PasswordInput from './PasswordInput';
 import RoleSelector, { UserRole } from './RoleSelector';
 import SpecialtySelector, { TeacherSpecialty } from './SpecialtySelector';
-import TelegramLoginButton from './TelegramLoginButton';
+// import TelegramLoginButton from './TelegramLoginButton'; // Временно отключено
 
 type AuthMode = 'login' | 'register' | 'forgot-password';
 type RegisterStep = 'phone' | 'otp' | 'profile';
@@ -320,7 +320,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 {loading ? 'Kirilmoqda...' : 'Kirish'}
               </button>
 
-              <div className="relative my-6">
+              {/* Временно отключено: Telegram авторизация */}
+              {/* <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300"></div>
                 </div>
@@ -329,12 +330,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 </div>
               </div>
 
-              {/* Telegram Login Widget */}
               <TelegramLoginButton
                 onAuth={() => {
                   onClose();
                 }}
-              />
+              /> */}
 
               <div className="text-center text-sm text-gray-600">
                 Akkauntingiz yoʻqmi?{' '}
