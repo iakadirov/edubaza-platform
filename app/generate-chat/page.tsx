@@ -925,82 +925,83 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
 
                     {/* Topics List */}
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {topics.length > 0 ? (
-                        <>
-                          {topics
-                            .filter((topic) => {
-                              const query = topicSearchQuery.toLowerCase();
-                              return (
-                                topic.titleUz.toLowerCase().includes(query) ||
-                                (topic.quarter && topic.quarter.toString().includes(query)) ||
-                                (topic.weekNumber && topic.weekNumber.toString().includes(query))
-                              );
-                            })
-                            .map((topic) => (
-                              <button
-                                key={topic.id}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedTopic(topic);
-                                  setTopicSearchQuery('');
-                                  setActiveVariable(null);
-                                }}
-                                className={`w-full p-4 rounded-xl text-left transition-all border-2 ${
-                                  selectedTopic?.id === topic.id
-                                    ? 'bg-green-50 border-green-600 shadow-md'
-                                    : 'bg-white border-gray-200 hover:border-green-300 hover:bg-green-50'
-                                }`}
-                              >
-                                <div className="font-medium text-gray-800">{topic.titleUz}</div>
-                                {topic.quarter && topic.weekNumber && (
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                      <Icon icon="solar:calendar-bold-duotone" className="text-sm" />
-                                      {topic.quarter}-chorak
-                                    </span>
-                                    <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                                      <Icon icon="solar:clock-circle-bold-duotone" className="text-sm" />
-                                      {topic.weekNumber}-hafta
-                                    </span>
-                                  </div>
-                                )}
-                              </button>
-                            ))}
-
-                          {/* Custom Topic Option */}
-                          {topicSearchQuery && topics.filter((topic) => {
-                            const query = topicSearchQuery.toLowerCase();
-                            return topic.titleUz.toLowerCase().includes(query);
-                          }).length === 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedTopic({
-                                  id: 'custom',
-                                  titleUz: topicSearchQuery.trim(),
-                                  gradeNumber: selectedGrade,
-                                  quarter: null,
-                                  keywords: [],
-                                });
-                                setTopicSearchQuery('');
-                                setActiveVariable(null);
-                              }}
-                              className="w-full p-4 rounded-xl text-left transition-all border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Icon icon="solar:add-circle-bold-duotone" className="text-xl text-amber-600" />
-                                <div>
-                                  <div className="font-medium text-gray-800">"{topicSearchQuery}" mavzusini ishlatish</div>
-                                  <div className="text-xs text-gray-600 mt-1">Maxsus mavzu (darslikda yo'q)</div>
-                                </div>
+                      {/* Existing Topics */}
+                      {topics.length > 0 && topics
+                        .filter((topic) => {
+                          const query = topicSearchQuery.toLowerCase();
+                          return (
+                            topic.titleUz.toLowerCase().includes(query) ||
+                            (topic.quarter && topic.quarter.toString().includes(query)) ||
+                            (topic.weekNumber && topic.weekNumber.toString().includes(query))
+                          );
+                        })
+                        .map((topic) => (
+                          <button
+                            key={topic.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedTopic(topic);
+                              setTopicSearchQuery('');
+                              setActiveVariable(null);
+                            }}
+                            className={`w-full p-4 rounded-xl text-left transition-all border-2 ${
+                              selectedTopic?.id === topic.id
+                                ? 'bg-green-50 border-green-600 shadow-md'
+                                : 'bg-white border-gray-200 hover:border-green-300 hover:bg-green-50'
+                            }`}
+                          >
+                            <div className="font-medium text-gray-800">{topic.titleUz}</div>
+                            {topic.quarter && topic.weekNumber && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                  <Icon icon="solar:calendar-bold-duotone" className="text-sm" />
+                                  {topic.quarter}-chorak
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                                  <Icon icon="solar:clock-circle-bold-duotone" className="text-sm" />
+                                  {topic.weekNumber}-hafta
+                                </span>
                               </div>
-                            </button>
-                          )}
-                        </>
-                      ) : (
+                            )}
+                          </button>
+                        ))}
+
+                      {/* Custom Topic Option - показываем если ввели текст и нет точного совпадения */}
+                      {topicSearchQuery && (topics.length === 0 || topics.filter((topic) => {
+                        const query = topicSearchQuery.toLowerCase();
+                        return topic.titleUz.toLowerCase().includes(query);
+                      }).length === 0) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTopic({
+                              id: 'custom',
+                              titleUz: topicSearchQuery.trim(),
+                              gradeNumber: selectedGrade,
+                              quarter: null,
+                              keywords: [],
+                            });
+                            setTopicSearchQuery('');
+                            setActiveVariable(null);
+                          }}
+                          className="w-full p-4 rounded-xl text-left transition-all border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon icon="solar:add-circle-bold-duotone" className="text-xl text-amber-600" />
+                            <div>
+                              <div className="font-medium text-gray-800">"{topicSearchQuery}" mavzusini ishlatish</div>
+                              <div className="text-xs text-gray-600 mt-1">Maxsus mavzu (darslikda yoʻq)</div>
+                            </div>
+                          </div>
+                        </button>
+                      )}
+
+                      {/* Loading state - показываем только если темы загружаются И ничего не введено */}
+                      {topics.length === 0 && !topicSearchQuery && (
                         <div className="text-center py-12">
                           <Icon icon="solar:file-search-bold-duotone" className="text-6xl text-gray-300 mx-auto mb-3" />
                           <p className="text-gray-500">Mavzular yuklanmoqda...</p>
+                          <p className="text-xs text-gray-400 mt-2">Yoki yuqoridagi qatorga mavzu nomini yozing</p>
                         </div>
                       )}
                     </div>
