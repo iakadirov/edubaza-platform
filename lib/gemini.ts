@@ -109,11 +109,14 @@ Maxsus talablar:
   ENGLISH_LANGUAGE: `
 --- FAN QOIDALARI: INGLIZ TILI ---
 Rol: ESL Teacher (CEFR Standards).
+MUHIM: All questions, options, and answers MUST be in English!
 Maxsus talablar:
 - CEFR darajasiga rioya qiling (A1-C2)
 - Lug'at: Sinf darajasiga mos
 - Grammatika: Mavzuga mos (Past Simple, Present Perfect)
 - Slengsiz rasmiy til (agar mavzu "Norasmiy muloqot" bo'lmasa)
+- Use simple, age-appropriate English vocabulary
+- Natural English phrasing (not translations from Uzbek)
 `,
 
   HISTORY: `
@@ -314,11 +317,18 @@ function buildPrompt(params: GenerateTasksParams): { systemInstruction: string; 
   const difficultyName = difficultyLabels[difficulty] || difficulty;
   const taskTypesStr = params.taskTypes.map(t => taskTypeLabels[t] || t).join(', ');
 
+  // Для английского языка задачи должны быть на английском
+  const language = subject === 'ENGLISH_LANGUAGE'
+    ? 'English (questions, options, and answers must be in English)'
+    : subject === 'RUSSIAN_LANGUAGE'
+    ? 'Rus tili (lotin yozuvi)'
+    : 'Oʻzbek tili (lotin yozuvi, ʻ modifier U+02BB Oʻ va Gʻ uchun)';
+
   let userPrompt = `*** KONTEKST ***
 Sinf: ${grade}-sinf
 Fan: ${subjectName}
 Mavzu: "${topic}"
-Til: Oʻzbek tili (lotin yozuvi, ʻ modifier U+02BB Oʻ va Gʻ uchun)
+Til: ${language}
 Format: ${format}
 
 Oʻzbekiston konteksti:
