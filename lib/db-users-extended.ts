@@ -140,8 +140,8 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
 
     const passwordHash = password ? await hashPassword(password) : null;
 
-    // Определяем тариф: для учителей BEMINNAT, для остальных FREE
-    const subscriptionPlan = role === 'TEACHER' ? 'BEMINNAT' : 'FREE';
+    // Определяем тариф: для учителей PRO (бесплатно), для остальных FREE
+    const subscriptionPlan = role === 'TEACHER' ? 'PRO' : 'FREE';
 
     const escapedPhone = phone.replace(/'/g, "''");
     const fields = ['id', 'phone', 'role', '\\"subscriptionPlan\\"', '\\"createdAt\\"', '\\"updatedAt\\"'];
