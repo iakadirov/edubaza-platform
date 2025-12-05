@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import RoleSelector, { UserRole } from '@/components/auth/RoleSelector';
+import PhoneInput from '@/components/auth/PhoneInput';
 import PasswordInput from '@/components/auth/PasswordInput';
+import RoleSelector, { UserRole } from '@/components/auth/RoleSelector';
 import SpecialtySelector, { TeacherSpecialty } from '@/components/auth/SpecialtySelector';
 
 type Step = 'phone' | 'otp' | 'profile';
@@ -34,35 +35,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Format phone number: автоматически +998, только цифры, макс 9 цифр
-  const formatPhoneNumber = (value: string) => {
-    // Убираем все кроме цифр
-    const numbers = value.replace(/\D/g, '');
-
-    // Удаляем 998 если пользователь его ввел
-    let localNumber = numbers;
-    if (localNumber.startsWith('998')) {
-      localNumber = localNumber.substring(3);
-    }
-
-    // Берем максимум 9 цифр
-    localNumber = localNumber.substring(0, 9);
-
-    // Форматируем: 94 639 21 25
-    const match = localNumber.match(/^(\d{0,2})(\d{0,3})(\d{0,2})(\d{0,2})$/);
-    if (match) {
-      const parts = [match[1], match[2], match[3], match[4]].filter(Boolean);
-      return `+998 ${parts.join(' ')}`.trim();
-    }
-
-    return `+998 ${localNumber}`.trim();
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setPhone(formatted);
-  };
-
   // Step 1: Send OTP
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +42,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const cleanPhone = phone.replace(/\s/g, '');
+      const cleanPhone = `+998${phone.replace(/\s/g, '')}`;
 
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -101,10 +73,6 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const cleanPhone = phone.replace(/\s/g, '');
-
-      // Проверка OTP без создания пользователя (используем /api/auth/register для финальной регистрации)
-      // Здесь просто проверяем формат кода
       if (!otp || otp.length !== 6) {
         setError('Notoʻgʻri kod');
         setLoading(false);
@@ -149,7 +117,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const cleanPhone = phone.replace(/\s/g, '');
+      const cleanPhone = `+998${phone.replace(/\s/g, '')}`;
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -273,23 +241,16 @@ export default function RegisterPage() {
         {/* Step 1: Phone */}
         {step === 'phone' && (
           <form onSubmit={handleSendOTP} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telefon raqami
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={handlePhoneChange}
-                placeholder="+998 __ ___ __ __"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <PhoneInput
+              value={phone}
+              onChange={setPhone}
+              label="Telefon raqami"
+              required
+            />
 
             <button
               type="submit"
-              disabled={loading || phone.length < 17}
+              disabled={loading || phone.length < 9}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Yuborilmoqda...' : 'Kod olish'}
@@ -321,7 +282,7 @@ export default function RegisterPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="mt-2 text-sm text-gray-600">
-                {phone} raqamiga yuborildi
+                +998 {phone} raqamiga yuborildi
               </p>
             </div>
 

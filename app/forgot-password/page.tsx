@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PhoneInput from '@/components/auth/PhoneInput';
+import PasswordInput from '@/components/auth/PasswordInput';
 
 type Step = 'phone' | 'otp' | 'reset';
 
@@ -16,23 +18,6 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.startsWith('998')) {
-      const match = numbers.match(/^998(\d{0,2})(\d{0,3})(\d{0,2})(\d{0,2})$/);
-      if (match) {
-        return `+998 ${match[1]} ${match[2]} ${match[3]} ${match[4]}`.trim();
-      }
-    }
-    return value;
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setPhone(formatted);
-  };
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +25,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const cleanPhone = phone.replace(/\s/g, '');
+      const cleanPhone = `+998${phone.replace(/\s/g, '')}`;
 
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
@@ -55,10 +40,10 @@ export default function ForgotPasswordPage() {
         setCountdown(300);
         startCountdown();
       } else {
-        setError(data.error || 'Ошибка отправки SMS');
+        setError(data.error || 'SMS yuborishda xatolik');
       }
     } catch (err) {
-      setError('Ошибка сервера');
+      setError('Server xatosi');
     } finally {
       setLoading(false);
     }
@@ -69,7 +54,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     if (otp.length !== 6) {
-      setError('Введите 6-значный код');
+      setError('6 raqamli kodni kiriting');
       return;
     }
 
@@ -81,19 +66,19 @@ export default function ForgotPasswordPage() {
     setError('');
 
     if (newPassword.length < 6) {
-      setError('Пароль должен быть минимум 6 символов');
+      setError('Parol kamida 6 ta belgidan iborat boʻlishi kerak');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setError('Parollar mos kelmayapti');
       return;
     }
 
     setLoading(true);
 
     try {
-      const cleanPhone = phone.replace(/\s/g, '');
+      const cleanPhone = `+998${phone.replace(/\s/g, '')}`;
 
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -108,13 +93,13 @@ export default function ForgotPasswordPage() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Пароль успешно изменен! Сейчас вы будете перенаправлены на страницу входа.');
+        alert('Parol muvaffaqiyatli oʻzgartirildi! Endi tizimga kirishingiz mumkin.');
         router.push('/login');
       } else {
-        setError(data.error || 'Ошибка сброса пароля');
+        setError(data.error || 'Parolni tiklashda xatolik');
       }
     } catch (err) {
-      setError('Ошибка сервера');
+      setError('Server xatosi');
     } finally {
       setLoading(false);
     }
@@ -143,12 +128,12 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Восстановление пароля
+            Parolni tiklash
           </h1>
           <p className="text-gray-600">
-            {step === 'phone' && 'Введите номер телефона'}
-            {step === 'otp' && 'Введите код из SMS'}
-            {step === 'reset' && 'Установите новый пароль'}
+            {step === 'phone' && 'Telefon raqamingizni kiriting'}
+            {step === 'otp' && 'SMS dan kelgan kodni kiriting'}
+            {step === 'reset' && 'Yangi parol oʻylab toping'}
           </p>
         </div>
 
@@ -161,31 +146,24 @@ export default function ForgotPasswordPage() {
         {/* Step 1: Phone */}
         {step === 'phone' && (
           <form onSubmit={handleSendOTP} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Номер телефона
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={handlePhoneChange}
-                placeholder="+998 __ ___ __ __"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <PhoneInput
+              value={phone}
+              onChange={setPhone}
+              label="Telefon raqami"
+              required
+            />
 
             <button
               type="submit"
-              disabled={loading || phone.length < 13}
+              disabled={loading || phone.length < 9}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Отправка...' : 'Получить код'}
+              {loading ? 'Yuborilmoqda...' : 'Kod olish'}
             </button>
 
             <div className="text-center text-sm text-gray-600">
               <a href="/login" className="text-blue-600 hover:underline">
-                ← Назад к входу
+                ← Kirish sahifasiga qaytish
               </a>
             </div>
           </form>
@@ -196,7 +174,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleVerifyOTP} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Код из SMS
+                SMS dan kelgan kod
               </label>
               <input
                 type="text"
@@ -209,13 +187,13 @@ export default function ForgotPasswordPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="mt-2 text-sm text-gray-600">
-                Отправлено на {phone}
+                +998 {phone} raqamiga yuborildi
               </p>
             </div>
 
             {countdown > 0 && (
               <div className="text-center text-sm text-gray-600">
-                Повторить через {formatTime(countdown)}
+                Qayta yuborish: {formatTime(countdown)}
               </div>
             )}
 
@@ -225,7 +203,7 @@ export default function ForgotPasswordPage() {
                 onClick={() => setStep('phone')}
                 className="w-full text-blue-600 hover:underline text-sm font-medium"
               >
-                Отправить код повторно
+                Kodni qayta yuborish
               </button>
             )}
 
@@ -234,7 +212,7 @@ export default function ForgotPasswordPage() {
               disabled={otp.length !== 6}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              Продолжить
+              Davom etish
             </button>
 
             <button
@@ -242,7 +220,7 @@ export default function ForgotPasswordPage() {
               onClick={() => setStep('phone')}
               className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium"
             >
-              ← Изменить номер
+              ← Raqamni oʻzgartirish
             </button>
           </form>
         )}
@@ -250,44 +228,30 @@ export default function ForgotPasswordPage() {
         {/* Step 3: Reset Password */}
         {step === 'reset' && (
           <form onSubmit={handleResetPassword} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Новый пароль
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Минимум 6 символов"
-                  required
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
-            </div>
+            <PasswordInput
+              value={newPassword}
+              onChange={setNewPassword}
+              label="Yangi parol"
+              placeholder="Kamida 6 ta belgi"
+              showStrength
+              required
+            />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Повторите пароль
+                Parolni takrorlang <span className="text-red-500">*</span>
               </label>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Повторите пароль"
+                placeholder="Parolni takrorlang"
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {confirmPassword && newPassword !== confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">
-                  Пароли не совпадают
+                  Parollar mos kelmayapti
                 </p>
               )}
             </div>
@@ -297,7 +261,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Сохранение...' : 'Сбросить пароль'}
+              {loading ? 'Saqlanmoqda...' : 'Parolni tiklash'}
             </button>
           </form>
         )}
