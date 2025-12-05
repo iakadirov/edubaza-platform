@@ -23,7 +23,12 @@ if [ ! -f "package.json" ]; then
 fi
 
 echo -e "${GREEN}[1/6] Pulling latest changes from GitHub...${NC}"
+# Stash any local changes (including package-lock.json)
+git stash
+# Pull latest changes
 git pull origin main
+# Try to apply stashed changes (if any conflicts, keep incoming version)
+git stash pop || git reset --hard HEAD
 
 echo -e "${GREEN}[2/6] Installing dependencies...${NC}"
 npm install
