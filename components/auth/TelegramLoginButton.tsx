@@ -30,7 +30,7 @@ export default function TelegramLoginButton({ onAuth, botUsername }: TelegramLog
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const botName = botUsername || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'edubaza_uz_bot';
+  const botName = botUsername || process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'edubaza_auth_bot';
 
   useEffect(() => {
     // Создаём глобальную callback функцию
