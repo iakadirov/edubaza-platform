@@ -175,7 +175,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <Link
-                href="/generate"
+                href="/generate-chat"
                 className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#1761FF] to-[#1451dd] hover:from-[#1451dd] hover:to-[#0d3fb8] text-white rounded-xl text-lg font-semibold transition-all duration-200 shadow-lg"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -263,7 +263,7 @@ export default function DashboardPage() {
                       Mening materiallarim
                     </h2>
                     <Link
-                      href="/generate"
+                      href="/generate-chat"
                       className="text-[#1761FF] hover:text-[#1451dd] font-semibold text-sm flex items-center gap-1"
                     >
                       <span>Yangi yaratish</span>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
                       </div>
                       <p className="text-gray-600 mb-4 text-lg">Sizda hali materiallar yo'q</p>
                       <Link
-                        href="/generate"
+                        href="/generate-chat"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-[#1761FF] hover:bg-[#1451dd] text-white rounded-xl font-semibold transition-colors"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,7 +424,7 @@ export default function DashboardPage() {
                   </h2>
                   <div className="space-y-2">
                     <Link
-                      href="/generate"
+                      href="/generate-chat"
                       className="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors group"
                     >
                       <div className="w-10 h-10 bg-blue-100 group-hover:bg-[#1761FF] rounded-lg flex items-center justify-center transition-colors">
