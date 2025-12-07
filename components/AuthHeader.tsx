@@ -141,7 +141,7 @@ export default function AuthHeader() {
         <div className="flex items-center gap-8">
           {/* Generate Button */}
           <Link
-            href="/generate"
+            href="/generate-chat"
             className="group flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1761FF] to-[#1451dd] hover:from-[#1451dd] hover:to-[#0d3fb8] text-white rounded-xl text-base font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
