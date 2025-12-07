@@ -49,7 +49,15 @@ import {
 } from '@/components/ui/select';
 
 import type { LibraryBook } from '@/types/library';
-import { formatFileSize } from '@/lib/storage-library';
+
+// Utility function for formatting file size
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}
 
 export default function BooksAdminPage() {
   const router = useRouter();

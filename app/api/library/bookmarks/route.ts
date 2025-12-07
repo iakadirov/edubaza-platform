@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserBookmarks, toggleBookmark } from '@/lib/db-library';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/jwt';
 
 /**
  * GET /api/library/bookmarks

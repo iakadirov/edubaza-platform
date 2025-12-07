@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadingProgress, updateReadingProgress, getRecentlyReadBooks } from '@/lib/db-library';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/jwt';
 
 /**
  * GET /api/library/progress

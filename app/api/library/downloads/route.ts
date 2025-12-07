@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { trackDownload, getUserDownloads, getBookById } from '@/lib/db-library';
 import { getBookDownloadUrl } from '@/lib/storage-library';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/jwt';
 
 /**
  * GET /api/library/downloads

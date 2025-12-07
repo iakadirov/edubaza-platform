@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBooks, createBook } from '@/lib/db-library';
 import { uploadBookPDF, uploadBookCover, generateBookSlug, validatePDFFile, validateCoverImage } from '@/lib/storage-library';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/jwt';
 import type { GetBooksQuery, CreateBookRequest } from '@/types/library';
 
 /**

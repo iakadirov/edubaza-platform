@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBookById, updateBook, deleteBook, incrementBookViews } from '@/lib/db-library';
 import { deleteBookPDF, deleteBookCover } from '@/lib/storage-library';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/jwt';
 import type { UpdateBookRequest } from '@/types/library';
 
 /**
