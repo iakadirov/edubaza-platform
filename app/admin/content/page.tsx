@@ -72,6 +72,12 @@ export default function AdminContentOverviewPage() {
       });
       const tasksData = await tasksResponse.json();
 
+      // Load books stats
+      const booksResponse = await fetch('/api/library/books?limit=1', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const booksData = await booksResponse.json();
+
       if (tasksData.success) {
         const tasks = tasksData.data;
         setStats({
@@ -83,7 +89,7 @@ export default function AdminContentOverviewPage() {
           },
           lessons: { total: 0 }, // TODO: Implement
           resources: { total: 0 }, // TODO: Implement
-          books: { total: 0 }, // TODO: Implement
+          books: { total: booksData.success ? booksData.pagination?.total || 0 : 0 },
         });
       }
     } catch (error) {
@@ -149,8 +155,8 @@ export default function AdminContentOverviewPage() {
       stats: [
         { label: 'Jami', value: stats.books.total, icon: 'solar:book-2-bold' },
       ],
-      available: false,
-      comingSoon: true,
+      available: true,
+      comingSoon: false,
     },
   ];
 
