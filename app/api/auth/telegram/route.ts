@@ -88,6 +88,14 @@ export async function POST(request: NextRequest) {
       // Формат: +tg{telegram_id} - гарантированно уникален и не конфликтует с реальными номерами
       const virtualPhone = `+tg${telegramData.id}`;
 
+      console.log('Creating new Telegram user:', {
+        virtualPhone,
+        telegramId: telegramData.id,
+        firstName: telegramData.first_name,
+        lastName: telegramData.last_name,
+        username: telegramData.username,
+      });
+
       try {
         const newUser = await createUserExtended({
           phone: virtualPhone,
