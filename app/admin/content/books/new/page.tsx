@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Upload, FileText, ImagePlus, Loader2 } from 'lucide-react';
+import { Upload, FileText, ImagePlus, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+
+import { PageHeader } from '@/components/admin/PageHeader';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -148,23 +150,13 @@ export default function NewBookPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Yangi kitob qo'shish</h1>
-          <p className="text-muted-foreground">
-            Kutubxonaga yangi kitob qo'shish
-          </p>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        icon="solar:book-bookmark-bold-duotone"
+        title="Yangi kitob qo'shish"
+        subtitle="Kutubxonaga yangi kitob qo'shish"
+        backHref="/admin/content/books"
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -626,6 +618,6 @@ export default function NewBookPage() {
           </div>
         </form>
       </Form>
-    </div>
+    </>
   );
 }

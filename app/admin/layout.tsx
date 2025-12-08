@@ -83,33 +83,46 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex" style={{ background: '#F4F4F6' }}>
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
-        <div className="sticky top-0 h-screen flex flex-col">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <Link href="/dashboard" className="group text-blue-600 hover:text-blue-700 text-sm flex items-center gap-2 transition-colors">
-              <Icon icon="solar:arrow-left-line-duotone" className="text-base group-hover:hidden" />
-              <Icon icon="solar:arrow-left-bold-duotone" className="text-base hidden group-hover:block" />
-              <span>Bosh sahifaga</span>
+      <aside className="w-[280px] flex-shrink-0 p-5">
+        <div className="h-full flex flex-col">
+          {/* Logo & Brand */}
+          <div className="px-4 py-6">
+            <Link href="/dashboard" className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <Icon icon="solar:book-bold" className="text-white text-2xl" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">Edubaza</h1>
+                <p className="text-xs text-gray-500">Admin Panel</p>
+              </div>
             </Link>
-            <h1 className="text-xl font-bold text-gray-900 mt-3">
-              Admin Panel
-            </h1>
-            {user && (
-              <p className="text-xs text-gray-500 mt-1">
-                {user.fullName || user.phone}
-              </p>
-            )}
           </div>
 
+          {/* User Info */}
+          {user && (
+            <div className="mx-4 mb-6 p-3 bg-white rounded-xl border border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                  {(user.fullName || user.phone || 'A').charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user.fullName || user.phone}
+                  </p>
+                  <p className="text-xs text-gray-500">Administrator</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4">
+          <nav className="flex-1 overflow-y-auto px-2">
             <div className="space-y-6">
               {menuItems.map((group) => (
                 <div key={group.title}>
-                  <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                     {group.title}
                   </h3>
                   <div className="space-y-1">
@@ -120,17 +133,19 @@ export default function AdminLayout({
                           key={item.href}
                           href={item.href}
                           className={`
-                            group w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 block
+                            group w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-3
                             ${
                               isActive
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'text-gray-700 hover:bg-gray-50'
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                : 'text-gray-700 hover:bg-white hover:shadow-sm'
                             }
                           `}
                         >
                           <Icon
-                            icon={isActive ? item.activeIcon : item.icon}
-                            className={`text-lg transition-transform group-hover:scale-110 ${isActive ? 'text-blue-600' : 'text-gray-500'}`}
+                            icon={item.icon.replace('line-duotone', 'bold-duotone')}
+                            className={`text-xl transition-transform group-hover:scale-110 ${
+                              isActive ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'
+                            }`}
                           />
                           <span>{item.label}</span>
                         </Link>
@@ -143,20 +158,29 @@ export default function AdminLayout({
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <div className="px-2 pt-4 mt-4 border-t border-gray-200">
             <Link
               href="/dashboard"
-              className="block text-center px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+              className="group w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm rounded-xl transition-all"
             >
-              Adminkadan chiqish
+              <Icon
+                icon="solar:logout-2-bold-duotone"
+                className="text-xl text-gray-400 group-hover:text-red-500 transition-colors"
+              />
+              <span>Bosh sahifaga qaytish</span>
             </Link>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
+      <main className="flex-1 overflow-y-auto p-4">
+        <div
+          className="bg-white rounded-xl shadow-sm min-h-full"
+          style={{ boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)', padding: '1.5rem' }}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -14,6 +14,7 @@ import {
   EssayFormComponent
 } from '../ContentForms';
 import MathRenderer from '@/components/MathRenderer';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 type TaskSubType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'FILL_BLANKS' | 'MATCHING' | 'ESSAY' | 'LONG_ANSWER';
 
@@ -369,54 +370,37 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/admin/content"
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <Icon icon="solar:arrow-left-bold-duotone" className="text-2xl" />
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                  <Icon icon="solar:document-text-bold-duotone" className="text-blue-600" />
-                  Topshiriqlar
-                </h1>
-                <p className="text-gray-600 mt-1">Barcha test savollari va topshiriqlar</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/admin/content/import-json"
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                <Icon icon="solar:import-bold-duotone" className="text-xl" />
-                <span>Import</span>
-              </Link>
-              <button
-                onClick={openAddModal}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                <Icon icon="solar:add-circle-bold-duotone" className="text-xl" />
-                <span>Yangi qoʻshish</span>
-              </button>
-            </div>
+    <>
+      <PageHeader
+        icon="solar:document-text-bold-duotone"
+        title="Topshiriqlar"
+        subtitle="Barcha test savollari va topshiriqlar"
+        backHref="/admin/content"
+        actions={
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/content/import-json"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <Icon icon="solar:import-bold-duotone" className="text-xl" />
+              <span>Import</span>
+            </Link>
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <Icon icon="solar:add-circle-bold-duotone" className="text-xl" />
+              <span>Yangi qoʻshish</span>
+            </button>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Summary Stats */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Jami topshiriqlar: {tasks.length}</h2>
-              <p className="text-sm text-gray-600 mt-1">Filtrlangan: {filteredTasks.length}</p>
+        }
+      />
+      {/* Summary Stats */}
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Jami topshiriqlar: {tasks.length}</h2>
+            <p className="text-sm text-muted-foreground mt-1">Filtrlangan: {filteredTasks.length}</p>
             </div>
             <Icon icon="solar:chart-bold-duotone" className="text-4xl text-blue-600" />
           </div>
@@ -724,7 +708,6 @@ export default function TasksPage() {
             </div>
           )}
         </div>
-      </div>
 
       {/* View/Edit Task Modal */}
       {viewTask && (
@@ -1010,6 +993,6 @@ export default function TasksPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

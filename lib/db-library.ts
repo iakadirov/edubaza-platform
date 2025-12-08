@@ -111,6 +111,164 @@ export async function getCategoryBySlug(slug: string): Promise<LibraryCategory |
   return result.rows[0] || null;
 }
 
+/**
+ * Create a new category
+ * @param data - Category creation data
+ * @returns Created category
+ */
+export async function createCategory(data: CreateCategoryRequest): Promise<LibraryCategory> {
+  const query = `
+    INSERT INTO library_categories (
+      name_uz,
+      name_ru,
+      name_en,
+      slug,
+      description_uz,
+      parent_category_id,
+      linked_subject_id,
+      linked_grade,
+      category_type,
+      icon,
+      sort_order
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    RETURNING
+      id,
+      name_uz as "nameUz",
+      name_ru as "nameRu",
+      name_en as "nameEn",
+      slug,
+      description_uz as "descriptionUz",
+      parent_category_id as "parentCategoryId",
+      linked_subject_id as "linkedSubjectId",
+      linked_grade as "linkedGrade",
+      category_type as "categoryType",
+      icon,
+      sort_order as "sortOrder",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+  `;
+
+  const values = [
+    data.nameUz,
+    data.nameRu || null,
+    data.nameEn || null,
+    data.slug,
+    data.descriptionUz || null,
+    data.parentCategoryId || null,
+    data.linkedSubjectId || null,
+    data.linkedGrade || null,
+    data.categoryType,
+    data.icon || null,
+    data.sortOrder || 0,
+  ];
+
+  const result = await pool.query(query, values);
+  return result.rows[0];
+}
+
+/**
+ * Update a category
+ * @param categoryId - Category UUID
+ * @param data - Update data
+ * @returns Updated category or null
+ */
+export async function updateCategory(
+  categoryId: string,
+  data: UpdateCategoryRequest
+): Promise<LibraryCategory | null> {
+  const fields: string[] = [];
+  const values: any[] = [];
+  let paramIndex = 1;
+
+  if (data.nameUz !== undefined) {
+    fields.push(`name_uz = $${paramIndex++}`);
+    values.push(data.nameUz);
+  }
+  if (data.nameRu !== undefined) {
+    fields.push(`name_ru = $${paramIndex++}`);
+    values.push(data.nameRu);
+  }
+  if (data.nameEn !== undefined) {
+    fields.push(`name_en = $${paramIndex++}`);
+    values.push(data.nameEn);
+  }
+  if (data.slug !== undefined) {
+    fields.push(`slug = $${paramIndex++}`);
+    values.push(data.slug);
+  }
+  if (data.descriptionUz !== undefined) {
+    fields.push(`description_uz = $${paramIndex++}`);
+    values.push(data.descriptionUz);
+  }
+  if (data.parentCategoryId !== undefined) {
+    fields.push(`parent_category_id = $${paramIndex++}`);
+    values.push(data.parentCategoryId);
+  }
+  if (data.linkedSubjectId !== undefined) {
+    fields.push(`linked_subject_id = $${paramIndex++}`);
+    values.push(data.linkedSubjectId);
+  }
+  if (data.linkedGrade !== undefined) {
+    fields.push(`linked_grade = $${paramIndex++}`);
+    values.push(data.linkedGrade);
+  }
+  if (data.categoryType !== undefined) {
+    fields.push(`category_type = $${paramIndex++}`);
+    values.push(data.categoryType);
+  }
+  if (data.icon !== undefined) {
+    fields.push(`icon = $${paramIndex++}`);
+    values.push(data.icon);
+  }
+  if (data.sortOrder !== undefined) {
+    fields.push(`sort_order = $${paramIndex++}`);
+    values.push(data.sortOrder);
+  }
+
+  if (fields.length === 0) {
+    return getCategoryById(categoryId);
+  }
+
+  fields.push(`updated_at = NOW()`);
+  values.push(categoryId);
+
+  const query = `
+    UPDATE library_categories
+    SET ${fields.join(', ')}
+    WHERE id = $${paramIndex}
+    RETURNING
+      id,
+      name_uz as "nameUz",
+      name_ru as "nameRu",
+      name_en as "nameEn",
+      slug,
+      description_uz as "descriptionUz",
+      parent_category_id as "parentCategoryId",
+      linked_subject_id as "linkedSubjectId",
+      linked_grade as "linkedGrade",
+      category_type as "categoryType",
+      icon,
+      sort_order as "sortOrder",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+  `;
+
+  const result = await pool.query(query, values);
+  return result.rows[0] || null;
+}
+
+/**
+ * Delete a category
+ * @param categoryId - Category UUID
+ * @returns Success status
+ */
+export async function deleteCategory(categoryId: string): Promise<boolean> {
+  const query = 'DELETE FROM library_categories WHERE id = $1';
+  const result = await pool.query(query, [categoryId]);
+  return result.rowCount !== null && result.rowCount > 0;
+}
+
 // ============================================
 // Book Functions
 // ============================================

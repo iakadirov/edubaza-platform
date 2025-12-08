@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { PageHeader } from '@/components/admin/PageHeader';
 import {
   Table,
   TableBody,
@@ -144,23 +145,22 @@ export default function BooksAdminPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kitoblar</h1>
-          <p className="text-muted-foreground">
-            Kutubxona kitoblarini boshqarish
-          </p>
-        </div>
-        <Button onClick={() => router.push('/admin/content/books/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Yangi kitob
-        </Button>
-      </div>
+    <>
+      <PageHeader
+        icon="solar:book-bookmark-bold-duotone"
+        title="Kitoblar"
+        subtitle="Kutubxona kitoblarini boshqarish"
+        backHref="/admin/content"
+        actions={
+          <Button onClick={() => router.push('/admin/content/books/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Yangi kitob
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -402,6 +402,6 @@ export default function BooksAdminPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

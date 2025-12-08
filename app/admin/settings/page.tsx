@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import { SiteSettings, SETTING_CATEGORIES, SiteSettingDB } from '@/types/settings';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 // Import setting panels
 import { GeneralSettingsPanel } from '@/components/admin/settings/GeneralSettingsPanel';
@@ -175,14 +176,17 @@ export default function AdminSettingsPage() {
   ];
 
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header with tabs */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Настройки системы</h1>
-          <p className="text-gray-600 mb-6">Конфигурация платформы и интеграций</p>
+    <>
+      <PageHeader
+        icon="solar:settings-bold-duotone"
+        title="Настройки системы"
+        subtitle="Конфигурация платформы и интеграций"
+        backHref="/admin"
+      />
 
-          {/* Horizontal tabs for settings categories */}
+      <div>
+        {/* Horizontal tabs for settings categories */}
+        <div className="mb-6">
           <div className="border-b border-gray-200">
             <nav className="flex flex-wrap gap-2 -mb-px">
               {menuGroups.map((group) => (
@@ -302,6 +306,6 @@ export default function AdminSettingsPage() {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

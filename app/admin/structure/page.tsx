@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@iconify/react';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 interface Grade {
   number: number;
@@ -534,109 +535,98 @@ export default function AdminStructurePage() {
   }, [activeTab]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Toast Notifications */}
-        <div className="fixed top-4 right-4 z-[100] space-y-2">
-          {toasts.map(toast => (
-            <div
-              key={toast.id}
-              className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] animate-slide-in-right ${
-                toast.type === 'success' ? 'bg-green-500 text-white' :
-                toast.type === 'error' ? 'bg-red-500 text-white' :
-                'bg-blue-500 text-white'
-              }`}
-            >
-              <Icon
-                icon={
-                  toast.type === 'success' ? 'solar:check-circle-bold' :
-                  toast.type === 'error' ? 'solar:close-circle-bold' :
-                  'solar:info-circle-bold'
-                }
-                className="text-2xl"
-              />
-              <span className="font-medium">{toast.message}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
-              O'quv dasturi tuzilmasi
-            </h1>
-            <p className="text-gray-600 mt-1 text-sm">Sinflar, fanlar va mavzularni boshqaring</p>
-          </div>
-          <Link
-            href="/admin"
-            className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
+    <>
+      {/* Toast Notifications */}
+      <div className="fixed top-4 right-4 z-[100] space-y-2">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] animate-slide-in-right ${
+              toast.type === 'success' ? 'bg-green-500 text-white' :
+              toast.type === 'error' ? 'bg-red-500 text-white' :
+              'bg-blue-500 text-white'
+            }`}
           >
-            <Icon icon="solar:arrow-left-line-duotone" className="text-xl" />
-            <span className="hidden sm:inline">Admin panel</span>
-          </Link>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-4">
-          <div className="flex border-b border-gray-200 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('topics')}
-              className={`flex items-center gap-2 px-4 lg:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'topics'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Icon
-                icon={activeTab === 'topics' ? 'solar:notebook-bold-duotone' : 'solar:notebook-line-duotone'}
-                className="text-xl"
-              />
-              <span>Mavzular</span>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                {topics.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('subjects')}
-              className={`flex items-center gap-2 px-4 lg:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'subjects'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Icon
-                icon={activeTab === 'subjects' ? 'solar:book-2-bold-duotone' : 'solar:book-2-line-duotone'}
-                className="text-xl"
-              />
-              <span>Fanlar</span>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                {subjects.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('grades')}
-              className={`flex items-center gap-2 px-4 lg:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
-                activeTab === 'grades'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Icon
-                icon={activeTab === 'grades' ? 'solar:diploma-bold-duotone' : 'solar:diploma-line-duotone'}
-                className="text-xl"
-              />
-              <span>Sinflar</span>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                {grades.length}
-              </span>
-            </button>
+            <Icon
+              icon={
+                toast.type === 'success' ? 'solar:check-circle-bold' :
+                toast.type === 'error' ? 'solar:close-circle-bold' :
+                'solar:info-circle-bold'
+              }
+              className="text-2xl"
+            />
+            <span className="font-medium">{toast.message}</span>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Content */}
-        <div className="bg-white rounded-lg shadow-sm">
-          {loading ? (
+      <PageHeader
+        icon="solar:buildings-2-bold-duotone"
+        title="O'quv dasturi tuzilmasi"
+        subtitle="Sinflar, fanlar va mavzularni boshqaring"
+        backHref="/admin"
+      />
+
+      {/* Tabs */}
+      <div className="bg-white rounded-lg shadow-sm mb-4">
+        <div className="flex border-b border-gray-200 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('topics')}
+            className={`flex items-center gap-2 px-4 lg:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
+              activeTab === 'topics'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Icon
+              icon={activeTab === 'topics' ? 'solar:notebook-bold-duotone' : 'solar:notebook-line-duotone'}
+              className="text-xl"
+            />
+            <span>Mavzular</span>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+              {topics.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('subjects')}
+            className={`flex items-center gap-2 px-4 lg:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
+              activeTab === 'subjects'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Icon
+              icon={activeTab === 'subjects' ? 'solar:book-2-bold-duotone' : 'solar:book-2-line-duotone'}
+              className="text-xl"
+            />
+            <span>Fanlar</span>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+              {subjects.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('grades')}
+            className={`flex items-center gap-2 px-4 lg:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
+              activeTab === 'grades'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Icon
+              icon={activeTab === 'grades' ? 'solar:diploma-bold-duotone' : 'solar:diploma-line-duotone'}
+              className="text-xl"
+            />
+            <span>Sinflar</span>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+              {grades.length}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="bg-white rounded-lg shadow-sm">
+        {loading ? (
             <div className="text-center py-12 text-gray-500">
               <Icon icon="svg-spinners:ring-resize" className="text-4xl mx-auto mb-2" />
               <p>Yuklanmoqda...</p>
@@ -1095,7 +1085,6 @@ export default function AdminStructurePage() {
             </>
           )}
         </div>
-      </div>
 
       {/* Subject Modal */}
       {showSubjectModal && (
@@ -1690,6 +1679,6 @@ export default function AdminStructurePage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

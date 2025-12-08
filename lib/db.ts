@@ -1,13 +1,15 @@
 // PostgreSQL database connection utility
 import { Pool } from 'pg';
 
-// Создаем пул соединений
+// Создаем пул соединений из DATABASE_URL или отдельных переменных
 const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  database: 'edubaza',
-  user: 'edubaza',
-  password: 'test123', // Docker container password
+  connectionString: process.env.DATABASE_URL,
+  // Fallback на отдельные переменные если DATABASE_URL не задан
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'edubaza',
+  user: process.env.DB_USER || 'edubaza',
+  password: process.env.DB_PASSWORD || 'test123',
 });
 
 // Проверяем соединение при первом запуске
@@ -29,4 +31,5 @@ export async function query(text: string, params?: any[]) {
   }
 }
 
+export { pool };
 export default pool;

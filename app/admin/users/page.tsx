@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/date-format';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 interface User {
   id: string;
@@ -95,19 +96,15 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Foydalanuvchilarni boshqarish
-          </h1>
-          <p className="text-gray-600">
-            Jami foydalanuvchilar: {users.length}
-          </p>
-        </div>
+    <>
+      <PageHeader
+        icon="solar:users-group-rounded-bold-duotone"
+        title="Foydalanuvchilarni boshqarish"
+        subtitle={`Jami foydalanuvchilar: ${users.length}`}
+        backHref="/admin"
+      />
 
-        {/* Filters */}
+      {/* Filters */}
         <div className="mb-6 flex gap-4 flex-wrap">
           <div className="flex gap-2">
             <button
@@ -273,7 +270,6 @@ export default function AdminUsersPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </>
   );
 }

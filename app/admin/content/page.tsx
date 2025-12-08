@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@iconify/react';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 interface ContentStats {
   tasks: {
@@ -21,6 +22,9 @@ interface ContentStats {
   books: {
     total: number;
   };
+  categories: {
+    total: number;
+  };
 }
 
 export default function AdminContentOverviewPage() {
@@ -31,6 +35,7 @@ export default function AdminContentOverviewPage() {
     lessons: { total: 0 },
     resources: { total: 0 },
     books: { total: 0 },
+    categories: { total: 0 },
   });
 
   useEffect(() => {
@@ -78,6 +83,12 @@ export default function AdminContentOverviewPage() {
       });
       const booksData = await booksResponse.json();
 
+      // Load categories stats
+      const categoriesResponse = await fetch('/api/library/categories', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const categoriesData = await categoriesResponse.json();
+
       if (tasksData.success) {
         const tasks = tasksData.data;
         setStats({
@@ -90,6 +101,7 @@ export default function AdminContentOverviewPage() {
           lessons: { total: 0 }, // TODO: Implement
           resources: { total: 0 }, // TODO: Implement
           books: { total: booksData.success ? booksData.pagination?.total || 0 : 0 },
+          categories: { total: categoriesData.success ? categoriesData.data.length : 0 },
         });
       }
     } catch (error) {
@@ -158,33 +170,32 @@ export default function AdminContentOverviewPage() {
       available: true,
       comingSoon: false,
     },
+    {
+      id: 'categories',
+      title: 'Kategoriyalar',
+      description: 'Kitoblar uchun kategoriyalar va bo\'limlar',
+      icon: 'solar:folder-with-files-bold-duotone',
+      href: '/admin/content/categories',
+      color: 'teal',
+      gradient: 'from-teal-500 to-cyan-500',
+      stats: [
+        { label: 'Jami', value: stats.categories.total, icon: 'solar:folder-bold' },
+      ],
+      available: true,
+      comingSoon: false,
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Icon icon="solar:library-bold-duotone" className="text-blue-600" />
-                Kontent kutubxonasi
-              </h1>
-              <p className="text-gray-600 mt-1">Barcha oʻquv materiallari bir joyda</p>
-            </div>
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <Icon icon="solar:arrow-left-bold-duotone" className="text-xl" />
-              <span className="hidden md:inline">Admin panel</span>
-            </Link>
-          </div>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        icon="solar:library-bold-duotone"
+        title="Kontent kutubxonasi"
+        subtitle="Barcha oʻquv materiallari bir joyda"
+        backHref="/admin"
+      />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Icon icon="solar:refresh-circle-bold-duotone" className="text-6xl text-blue-600 animate-spin" />
@@ -296,8 +307,10 @@ export default function AdminContentOverviewPage() {
           </div>
         )}
 
-        {/* Quick Stats Overview */}
-        {!loading && (
+      </div>
+
+      {/* Quick Stats Overview */}
+      {!loading && (
           <div className="mt-8 bg-white rounded-2xl shadow-sm p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Icon icon="solar:chart-2-bold-duotone" className="text-xl text-blue-600" />
@@ -325,7 +338,6 @@ export default function AdminContentOverviewPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 }

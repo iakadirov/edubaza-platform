@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatDate } from '@/lib/date-format';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 interface Worksheet {
   id: string;
@@ -154,19 +155,15 @@ export default function AllWorksheetsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Все рабочие листы
-          </h1>
-          <p className="text-gray-600">
-            Всего рабочих листов: {worksheets.length}
-          </p>
-        </div>
+    <>
+      <PageHeader
+        icon="solar:clipboard-list-bold-duotone"
+        title="Все рабочие листы"
+        subtitle={`Всего рабочих листов: ${worksheets.length}`}
+        backHref="/admin"
+      />
 
-        {/* Filters */}
+      {/* Filters */}
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -317,7 +314,6 @@ export default function AllWorksheetsPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 }
