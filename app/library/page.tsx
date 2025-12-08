@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import { BookGrid } from '@/components/library/BookGrid';
@@ -15,7 +15,7 @@ interface Category {
   slug: string;
 }
 
-export default function LibraryPage() {
+function LibraryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -232,5 +232,13 @@ export default function LibraryPage() {
         <BookGrid books={books} loading={loading} emptyMessage="Hech qanday kitob topilmadi. Filtrlarni o'zgartiring." />
       </div>
     </div>
+  );
+}
+
+export default function LibraryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LibraryContent />
+    </Suspense>
   );
 }
