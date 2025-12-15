@@ -84,7 +84,7 @@ export default function AuthHeader() {
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center group">
             <Image
-              src="/images/mainlogo.png"
+              src="/images/logo.svg"
               alt="edubaza"
               width={120}
               height={40}

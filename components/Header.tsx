@@ -130,7 +130,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <Image
-              src="/images/mainlogo.png"
+              src="/images/logo.svg"
               alt="edubaza"
               width={120}
               height={40}

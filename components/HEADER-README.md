@@ -19,7 +19,7 @@ components/Header.tsx
 - **Шрифт:** Onest (все веса подключены в globals.css)
 
 ### Первая строка (Main Header) - 68px:
-- **Логотип:** Изображение из `/images/mainlogo.png` (120x40px, приоритетная загрузка)
+- **Логотип:** Изображение из `/images/logo.svg` (120x40px, приоритетная загрузка)
 - **Поиск:** Ширина 443px, высота 43px, бордер #EDEDED, радиус 12px
 - **Навигация:** "Ustozlar uchun", "O'quvchilar uchun"
 - **Кнопка входа:** "Kirish" - фон #1761FF, hover #1451dd
