@@ -413,8 +413,8 @@ export default function WorksheetViewPage() {
           ))}
         </div>
 
-        {/* AI Debug Info Section */}
-        {worksheet?.aiDebugInfo && (
+        {/* AI Debug Info Section - ЗАКОММЕНТИРОВАНО: скрыто от пользователей */}
+        {/* {worksheet?.aiDebugInfo && (
           <div className="mt-12 print:hidden">
             <div className="bg-gray-900 rounded-xl overflow-hidden">
               <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
@@ -426,7 +426,6 @@ export default function WorksheetViewPage() {
               </div>
 
               <div className="p-6 space-y-6">
-                {/* Parameters */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <Icon icon="solar:settings-bold-duotone" className="text-blue-400" />
@@ -437,7 +436,6 @@ export default function WorksheetViewPage() {
                   </pre>
                 </div>
 
-                {/* System Instruction */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <Icon icon="solar:document-bold-duotone" className="text-green-400" />
@@ -448,7 +446,6 @@ export default function WorksheetViewPage() {
                   </pre>
                 </div>
 
-                {/* User Prompt */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <Icon icon="solar:chat-round-bold-duotone" className="text-yellow-400" />
@@ -459,7 +456,6 @@ export default function WorksheetViewPage() {
                   </pre>
                 </div>
 
-                {/* Raw Response */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <Icon icon="solar:code-square-bold-duotone" className="text-purple-400" />
@@ -470,7 +466,6 @@ export default function WorksheetViewPage() {
                   </pre>
                 </div>
 
-                {/* Parse Error (if any) */}
                 {worksheet.aiDebugInfo.parseError && (
                   <div>
                     <h3 className="text-lg font-semibold text-red-400 mb-3 flex items-center gap-2">
@@ -483,14 +478,13 @@ export default function WorksheetViewPage() {
                   </div>
                 )}
 
-                {/* Timestamp */}
                 <div className="text-xs text-gray-500 text-right">
                   Generated at: {new Date(worksheet.aiDebugInfo.timestamp).toLocaleString('ru-RU')}
                 </div>
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-sm print:hidden">
