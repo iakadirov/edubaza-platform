@@ -41,6 +41,9 @@ export interface User {
 }
 
 export async function findUserByPhone(phone: string): Promise<User | null> {
+  if (!process.env.DATABASE_PASSWORD) {
+    throw new Error('DATABASE_PASSWORD environment variable is required');
+  }
   try {
     const sql = `SELECT * FROM users WHERE phone = '${phone}' LIMIT 1;`;
     const stdout = await executeSql(sql, { fieldSeparator: '|' });
@@ -73,12 +76,15 @@ export async function findUserByPhone(phone: string): Promise<User | null> {
 }
 
 export async function createUser(phone: string): Promise<User | null> {
+  if (!process.env.DATABASE_PASSWORD) {
+    throw new Error('DATABASE_PASSWORD environment variable is required');
+  }
   try {
     // Генерируем UUID для id (используем gen_random_uuid() PostgreSQL)
     const sql = `INSERT INTO users (id, phone, \\"subscriptionPlan\\", \\"createdAt\\", \\"updatedAt\\") VALUES (gen_random_uuid()::text, '${phone}', 'FREE', NOW(), NOW()) RETURNING *;`;
 
     const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -116,6 +122,9 @@ export async function updateUserProfile(
     school?: string | null;
   }
 ): Promise<User | null> {
+  if (!process.env.DATABASE_PASSWORD) {
+    throw new Error('DATABASE_PASSWORD environment variable is required');
+  }
   try {
     const setParts: string[] = [];
 
@@ -136,7 +145,7 @@ export async function updateUserProfile(
     const sql = `UPDATE users SET ${setParts.join(', ')}, \\"updatedAt\\" = NOW() WHERE phone = '${phone}' RETURNING *;`;
 
     const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -192,6 +201,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export async function createUserWithPassword(phone: string, password: string): Promise<User | null> {
+  if (!process.env.DATABASE_PASSWORD) {
+    throw new Error('DATABASE_PASSWORD environment variable is required');
+  }
   try {
     const passwordHash = await hashPassword(password);
     const escapedHash = passwordHash.replace(/'/g, "''");
@@ -199,7 +211,7 @@ export async function createUserWithPassword(phone: string, password: string): P
     const sql = `INSERT INTO users (id, phone, password_hash, \\"subscriptionPlan\\", \\"createdAt\\", \\"updatedAt\\") VALUES (gen_random_uuid()::text, '${phone}', '${escapedHash}', 'FREE', NOW(), NOW()) RETURNING *;`;
 
     const { stdout } = await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${sql}"`
     );
 
     if (!stdout || stdout.trim() === '') {
@@ -214,6 +226,9 @@ export async function createUserWithPassword(phone: string, password: string): P
 }
 
 export async function updateUserPassword(phone: string, newPassword: string): Promise<boolean> {
+  if (!process.env.DATABASE_PASSWORD) {
+    throw new Error('DATABASE_PASSWORD environment variable is required');
+  }
   try {
     const passwordHash = await hashPassword(newPassword);
     const escapedHash = passwordHash.replace(/'/g, "''");
@@ -221,7 +236,7 @@ export async function updateUserPassword(phone: string, newPassword: string): Pr
     const sql = `UPDATE users SET password_hash = '${escapedHash}', \\"updatedAt\\" = NOW() WHERE phone = '${phone}';`;
 
     await execAsync(
-      `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -c "${sql}"`
+      `PGPASSWORD='${process.env.DATABASE_PASSWORD}' psql -h localhost -U edubaza -d edubaza -c "${sql}"`
     );
 
     return true;

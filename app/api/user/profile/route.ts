@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     let planInfo = null;
     try {
       const { stdout: planStdout } = await execAsync(
-        `PGPASSWORD='${process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU'}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${planSql}"`
+        `PGPASSWORD='${process.env.DATABASE_PASSWORD}' psql -h localhost -U edubaza -d edubaza -t -A -F"|" -c "${planSql}"`
       );
 
       const line = planStdout.trim();

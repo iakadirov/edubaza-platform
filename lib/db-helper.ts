@@ -2,7 +2,10 @@ import { spawn } from 'child_process';
 
 // Определяем, используем ли Docker или прямое подключение
 const USE_DOCKER = process.env.USE_DOCKER_POSTGRES === 'true';
-const DB_PASSWORD = process.env.DATABASE_PASSWORD || '9KOcIWiykfNXVZryDSfjnHk2ungrXkzIFkwU';
+const DB_PASSWORD = process.env.DATABASE_PASSWORD;
+if (!DB_PASSWORD) {
+  throw new Error('DATABASE_PASSWORD environment variable is required');
+}
 
 /**
  * Универсальная функция для выполнения SQL запросов
