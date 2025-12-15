@@ -368,6 +368,7 @@ export default function Header() {
             </svg>
             <span>Yordam</span>
           </Link>
+          </div>
         </div>
 
         {/* Mega Menu Dropdown */}

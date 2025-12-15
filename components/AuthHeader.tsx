@@ -401,6 +401,7 @@ export default function AuthHeader() {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
           </div>
         )}
