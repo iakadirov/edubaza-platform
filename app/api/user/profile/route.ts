@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { findUserByPhone as findUserByPhoneOld, TeacherSpecialty } from '@/lib/db-users';
 import { findUserByPhone, findUserById, updateUserProfileExtended } from '@/lib/db-users-extended';
+import { executeSql } from '@/lib/db-helper';
 
 export async function GET(request: NextRequest) {
   try {
