@@ -77,7 +77,8 @@ export default function AuthHeader() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white font-['Onest']">
       {/* Main Header */}
-      <div className="flex justify-between items-center px-20 lg:px-40 xl:px-80 h-[68px] bg-white border-b border-gray-100">
+      <div className="flex justify-center w-full bg-white border-b border-gray-100">
+        <div className="flex justify-between items-center px-6 h-[68px] w-full max-w-[1440px]">
         {/* Left Side - Logo and Search */}
         <div className="flex items-center gap-6">
           {/* Logo */}
@@ -213,7 +214,8 @@ export default function AuthHeader() {
 
       {/* Secondary Navigation */}
       <div className="relative bg-white">
-        <div className="flex justify-between items-center px-20 lg:px-40 xl:px-80 h-[56px]">
+        <div className="flex justify-center w-full">
+          <div className="flex justify-between items-center px-6 h-[56px] w-full max-w-[1440px]">
           {/* Categories */}
           <nav className="flex items-center gap-8">
             {/* Darsliklar with Dropdown Indicator */}
@@ -333,6 +335,7 @@ export default function AuthHeader() {
             </svg>
             <span>Yordam</span>
           </Link>
+          </div>
         </div>
 
         {/* Mega Menu Dropdown */}
@@ -342,7 +345,8 @@ export default function AuthHeader() {
             onMouseEnter={() => setActiveMenu(activeMenu)}
             onMouseLeave={() => setActiveMenu(null)}
           >
-            <div className="px-20 lg:px-40 xl:px-80 py-10">
+            <div className="flex justify-center w-full">
+              <div className="px-6 py-10 w-full max-w-[1440px]">
               <div className="grid grid-cols-3 gap-10">
                 {megaMenus[activeMenu].map((section, idx) => (
                   <div key={idx} className="space-y-4">
