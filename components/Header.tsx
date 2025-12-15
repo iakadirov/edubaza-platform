@@ -132,10 +132,11 @@ export default function Header() {
             <Image
               src="/images/logo.svg"
               alt="edubaza"
-              width={120}
-              height={40}
+              width={160}
+              height={32}
               priority
               className="object-contain"
+              style={{ maxWidth: 'fit-content', height: '32px' }}
             />
           </Link>
 

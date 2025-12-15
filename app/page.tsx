@@ -43,7 +43,7 @@ export default function LandingPage() {
       <Header />
 
       {/* Hero Section - Soft Pastel Style */}
-      <section className="relative pt-32 pb-24 overflow-hidden bg-[#F5F3FF]">
+      <section className="relative pt-[124px] pb-24 overflow-hidden bg-[#F5F3FF]">
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
