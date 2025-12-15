@@ -144,12 +144,12 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
     const subscriptionPlan = role === 'TEACHER' ? 'PRO' : 'FREE';
 
     const escapedPhone = phone.replace(/'/g, "''");
-    const fields = ['id', 'phone', 'role', '\\"subscriptionPlan\\"', '\\"createdAt\\"', '\\"updatedAt\\"'];
+    const fields = ['id', 'phone', 'role', '"subscriptionPlan"', '"createdAt"', '"updatedAt"'];
     const values = [
       'gen_random_uuid()::text',
       `'${escapedPhone}'`,
       `'${role}'::user_role`,
-      `'${subscriptionPlan}'::\\"SubscriptionPlan\\"`,
+      `'${subscriptionPlan}'::"SubscriptionPlan"`,
       'NOW()',
       'NOW()',
     ];
@@ -190,7 +190,7 @@ export async function createUserExtended(params: CreateUserParams): Promise<User
 
     if (specialty) {
       fields.push('specialty');
-      values.push(`'${specialty}'::\\"TeacherSpecialty\\"`);
+      values.push(`'${specialty}'::"TeacherSpecialty"`);
     }
 
     if (school) {
@@ -243,7 +243,7 @@ export async function updateUserProfileExtended(
     }
 
     if (updates.specialty !== undefined) {
-      setParts.push(updates.specialty ? `specialty = '${updates.specialty}'::\\"TeacherSpecialty\\"` : `specialty = NULL`);
+      setParts.push(updates.specialty ? `specialty = '${updates.specialty}'::"TeacherSpecialty"` : `specialty = NULL`);
     }
 
     if (updates.school !== undefined) {
@@ -270,7 +270,7 @@ export async function updateUserProfileExtended(
     }
 
     const escapedUserId = userId.replace(/'/g, "''");
-    const sql = `UPDATE users SET ${setParts.join(', ')}, \\"updatedAt\\" = NOW() WHERE id = '${escapedUserId}' RETURNING *;`;
+    const sql = `UPDATE users SET ${setParts.join(', ')}, "updatedAt" = NOW() WHERE id = '${escapedUserId}' RETURNING *;`;
 
     const stdout = await executeSql(sql, { fieldSeparator: '|' });
 
