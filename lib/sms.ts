@@ -30,6 +30,7 @@ async function getAuthToken(): Promise<string> {
   }
 
   try {
+    console.log('[Eskiz] Attempting authentication...', { email, apiUrl });
     const response = await fetch(`${apiUrl}/auth/login`, {
       method: 'POST',
       headers: {
@@ -39,21 +40,30 @@ async function getAuthToken(): Promise<string> {
     });
 
     if (!response.ok) {
-      throw new Error(`Eskiz auth failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('[Eskiz] Auth failed:', { status: response.status, statusText: response.statusText, error: errorText });
+      throw new Error(`Eskiz auth failed: ${response.statusText} - ${errorText}`);
     }
 
     const data: EskizAuthResponse = await response.json();
+    console.log('[Eskiz] Auth successful, token received');
     cachedToken = data.data.token;
     tokenExpiry = Date.now() + 25 * 24 * 60 * 60 * 1000; // 25 дней
 
     return cachedToken;
   } catch (error) {
-    console.error('Eskiz auth error:', error);
+    console.error('[Eskiz] Auth error:', error);
     throw new Error('Failed to authenticate with Eskiz.uz');
   }
 }
 
 export async function sendSMS(phone: string, message: string): Promise<boolean> {
+  // Режим разработки: если ESKIZ_MOCK=true, не отправляем реальные SMS
+  if (process.env.ESKIZ_MOCK === 'true') {
+    console.log('[Eskiz] MOCK MODE: SMS would be sent to', phone, 'Message:', message);
+    return true;
+  }
+
   const apiUrl = process.env.ESKIZ_API_URL || 'https://notify.eskiz.uz/api';
 
   try {
@@ -61,6 +71,8 @@ export async function sendSMS(phone: string, message: string): Promise<boolean> 
 
     // Форматируем номер телефона (убираем + если есть)
     const formattedPhone = phone.replace('+', '');
+
+    console.log('[Eskiz] Sending SMS...', { phone: formattedPhone, messageLength: message.length, from: '4546' });
 
     const response = await fetch(`${apiUrl}/message/sms/send`, {
       method: 'POST',
@@ -76,20 +88,34 @@ export async function sendSMS(phone: string, message: string): Promise<boolean> 
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Eskiz] SMS send failed:', { 
+        status: response.status, 
+        statusText: response.statusText, 
+        error: errorText 
+      });
+
       // Если токен невалидный, сбрасываем кэш и пробуем еще раз
       if (response.status === 401) {
+        console.log('[Eskiz] Token invalid, retrying with new token...');
         cachedToken = null;
         tokenExpiry = 0;
         return sendSMS(phone, message); // Рекурсивный вызов
       }
-      throw new Error(`Eskiz SMS send failed: ${response.statusText}`);
+      throw new Error(`Eskiz SMS send failed: ${response.statusText} - ${errorText}`);
     }
 
     const data: EskizSMSResponse = await response.json();
+    console.log('[Eskiz] SMS response:', { status: data.status, message: data.message });
+    
     // Eskiz может вернуть 'waiting' или 'success' - оба случая считаем успешными
-    return data.status === 'success' || data.status === 'waiting';
+    const success = data.status === 'success' || data.status === 'waiting';
+    if (!success) {
+      console.warn('[Eskiz] Unexpected status:', data.status);
+    }
+    return success;
   } catch (error) {
-    console.error('SMS send error:', error);
+    console.error('[Eskiz] SMS send error:', error);
     return false;
   }
 }
