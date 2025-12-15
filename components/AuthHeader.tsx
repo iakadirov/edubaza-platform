@@ -210,6 +210,7 @@ export default function AuthHeader() {
             )}
           </div>
         </div>
+        </div>
       </div>
 
       {/* Secondary Navigation */}
