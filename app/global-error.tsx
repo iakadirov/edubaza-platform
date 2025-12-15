@@ -8,7 +8,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html>
+    <html lang="en">
       <body>
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center px-4">
