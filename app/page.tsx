@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Container } from '@/components/ui/container';
 import {
   BookOpen,
   Sparkles,
@@ -44,7 +45,7 @@ export default function LandingPage() {
 
       {/* Hero Section - Soft Pastel Style */}
       <section className="relative pt-[124px] pb-24 overflow-hidden bg-[#F5F3FF]">
-        <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <Container backgroundClassName="bg-[#F5F3FF]">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
             <div className="space-y-8">
@@ -123,12 +124,12 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* Features Section */}
       <section className="py-24 bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <Container backgroundClassName="bg-white">
           <div className="text-center mb-20">
             <h2 className="text-5xl lg:text-6xl font-black text-gray-900 mb-6">
               Barcha imkoniyatlar bir joyda
@@ -261,12 +262,12 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* Testimonials - Soft Cards */}
       <section className="py-24 bg-[#FAFAF9]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <Container backgroundClassName="bg-[#FAFAF9]">
           <div className="text-center mb-16">
             <h2 className="text-5xl lg:text-6xl font-black text-gray-900 mb-6">
               O'qituvchilar fikri
@@ -326,12 +327,12 @@ export default function LandingPage() {
               </Card>
             ))}
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* CTA Section - Soft Purple */}
       <section className="py-32 bg-[#F5F3FF]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl text-center space-y-10">
+        <Container backgroundClassName="bg-[#F5F3FF]" className="text-center space-y-10">
           <div className="text-7xl mb-6">🚀</div>
           <h2 className="text-5xl lg:text-6xl font-black text-gray-900 leading-tight">
             Bugun bepul boshlang
@@ -352,12 +353,12 @@ export default function LandingPage() {
           <p className="text-lg text-gray-600 pt-4">
             Kredit karta shart emas • 2 daqiqada sozlash • Istalgan vaqt bekor qilish
           </p>
-        </div>
+        </Container>
       </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <Container backgroundClassName="bg-gray-900">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2">
               <h3 className="text-white text-4xl font-black mb-4">
@@ -395,7 +396,7 @@ export default function LandingPage() {
               <a href="#" className="text-gray-500 hover:text-white transition-colors">Shartlar</a>
             </div>
           </div>
-        </div>
+        </Container>
       </footer>
     </div>
   );

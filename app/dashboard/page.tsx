@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AuthHeader from '@/components/AuthHeader';
+import { Container } from '@/components/ui/container';
 import { generateWorksheetTitle } from '@/lib/worksheet-title';
 import { formatDate } from '@/lib/date-format';
 
@@ -163,8 +164,8 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="pt-[124px]">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-12">
+          <Container>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -184,13 +185,13 @@ export default function DashboardPage() {
                 <span>Yangi material yaratish</span>
               </Link>
             </div>
-          </div>
+          </Container>
         </section>
 
         {/* Stats Cards */}
         <section className="py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-4 gap-6">
+          <Container>
+            <div className="grid md:grid-cols-4 gap-[24px]">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -248,13 +249,13 @@ export default function DashboardPage() {
                 <div className="text-sm text-gray-600">Tarif rejasi</div>
               </div>
             </div>
-          </div>
+          </Container>
         </section>
 
         {/* Main Grid */}
         <section className="pb-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-3 gap-8">
+          <Container>
+            <div className="grid lg:grid-cols-3 gap-[24px]">
               {/* Left Column - Worksheets */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -297,7 +298,7 @@ export default function DashboardPage() {
                       </Link>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-[24px]">
                       {worksheets.slice(0, 5).map((worksheet) => (
                         <div
                           key={worksheet.id}
@@ -366,7 +367,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Right Column - Profile & Quick Actions */}
-              <div className="space-y-6">
+              <div className="space-y-[24px]">
                 {/* Profile Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <div className="flex items-center justify-between mb-6">
@@ -496,7 +497,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </Container>
         </section>
       </main>
     </div>

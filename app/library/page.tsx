@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import { BookGrid } from '@/components/library/BookGrid';
+import { Container } from '@/components/ui/container';
 import { BookCardProps } from '@/components/library/BookCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -117,8 +118,8 @@ function LibraryContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <section className="bg-white border-b border-gray-200 shadow-sm">
+        <Container backgroundClassName="bg-white" className="py-8">
           <div className="flex items-center gap-4 mb-6">
             <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
               <Icon icon="solar:book-bookmark-bold-duotone" className="text-4xl text-white" />
@@ -215,11 +216,12 @@ function LibraryContent() {
               )}
             </div>
           </form>
-        </div>
-      </div>
+        </Container>
+      </section>
 
       {/* Books Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section className="py-12 bg-white">
+        <Container backgroundClassName="bg-white">
         {/* Results Count */}
         {!loading && (
           <div className="mb-6 flex items-center justify-between">
@@ -230,7 +232,8 @@ function LibraryContent() {
         )}
 
         <BookGrid books={books} loading={loading} emptyMessage="Hech qanday kitob topilmadi. Filtrlarni o'zgartiring." />
-      </div>
+        </Container>
+      </section>
     </div>
   );
 }

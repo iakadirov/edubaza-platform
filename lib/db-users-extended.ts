@@ -347,6 +347,7 @@ export async function checkUserPassword(phone: string, password: string): Promis
 export async function checkUserPasswordOptimized(phone: string, password: string): Promise<User | null> {
   try {
     const escapedPhone = phone.replace(/'/g, "''");
+    console.log('[checkUserPasswordOptimized] Looking for user with phone:', phone, 'escaped:', escapedPhone);
 
     // Один запрос для получения пользователя И password_hash
     const sql = `
@@ -361,8 +362,10 @@ export async function checkUserPasswordOptimized(phone: string, password: string
     `;
 
     const stdout = await executeSql(sql, { fieldSeparator: '|' });
+    console.log('[checkUserPasswordOptimized] SQL result length:', stdout?.length, 'first 200 chars:', stdout?.substring(0, 200));
 
     if (!stdout || stdout.trim() === '') {
+      console.log('[checkUserPasswordOptimized] No user found with phone:', phone);
       return null;
     }
 
@@ -370,26 +373,42 @@ export async function checkUserPasswordOptimized(phone: string, password: string
     const parts = stdout.trim().split('|');
 
     if (parts.length < 22) {
-      console.error('Unexpected number of columns in checkUserPasswordOptimized');
+      console.error('[checkUserPasswordOptimized] Unexpected number of columns:', parts.length, 'expected: 22');
+      console.error('[checkUserPasswordOptimized] Columns:', parts);
       return null;
     }
 
     const passwordHash = parts[21]; // password_hash - последняя колонка
+    console.log('[checkUserPasswordOptimized] Password hash exists:', !!passwordHash, 'hash length:', passwordHash?.length);
 
     if (!passwordHash || passwordHash === '') {
+      console.log('[checkUserPasswordOptimized] No password hash found for user');
       return null; // Пароль не установлен
     }
 
     // Проверяем пароль
+    console.log('[checkUserPasswordOptimized] Verifying password...');
     const isValid = await verifyPassword(password, passwordHash);
+    console.log('[checkUserPasswordOptimized] Password valid:', isValid);
 
     if (!isValid) {
+      console.log('[checkUserPasswordOptimized] Password verification failed');
       return null;
     }
+    
+    console.log('[checkUserPasswordOptimized] Password verified successfully');
 
-    // Парсим пользователя (используем первые 21 колонку, без password_hash)
-    const userRow = parts.slice(0, 21).join('|');
-    return parseUser(userRow);
+    // Парсим пользователя
+    // Используем SELECT * чтобы получить правильный порядок колонок для parseUser
+    const user = await findUserByPhone(phone);
+    if (!user) {
+      console.log('[checkUserPasswordOptimized] User not found after password verification');
+      return null;
+    }
+    
+    // Обновляем hasPassword на основе проверки
+    user.hasPassword = true;
+    return user;
   } catch (error) {
     console.error('Check user password optimized error:', error);
     return null;

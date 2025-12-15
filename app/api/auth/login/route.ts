@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Форматирование и валидация номера телефона
     const phoneValidation = formatUzbekPhone(phone);
+    console.log('[Login] Phone validation:', { input: phone, formatted: phoneValidation.formatted, isValid: phoneValidation.isValid });
     if (!phoneValidation.isValid) {
       return NextResponse.json(
         {
@@ -31,7 +32,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. ОПТИМИЗИРОВАНО: Проверка пароля и получение пользователя (1 запрос вместо 2)
+    console.log('[Login] Checking password for phone:', phoneValidation.formatted);
     const user = await checkUserPasswordOptimized(phoneValidation.formatted, password);
+    console.log('[Login] User found:', !!user, user ? { id: user.id, phone: user.phone, hasPassword: user.hasPassword } : null);
 
     if (!user) {
       return NextResponse.json(
@@ -99,9 +102,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Login error:', error);
+    console.error('Login error stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       {
         error: 'Ошибка сервера',
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined,
       },
       { status: 500 }
     );

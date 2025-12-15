@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AuthHeader() {
@@ -11,6 +11,28 @@ export default function AuthHeader() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
+
+  // Отслеживание скролла для скрытия Secondary Navigation
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Показываем только когда на самом верху страницы (scrollY === 0)
+      // Скрываем во всех остальных случаях
+      if (currentScrollY === 0) {
+        setIsScrolledDown(false);
+      } else {
+        setIsScrolledDown(true);
+      }
+    };
+
+    // Проверяем начальную позицию
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -19,7 +41,7 @@ export default function AuthHeader() {
   };
 
   // Мега-меню данные
-  const megaMenus: Record<string, { title: string; items: { name: string; href: string; description: string }[] }[]> = {
+  const megaMenus: any = {
     textbooks: [
       {
         title: 'Boshlang\'ich sinf',
@@ -75,14 +97,15 @@ export default function AuthHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white font-['Onest']">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white" style={{ fontFamily: 'Onest' }}>
       {/* Main Header */}
-      <div className="flex justify-center w-full bg-white border-b border-gray-100">
-        <div className="flex justify-between items-center px-6 h-[68px] w-full max-w-[1440px]">
-        {/* Left Side - Logo and Search */}
-        <div className="flex items-center gap-6">
-          {/* Logo */}
-          <Link href="/dashboard" className="flex items-center group">
+      <div className="relative z-10 flex justify-center w-full bg-white border-b border-gray-100">
+        <div className="w-full max-w-[1440px] px-6">
+          <div className="flex justify-between items-center h-[68px] w-full max-w-[1392px] mx-auto px-6">
+            {/* Left Side - Logo and Search */}
+            <div className="flex items-center gap-6">
+              {/* Logo */}
+              <Link href="/dashboard" className="flex items-center group">
             <Image
               src="/images/logo.svg"
               alt="edubaza"
@@ -92,10 +115,10 @@ export default function AuthHeader() {
               className="object-contain"
               style={{ maxWidth: 'fit-content', height: '32px' }}
             />
-          </Link>
+              </Link>
 
-          {/* Search Bar */}
-          <div
+              {/* Search Bar */}
+              <div
             className={`flex items-center gap-3 px-4 py-2.5 w-[443px] h-[43px] bg-gray-50 rounded-xl transition-all duration-200 ${
               isSearchFocused
                 ? 'ring-2 ring-[#1761FF] ring-opacity-20 bg-white shadow-sm'
@@ -136,11 +159,11 @@ export default function AuthHeader() {
                 </svg>
               </button>
             )}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Right Side - Navigation and Profile */}
-        <div className="flex items-center gap-8">
+          {/* Right Side - Navigation and Profile */}
+          <div className="flex items-center gap-8">
           {/* Generate Button */}
           <Link
             href="/generate-chat"
@@ -210,18 +233,26 @@ export default function AuthHeader() {
               </div>
             )}
           </div>
-        </div>
+          </div>
+          </div>
         </div>
       </div>
 
       {/* Secondary Navigation */}
-      <div className="relative bg-white">
+      <div 
+        className={`relative z-0 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
+          isScrolledDown 
+            ? 'max-h-0 opacity-0 pointer-events-none' 
+            : 'max-h-[56px] opacity-100 pointer-events-auto'
+        }`}
+      >
         <div className="flex justify-center w-full">
-          <div className="flex justify-between items-center px-6 h-[56px] w-full max-w-[1440px]">
-          {/* Categories */}
-          <nav className="flex items-center gap-8">
-            {/* Darsliklar with Dropdown Indicator */}
-            <div
+          <div className="w-full max-w-[1440px] px-6">
+            <div className="flex justify-between items-center h-[56px] w-full max-w-[1392px] mx-auto px-6">
+              {/* Categories */}
+              <nav className="flex items-center gap-8">
+                {/* Darsliklar with Dropdown Indicator */}
+                <div
               className="relative h-full flex items-center"
               onMouseEnter={() => setActiveMenu('textbooks')}
               onMouseLeave={() => setActiveMenu(null)}
@@ -255,10 +286,10 @@ export default function AuthHeader() {
                   activeMenu === 'textbooks' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
-            </div>
+                </div>
 
-            {/* Resurslar with Dropdown Indicator */}
-            <div
+                {/* Resurslar with Dropdown Indicator */}
+                <div
               className="relative h-full flex items-center"
               onMouseEnter={() => setActiveMenu('resources')}
               onMouseLeave={() => setActiveMenu(null)}
@@ -292,43 +323,43 @@ export default function AuthHeader() {
                   activeMenu === 'resources' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
-            </div>
+                </div>
 
-            {/* Other menu items */}
-            <Link
-              href="/materials"
-              className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200 whitespace-nowrap"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Tarqatma materiallar</span>
-            </Link>
+                    {/* Other menu items */}
+                <Link
+                  href="/materials"
+                  className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200 whitespace-nowrap"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Tarqatma materiallar</span>
+                </Link>
 
-            <Link
-              href="/presentations"
-              className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-              </svg>
-              <span>Taqdimotlar</span>
-            </Link>
+                <Link
+                  href="/presentations"
+                  className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                  </svg>
+                  <span>Taqdimotlar</span>
+                </Link>
 
-            <Link
-              href="/courses"
-              className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Kurslar</span>
-            </Link>
-          </nav>
+                <Link
+                  href="/courses"
+                  className="group flex items-center gap-1.5 py-2 px-1 text-[15px] font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Kurslar</span>
+                </Link>
+              </nav>
 
-          {/* Right Side - Help/Support */}
-          <Link
+              {/* Right Side - Help/Support */}
+              <Link
             href="/help"
             className="group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#1761FF] hover:bg-blue-50 rounded-lg transition-all duration-200"
           >
@@ -336,7 +367,8 @@ export default function AuthHeader() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Yordam</span>
-          </Link>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -348,8 +380,9 @@ export default function AuthHeader() {
             onMouseLeave={() => setActiveMenu(null)}
           >
             <div className="flex justify-center w-full">
-              <div className="px-6 py-10 w-full max-w-[1440px]">
-              <div className="grid grid-cols-3 gap-10">
+              <div className="w-full max-w-[1440px] px-6">
+                <div className="w-full max-w-[1392px] mx-auto px-6 py-10">
+                  <div className="grid grid-cols-3 gap-10">
                 {megaMenus[activeMenu].map((section, idx) => (
                   <div key={idx} className="space-y-4">
                     {/* Section Header */}
@@ -402,7 +435,8 @@ export default function AuthHeader() {
                     </ul>
                   </div>
                 ))}
-              </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

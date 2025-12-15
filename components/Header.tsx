@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AuthModal from '@/components/auth/AuthModal';
 
 export default function Header() {
@@ -11,6 +11,28 @@ export default function Header() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password'>('login');
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
+
+  // Отслеживание скролла для скрытия Secondary Navigation
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Показываем только когда на самом верху страницы (scrollY === 0)
+      // Скрываем во всех остальных случаях
+      if (currentScrollY === 0) {
+        setIsScrolledDown(false);
+      } else {
+        setIsScrolledDown(true);
+      }
+    };
+
+    // Проверяем начальную позицию
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Мега-меню данные
   const megaMenus: Record<string, { title: string; items: { name: string; href: string; description: string }[] }[]> = {
@@ -121,12 +143,13 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white font-['Onest']">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white" style={{ fontFamily: 'Onest' }}>
       {/* Main Header */}
-      <div className="flex justify-center w-full bg-white border-b border-gray-100">
-        <div className="flex justify-between items-center px-6 h-[68px] w-full max-w-[1440px]">
-        {/* Left Side - Logo and Search */}
-        <div className="flex items-center gap-6">
+      <div className="relative z-10 flex justify-center w-full bg-white border-b border-gray-100">
+        <div className="w-full max-w-[1440px] px-6">
+          <div className="flex justify-between items-center h-[68px] w-full max-w-[1392px] mx-auto px-6">
+            {/* Left Side - Logo and Search */}
+            <div className="flex items-center gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <Image
@@ -182,11 +205,11 @@ export default function Header() {
                 </svg>
               </button>
             )}
+            </div>
           </div>
-        </div>
 
-        {/* Right Side - Navigation and Login */}
-        <div className="flex items-center gap-8">
+          {/* Right Side - Navigation and Login */}
+          <div className="flex items-center gap-8">
           {/* Teachers Link with Icon */}
           <Link
             href="/teachers"
@@ -236,18 +259,26 @@ export default function Header() {
             </svg>
             <span>Kirish</span>
           </button>
-        </div>
+          </div>
+          </div>
         </div>
       </div>
 
       {/* Secondary Navigation */}
-      <div className="relative bg-white">
+      <div 
+        className={`relative z-0 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
+          isScrolledDown 
+            ? 'max-h-0 opacity-0 pointer-events-none' 
+            : 'max-h-[56px] opacity-100 pointer-events-auto'
+        }`}
+      >
         <div className="flex justify-center w-full">
-          <div className="flex justify-between items-center px-6 h-[56px] w-full max-w-[1440px]">
-          {/* Categories */}
-          <nav className="flex items-center gap-8">
-            {/* Vositalar with Dropdown Indicator */}
-            <div
+          <div className="w-full max-w-[1440px] px-6">
+            <div className="flex justify-between items-center h-[56px] w-full max-w-[1392px] mx-auto px-6">
+              {/* Categories */}
+              <nav className="flex items-center gap-8">
+                {/* Vositalar with Dropdown Indicator */}
+                <div
               className="relative h-full flex items-center"
               onMouseEnter={() => setActiveMenu('vositalar')}
               onMouseLeave={() => setActiveMenu(null)}
@@ -282,10 +313,10 @@ export default function Header() {
                   activeMenu === 'vositalar' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
-            </div>
+                </div>
 
-            {/* Yechimlar with Dropdown Indicator */}
-            <div
+                {/* Yechimlar with Dropdown Indicator */}
+                <div
               className="relative h-full flex items-center"
               onMouseEnter={() => setActiveMenu('yechimlar')}
               onMouseLeave={() => setActiveMenu(null)}
@@ -319,10 +350,10 @@ export default function Header() {
                   activeMenu === 'yechimlar' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
-            </div>
+                </div>
 
-            {/* Resurslar with Dropdown Indicator */}
-            <div
+                {/* Resurslar with Dropdown Indicator */}
+                <div
               className="relative h-full flex items-center"
               onMouseEnter={() => setActiveMenu('resources')}
               onMouseLeave={() => setActiveMenu(null)}
@@ -356,11 +387,11 @@ export default function Header() {
                   activeMenu === 'resources' ? 'opacity-100' : 'opacity-0'
                 }`}
               />
-            </div>
-          </nav>
+                </div>
+              </nav>
 
-          {/* Right Side - Help/Support */}
-          <Link
+              {/* Right Side - Help/Support */}
+              <Link
             href="/help"
             className="group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#1761FF] hover:bg-blue-50 rounded-lg transition-all duration-200"
           >
@@ -368,7 +399,8 @@ export default function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Yordam</span>
-          </Link>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -380,9 +412,10 @@ export default function Header() {
             onMouseLeave={() => setActiveMenu(null)}
           >
             <div className="flex justify-center w-full">
-              <div className="px-6 py-10 w-full max-w-[1440px]">
-              <div className="grid grid-cols-3 gap-10">
-                {megaMenus[activeMenu].map((section, idx) => (
+              <div className="w-full max-w-[1440px] px-6">
+                <div className="w-full max-w-[1392px] mx-auto px-6 py-10">
+                  <div className="grid grid-cols-3 gap-10">
+                    {megaMenus[activeMenu].map((section, idx) => (
                   <div key={idx} className="space-y-4">
                     {/* Section Header */}
                     <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
@@ -433,31 +466,32 @@ export default function Header() {
                       ))}
                     </ul>
                   </div>
-                ))}
-              </div>
+                    ))}
+                  </div>
 
-              {/* Footer Banner */}
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#1761FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">Yangi materiallar har kuni!</div>
-                      <div className="text-xs text-gray-600">Eng so'nggi ta'lim resurslariga ega bo'ling</div>
+                  {/* Footer Banner */}
+                  <div className="mt-8 pt-6 border-t border-gray-100">
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center">
+                          <svg className="w-5 h-5 text-[#1761FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">Yangi materiallar har kuni!</div>
+                          <div className="text-xs text-gray-600">Eng so'nggi ta'lim resurslariga ega bo'ling</div>
+                        </div>
+                      </div>
+                      <Link
+                        href="/new"
+                        className="px-4 py-2 bg-white text-sm font-medium text-[#1761FF] rounded-lg hover:shadow-md transition-shadow"
+                      >
+                        Ko'rish →
+                      </Link>
                     </div>
                   </div>
-                  <Link
-                    href="/new"
-                    className="px-4 py-2 bg-white text-sm font-medium text-[#1761FF] rounded-lg hover:shadow-md transition-shadow"
-                  >
-                    Ko'rish →
-                  </Link>
                 </div>
-              </div>
               </div>
             </div>
           </div>

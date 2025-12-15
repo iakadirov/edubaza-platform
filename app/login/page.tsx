@@ -39,15 +39,19 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
+      
+      console.log('[Login Page] Response:', { ok: response.ok, status: response.status, hasToken: !!data.token, error: data.error });
 
       if (response.ok && data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         router.push('/dashboard');
       } else {
+        console.error('[Login Page] Login failed:', data);
         setError(data.error || `Notoʻgʻri telefon yoki parol`);
       }
     } catch (err) {
+      console.error('[Login Page] Login error:', err);
       setError('Kirish xatosi');
     } finally {
       setLoading(false);

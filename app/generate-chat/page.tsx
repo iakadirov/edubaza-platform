@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@iconify/react';
+import AuthHeader from '@/components/AuthHeader';
+import { Container } from '@/components/ui/container';
 
 interface Grade {
   number: number;
@@ -173,7 +175,7 @@ export default function GenerateChatPage() {
     const count = `${taskCount} ta`;
 
     if (materialType === 'NAZORAT') {
-      if (goalType === 'MAVZU') {
+      if (selectedGoal === 'MAVZU_MUSTAHKAMLASH') {
         return `Menga ${grade} uchun ${subject} fanidan mavzuni mustahkamlash uchun ${topic} mavzusida DTS asosida, o'rtacha murakkablikda tuzilgan ${count} vazifadan iborat tarqatma material tayyorlab bering! Savollar yoqimli, sodda va tushunarli usulda tuzilgan bo'lsin.`;
       } else {
         return `Menga ${grade} uchun ${subject} fanidan ${topic} mavzusi bo'yicha nazorat ishi (SHSB/BSB) uchun DTS asosida, o'rtacha murakkablikda tuzilgan ${count} vazifadan iborat material tayyorlab bering! Savollar professional, aniq va talabalar bilimini to'liq tekshiradigan bo'lsin.`;
@@ -299,26 +301,6 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
     }
   };
 
-  if (showProgress) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md w-full">
-          <Icon icon="solar:magic-stick-3-bold-duotone" className="text-6xl text-blue-600 mx-auto mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Topshiriqlar yaratilmoqda...</h2>
-          <p className="text-gray-600 mb-6">AI yordamida sifatli topshiriqlar tayyorlanmoqda</p>
-
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-500">{progress}%</p>
-        </div>
-      </div>
-    );
-  }
-
   const materialTypeCards = [
     {
       type: 'MATERIAL' as MaterialType,
@@ -352,92 +334,102 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
     },
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
-      <div className="max-w-[1278px] mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-gray-800">Edubaza AI</h1>
-            <span className="px-2 py-0.5 bg-white text-gray-600 text-xs font-medium rounded-full border border-gray-200">
-              Beta
-            </span>
+  if (showProgress) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md w-full">
+          <Icon icon="solar:magic-stick-3-bold-duotone" className="text-6xl text-blue-600 mx-auto mb-4 animate-pulse" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Topshiriqlar yaratilmoqda...</h2>
+          <p className="text-gray-600 mb-6">AI yordamida sifatli topshiriqlar tayyorlanmoqda</p>
+
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowDebugLogs(!showDebugLogs)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
-                showDebugLogs
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200'
-              }`}
-            >
-              <Icon icon="solar:code-bold-duotone" className="text-lg" />
-              <span className="text-sm font-medium">Debug Logs</span>
-            </button>
-            <Link
-              href="/generate"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Eski versiya
-            </Link>
-          </div>
+          <p className="text-sm text-gray-500">{progress}%</p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Main Container */}
-        <div className="bg-white rounded-3xl shadow-sm p-12 space-y-8">
-          {/* Title */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <Icon icon="solar:magic-stick-3-bold-duotone" className="text-2xl text-white" />
-            </div>
-            <h2 className="text-2xl font-semibold text-black text-center">
-              Edubaza AI xizmati haqida
-            </h2>
-          </div>
-
-          {/* Material Type Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {materialTypeCards.map((card) => (
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AuthHeader />
+      
+      <main className="pt-[124px]">
+        <section className="py-12">
+          <Container>
+            {/* Debug Logs Button - moved to top right of content */}
+            <div className="flex justify-end mb-6">
               <button
-                key={card.type}
-                type="button"
-                onClick={() => card.enabled && setMaterialType(card.type)}
-                disabled={!card.enabled}
-                className={`flex flex-col items-start p-6 rounded-3xl border transition-all ${
-                  !card.enabled
-                    ? 'opacity-60 cursor-not-allowed border-gray-100'
-                    : materialType === card.type
-                    ? 'border-gray-300 shadow-md'
-                    : 'border-gray-100 hover:border-gray-200'
+                onClick={() => setShowDebugLogs(!showDebugLogs)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                  showDebugLogs
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200'
                 }`}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <Icon icon={card.icon} className="text-2xl" style={{ color: card.color }} />
-                  <h3 className="font-medium text-base" style={{ color: card.color }}>
-                    {card.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed text-left">
-                  {card.description}
-                </p>
+                <Icon icon="solar:code-bold-duotone" className="text-lg" />
+                <span className="text-sm font-medium">Debug Logs</span>
               </button>
-            ))}
-          </div>
+            </div>
 
-          {/* Warning Banner */}
-          <div className="bg-[#F8FAFF] border border-[#EFF3FD] rounded-3xl p-6">
-            <h4 className="font-medium text-base text-[#F46A52] mb-2">Eslatma!</h4>
-            <p className="text-base text-gray-600">
-              AI tomonidan yaratilgan topshiriqlar avtomatik tekshiriladi va takomillashtiriladi
-            </p>
-          </div>
+            {/* Main Container */}
+            <div className="bg-white rounded-3xl shadow-sm p-12 space-y-8">
+              {/* Title */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <Icon icon="solar:magic-stick-3-bold-duotone" className="text-2xl text-white" />
+                </div>
+                <h2 className="text-2xl font-semibold text-black text-center">
+                  Edubaza AI xizmati haqida
+                </h2>
+              </div>
 
-          {/* Chat Input Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="bg-white border border-gray-200 rounded-3xl shadow-md">
-              {/* Text Area */}
-              <div className="p-6 pb-[68px]">
+              {/* Material Type Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {materialTypeCards.map((card) => (
+                  <button
+                    key={card.type}
+                    type="button"
+                    onClick={() => card.enabled && setMaterialType(card.type)}
+                    disabled={!card.enabled}
+                    className={`flex flex-col items-start p-6 rounded-3xl border transition-all ${
+                      !card.enabled
+                        ? 'opacity-60 cursor-not-allowed border-gray-100'
+                        : materialType === card.type
+                        ? 'border-gray-300 shadow-md'
+                        : 'border-gray-100 hover:border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Icon icon={card.icon} className="text-2xl" style={{ color: card.color }} />
+                      <h3 className="font-medium text-base" style={{ color: card.color }}>
+                        {card.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed text-left">
+                      {card.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+
+              {/* Warning Banner */}
+              <div className="bg-[#F8FAFF] border border-[#EFF3FD] rounded-3xl p-6">
+                <h4 className="font-medium text-base text-[#F46A52] mb-2">Eslatma!</h4>
+                <p className="text-base text-gray-600">
+                  AI tomonidan yaratilgan topshiriqlar avtomatik tekshiriladi va takomillashtiriladi
+                </p>
+              </div>
+
+              {/* Chat Input Form */}
+              <form onSubmit={handleSubmit}>
+                <div className="bg-white border border-gray-200 rounded-3xl shadow-md">
+                  {/* Text Area */}
+                  <div className="p-6 pb-[68px]">
                 {/* Dynamic Text with Interactive Variables */}
                 <p className="text-lg font-medium text-black leading-relaxed">
                   Menga{' '}
@@ -752,86 +744,86 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
                 </div>
               </div>
             </div>
-          </form>
+              </form>
 
-          {/* Debug Logs Panel */}
-          {showDebugLogs && (
-            <div className="bg-gray-900 border border-gray-700 rounded-3xl shadow-lg overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-gray-800">
-                <div className="flex items-center gap-3">
-                  <Icon icon="solar:code-bold-duotone" className="text-2xl text-green-400" />
-                  <h3 className="font-semibold text-lg text-white">Debug Logs</h3>
-                  <span className="text-xs text-gray-400">Промпт и параметры запроса</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowDebugLogs(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <Icon icon="solar:close-circle-bold" className="text-2xl" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto">
-                {/* Generated Prompt */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Icon icon="solar:chat-round-line-bold-duotone" className="text-xl text-blue-400" />
-                    <h4 className="font-semibold text-white">Сгенерированный промпт</h4>
+              {/* Debug Logs Panel */}
+              {showDebugLogs && (
+                <div className="bg-gray-900 border border-gray-700 rounded-3xl shadow-lg overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-gray-800">
+                    <div className="flex items-center gap-3">
+                      <Icon icon="solar:code-bold-duotone" className="text-2xl text-green-400" />
+                      <h3 className="font-semibold text-lg text-white">Debug Logs</h3>
+                      <span className="text-xs text-gray-400">Промпт и параметры запроса</span>
+                    </div>
                     <button
-                      onClick={() => navigator.clipboard.writeText(generatedPrompt)}
-                      className="ml-auto text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors flex items-center gap-1"
+                      type="button"
+                      onClick={() => setShowDebugLogs(false)}
+                      className="text-gray-400 hover:text-white transition-colors"
                     >
-                      <Icon icon="solar:copy-bold-duotone" />
-                      Копировать
+                      <Icon icon="solar:close-circle-bold" className="text-2xl" />
                     </button>
                   </div>
-                  <pre className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-sm text-green-300 font-mono whitespace-pre-wrap overflow-x-auto">
+
+                  {/* Content */}
+                  <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto">
+                    {/* Generated Prompt */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Icon icon="solar:chat-round-line-bold-duotone" className="text-xl text-blue-400" />
+                        <h4 className="font-semibold text-white">Сгенерированный промпт</h4>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(generatedPrompt)}
+                          className="ml-auto text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors flex items-center gap-1"
+                        >
+                          <Icon icon="solar:copy-bold-duotone" />
+                          Копировать
+                        </button>
+                      </div>
+                      <pre className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-sm text-green-300 font-mono whitespace-pre-wrap overflow-x-auto">
 {generatedPrompt}
-                  </pre>
-                </div>
-
-                {/* Request Payload */}
-                {requestPayload && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon icon="solar:server-bold-duotone" className="text-xl text-purple-400" />
-                      <h4 className="font-semibold text-white">Request Payload (JSON)</h4>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(JSON.stringify(requestPayload, null, 2))}
-                        className="ml-auto text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors flex items-center gap-1"
-                      >
-                        <Icon icon="solar:copy-bold-duotone" />
-                        Копировать
-                      </button>
+                      </pre>
                     </div>
-                    <pre className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-sm text-purple-300 font-mono overflow-x-auto">
+
+                    {/* Request Payload */}
+                    {requestPayload && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Icon icon="solar:server-bold-duotone" className="text-xl text-purple-400" />
+                          <h4 className="font-semibold text-white">Request Payload (JSON)</h4>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(JSON.stringify(requestPayload, null, 2))}
+                            className="ml-auto text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <Icon icon="solar:copy-bold-duotone" />
+                            Копировать
+                          </button>
+                        </div>
+                        <pre className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-sm text-purple-300 font-mono overflow-x-auto">
 {JSON.stringify(requestPayload, null, 2)}
-                    </pre>
+                        </pre>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                </div>
+              )}
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl flex items-center gap-2 text-sm">
-              <Icon icon="solar:danger-triangle-bold" className="text-lg flex-shrink-0" />
-              <span>{error}</span>
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl flex items-center gap-2 text-sm">
+                  <Icon icon="solar:danger-triangle-bold" className="text-lg flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Modal for Variable Selection */}
-        {activeVariable && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-800">
+            {/* Modal for Variable Selection */}
+            {activeVariable && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+                <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                  {/* Modal Header */}
+                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-gray-800">
                   {activeVariable === 'grade' && 'Sinfni tanlang'}
                   {activeVariable === 'subject' && 'Fanni tanlang'}
                   {activeVariable === 'goal' && 'Maqsadni tanlang'}
@@ -1399,12 +1391,56 @@ Menga ${selectedGrade}-sinf uchun ${selectedSubject.nameUz} fanidan ${selectedGo
                     </button>
                   </div>
                 )}
-
               </div>
             </div>
+              </div>
+            )}
+          </Container>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 py-16">
+        <Container backgroundClassName="bg-gray-900">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2">
+              <h3 className="text-white text-4xl font-black mb-4">
+                EduBaza
+              </h3>
+              <p className="text-gray-400 text-lg leading-relaxed max-w-md">
+                O'zbekistonning №1 ta'lim platformasi. O'qituvchilar uchun yaratilgan.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-lg mb-4">Platforma</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="hover:text-white transition-colors">Imkoniyatlar</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Narxlar</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Hamjamiyat</a></li>
+                <li><Link href="/login" className="hover:text-white transition-colors">Kirish</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold text-lg mb-4">Yordam</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="hover:text-white transition-colors">Qo'llanma</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Qo'llab-quvvatlash</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Bog'lanish</a></li>
+              </ul>
+            </div>
           </div>
-        )}
-      </div>
+          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-gray-500">
+              © 2024 EduBaza.uz. Barcha huquqlar himoyalangan.
+            </p>
+            <div className="flex gap-6">
+              <a href="#" className="text-gray-500 hover:text-white transition-colors">Maxfiylik</a>
+              <a href="#" className="text-gray-500 hover:text-white transition-colors">Shartlar</a>
+            </div>
+          </div>
+        </Container>
+      </footer>
     </div>
   );
 }
