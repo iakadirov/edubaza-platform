@@ -159,7 +159,7 @@ export default function Header() {
               height={32}
               priority
               className="object-contain"
-              style={{ maxWidth: 'fit-content', height: '32px' }}
+              style={{ width: 'auto', maxWidth: 'fit-content', height: '32px' }}
             />
           </Link>
 
