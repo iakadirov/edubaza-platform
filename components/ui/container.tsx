@@ -5,32 +5,85 @@ interface ContainerProps {
   children: ReactNode;
   className?: string;
   backgroundClassName?: string;
+  /**
+   * Уровень контейнера:
+   * - 'wrapper' - внешний контейнер (1200px, padding 30px)
+   * - 'content' - контентный контейнер с фоном (1140px, padding 24px, border-radius 24px)
+   * - 'inner' - внутренний контейнер (1092px, без padding)
+   * - 'full' - все три уровня (по умолчанию)
+   */
+  level?: 'wrapper' | 'content' | 'inner' | 'full';
 }
 
 /**
- * Container component with unified width system:
- * - Outer container: 1440px max-width with 24px padding
- * - Inner content: 1392px max-width with 24px padding
- * - Background: 1392px width
+ * Container component с трехуровневой системой из дизайн-системы EduMap:
  * 
- * Usage:
- * <Container backgroundClassName="bg-blue-50">
+ * 1. Container Wrapper (1200px max-width, 30px padding)
+ * 2. Container Content (1140px max-width, 24px padding, border-radius 24px, фон #f7fcfe)
+ * 3. Container Inner (1092px max-width, без padding)
+ * 
+ * @example
+ * // Все три уровня (по умолчанию)
+ * <Container>
  *   <h1>Content</h1>
+ * </Container>
+ * 
+ * @example
+ * // Только wrapper
+ * <Container level="wrapper">
+ *   <div>Content</div>
+ * </Container>
+ * 
+ * @example
+ * // Content с кастомным фоном
+ * <Container level="content" backgroundClassName="bg-white">
+ *   <div>Content</div>
  * </Container>
  */
 export function Container({ 
   children, 
   className,
-  backgroundClassName 
+  backgroundClassName,
+  level = 'full'
 }: ContainerProps) {
-  return (
-    <div className="max-w-[1440px] mx-auto px-6">
+  if (level === 'wrapper') {
+    return (
+      <div className={cn("container-wrapper", className)}>
+        {children}
+      </div>
+    );
+  }
+
+  if (level === 'content') {
+    return (
       <div className={cn(
-        "max-w-[1392px] mx-auto px-6",
+        "container-content",
         backgroundClassName,
         className
       )}>
         {children}
+      </div>
+    );
+  }
+
+  if (level === 'inner') {
+    return (
+      <div className={cn("container-inner", className)}>
+        {children}
+      </div>
+    );
+  }
+
+  // Full level (default) - все три уровня
+  return (
+    <div className="container-wrapper">
+      <div className={cn(
+        "container-content",
+        backgroundClassName
+      )}>
+        <div className={cn("container-inner", className)}>
+          {children}
+        </div>
       </div>
     </div>
   );

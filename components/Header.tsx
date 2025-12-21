@@ -145,9 +145,9 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white" style={{ fontFamily: 'Onest' }}>
       {/* Main Header */}
-      <div className="relative z-10 flex justify-center w-full bg-white border-b border-gray-100">
-        <div className="w-full max-w-[1440px] px-6">
-          <div className="flex justify-between items-center h-[68px] w-full max-w-[1392px] mx-auto px-6">
+      <div className="relative z-10 w-full bg-white border-b border-gray-100">
+        <div className="container-wrapper">
+          <div className="flex justify-between items-center h-[68px]">
             {/* Left Side - Logo and Search */}
             <div className="flex items-center gap-6">
           {/* Logo */}
@@ -210,31 +210,6 @@ export default function Header() {
 
           {/* Right Side - Navigation and Login */}
           <div className="flex items-center gap-8">
-          {/* Teachers Link with Icon */}
-          <Link
-            href="/teachers"
-            className="group flex items-center gap-2 text-base font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200 whitespace-nowrap"
-          >
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-[#1761FF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <span>Ustozlar uchun</span>
-          </Link>
-
-          {/* Students Link with Icon */}
-          <Link
-            href="/students"
-            className="group flex items-center gap-2 text-base font-medium text-gray-700 hover:text-[#1761FF] transition-all duration-200 whitespace-nowrap"
-          >
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-[#1761FF] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <span>O&apos;quvchilar uchun</span>
-          </Link>
-
-          {/* Divider */}
-          <div className="h-6 w-px bg-gray-200"></div>
-
           {/* Register Button - Text Only */}
           <button
             onClick={() => {
@@ -266,15 +241,15 @@ export default function Header() {
 
       {/* Secondary Navigation */}
       <div 
-        className={`relative z-0 bg-white overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`relative z-10 bg-white overflow-visible transition-all duration-300 ease-in-out ${
           isScrolledDown 
             ? 'max-h-0 opacity-0 pointer-events-none' 
             : 'max-h-[56px] opacity-100 pointer-events-auto'
         }`}
       >
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-[1440px] px-6">
-            <div className="flex justify-between items-center h-[56px] w-full max-w-[1392px] mx-auto px-6">
+        <div className="w-full">
+          <div className="container-wrapper">
+            <div className="flex justify-between items-center h-[56px]">
               {/* Categories */}
               <nav className="flex items-center gap-8">
                 {/* Vositalar with Dropdown Indicator */}
@@ -407,13 +382,13 @@ export default function Header() {
         {/* Mega Menu Dropdown */}
         {activeMenu && megaMenus[activeMenu] && (
           <div
-            className="absolute left-0 right-0 bg-white border-t border-gray-100 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200"
+            className="absolute left-0 right-0 bg-white border-t border-gray-100 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 z-50"
             onMouseEnter={() => setActiveMenu(activeMenu)}
             onMouseLeave={() => setActiveMenu(null)}
           >
-            <div className="flex justify-center w-full">
-              <div className="w-full max-w-[1440px] px-6">
-                <div className="w-full max-w-[1392px] mx-auto px-6 py-10">
+            <div className="w-full">
+              <div className="container-wrapper">
+                <div className="py-10">
                   <div className="grid grid-cols-3 gap-10">
                     {megaMenus[activeMenu].map((section, idx) => (
                   <div key={idx} className="space-y-4">

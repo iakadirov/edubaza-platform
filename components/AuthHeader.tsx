@@ -99,9 +99,9 @@ export default function AuthHeader() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white" style={{ fontFamily: 'Onest' }}>
       {/* Main Header */}
-      <div className="relative z-10 flex justify-center w-full bg-white border-b border-gray-100">
-        <div className="w-full max-w-[1440px] px-6">
-          <div className="flex justify-between items-center h-[68px] w-full max-w-[1392px] mx-auto px-6">
+      <div className="relative z-10 w-full bg-white border-b border-gray-100">
+        <div className="container-wrapper">
+          <div className="flex justify-between items-center h-[68px]">
             {/* Left Side - Logo and Search */}
             <div className="flex items-center gap-6">
               {/* Logo */}
@@ -246,9 +246,9 @@ export default function AuthHeader() {
             : 'max-h-[56px] opacity-100 pointer-events-auto'
         }`}
       >
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-[1440px] px-6">
-            <div className="flex justify-between items-center h-[56px] w-full max-w-[1392px] mx-auto px-6">
+        <div className="w-full">
+          <div className="container-wrapper">
+            <div className="flex justify-between items-center h-[56px]">
               {/* Categories */}
               <nav className="flex items-center gap-8">
                 {/* Darsliklar with Dropdown Indicator */}
@@ -379,9 +379,9 @@ export default function AuthHeader() {
             onMouseEnter={() => setActiveMenu(activeMenu)}
             onMouseLeave={() => setActiveMenu(null)}
           >
-            <div className="flex justify-center w-full">
-              <div className="w-full max-w-[1440px] px-6">
-                <div className="w-full max-w-[1392px] mx-auto px-6 py-10">
+            <div className="w-full">
+              <div className="container-wrapper">
+                <div className="py-10">
                   <div className="grid grid-cols-3 gap-10">
                 {megaMenus[activeMenu].map((section, idx) => (
                   <div key={idx} className="space-y-4">
